@@ -27,7 +27,12 @@ public class Robot extends TimedRobot {
   Joystick switchesJoystick = new Joystick(1);
 
   //Setup motors
-  CANSparkMax LeftMaster = new CANSparkMax(0, kBrushless);
+  CANSparkMax leftMaster = new CANSparkMax(0, kBrushless);
+  CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
+  CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+  CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
+  CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
+  CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
 
   /**
@@ -39,6 +44,13 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+    leftSlavePrimary.follow(leftMaster);
+    leftSlaveSecondary.follow(leftMaster);
+    rightSlavePrimary.follow(rightMaster);
+    rightSlaveSecondary.follow(rightMaster);
+    rightMaster.setInverted(true);
+    rightSlavePrimary.setInverted(true);
+    rightSlaveSecondary.setInverted(true);
   }
 
   /**
@@ -92,10 +104,14 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
-    double driverVertical = abs(driverJoystick.getY()) >= 0.1 ? -driverJoystick.getY() : 0;
-    double driverTwist = abs(driverJoystick.getZ()) >= 0.1 ? driverJoystick.getZ() : 0;
-    double leftPower = min(max(driverVertical + driverTwist, -1), 1);
-    double rightPower = min(max(driverVertical - driverTwist, -1), 1);
+    double driverVertical = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getY(), 0.1);
+    double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getZ(), 0.1);
+//    double leftPower = min(max(driverVertical + driverTwist, -1), 1);
+//    double rightPower = min(max(driverVertical - driverTwist, -1), 1);
+    DriveHelper driveHelper = new DriveHelper();
+    DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getTrigger(), false);
+    leftMaster.set(vals.leftDrive);
+    rightMaster.set(vals.rightDrive);
   }
 
   /**
