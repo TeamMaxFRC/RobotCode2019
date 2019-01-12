@@ -1,8 +1,13 @@
 package frc.team1071.robot;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import com.revrobotics.*;
+
+import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
+import static java.lang.Math.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -16,6 +21,14 @@ public class Robot extends TimedRobot {
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
+
+  //Setup the joysticks
+  Joystick driverJoystick = new Joystick(0);
+  Joystick switchesJoystick = new Joystick(1);
+
+  //Setup motors
+  CANSparkMax LeftMaster = new CANSparkMax(0, kBrushless);
+
 
   /**
    * This function is run when the robot is first started up and should be
@@ -79,6 +92,10 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
+    double driverVertical = abs(driverJoystick.getY()) >= 0.1 ? -driverJoystick.getY() : 0;
+    double driverTwist = abs(driverJoystick.getZ()) >= 0.1 ? driverJoystick.getZ() : 0;
+    double leftPower = min(max(driverVertical + driverTwist, -1), 1);
+    double rightPower = min(max(driverVertical - driverTwist, -1), 1);
   }
 
   /**
