@@ -22,11 +22,11 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
-    //Setup the joysticks
+    // Create the joystick for the driver and the operator.
     Joystick driverJoystick = new Joystick(0);
-    Joystick switchesJoystick = new Joystick(1);
+    Joystick operatorJoystick = new Joystick(1);
 
-    //Setup motors
+    // Create the drive motors and set configure them to their PDB number.
     CANSparkMax leftMaster = new CANSparkMax(0, kBrushless);
     CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
     CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
@@ -34,16 +34,14 @@ public class Robot extends TimedRobot {
     CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
     CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
-
-    /**
-     * This function is run when the robot is first started up and should be
-     * used for any initialization code.
-     */
+    // This function is run when the robot is first started up.
     @Override
     public void robotInit() {
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
+
+        // Define the motors as master or slave
         leftSlavePrimary.follow(leftMaster);
         leftSlaveSecondary.follow(leftMaster);
         rightSlavePrimary.follow(rightMaster);
@@ -63,6 +61,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+
     }
 
     /**
@@ -83,9 +82,7 @@ public class Robot extends TimedRobot {
         System.out.println("Auto selected: " + m_autoSelected);
     }
 
-    /**
-     * This function is called periodically during autonomous.
-     */
+    // This function is called periodically during autonomous.
     @Override
     public void autonomousPeriodic() {
         switch (m_autoSelected) {
@@ -99,25 +96,21 @@ public class Robot extends TimedRobot {
         }
     }
 
-    /**
-     * This function is called periodically during operator control.
-     */
+    // This function is called periodically during operator control.
     @Override
     public void teleopPeriodic() {
         double driverVertical = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getY(), 0.1);
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getZ(), 0.1);
-//    double leftPower = min(max(driverVertical + driverTwist, -1), 1);
-//    double rightPower = min(max(driverVertical - driverTwist, -1), 1);
         DriveHelper driveHelper = new DriveHelper();
         DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getTrigger(), false);
         leftMaster.set(vals.leftDrive);
         rightMaster.set(vals.rightDrive);
+        System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
     }
 
-    /**
-     * This function is called periodically during test mode.
-     */
+    // This function is called periodically during test mode.
     @Override
     public void testPeriodic() {
+
     }
 }
