@@ -182,7 +182,6 @@
     </library>
     <library name="Gradle: junit:junit:4.12">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/Could not find junit:junit:4.12.&#13;&#10;Searched in the following locations:&#13;&#10;  - file:/C:/Users/Public/frc2019/maven/junit/junit/4.12/junit-4.12.pom&#13;&#10;  - file:/C:/Users/Public/frc2019/maven/junit/junit/4.12/junit-4.12.jar&#13;&#10;  - http:/first.wpi.edu/FRC/roborio/maven/release/junit/junit/4.12/junit-4.12.pom&#13;&#10;  - http:/first.wpi.edu/FRC/roborio/maven/release/junit/junit/4.12/junit-4.12.jar&#13;&#10;  - http:/wpimirror.imjac.in/m2/release/junit/junit/4.12/junit-4.12.pom&#13;&#10;  - http:/wpimirror.imjac.in/m2/release/junit/junit/4.12/junit-4.12.jar!/" />
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar!/" />
       </CLASSES>
       <JAVADOC />
