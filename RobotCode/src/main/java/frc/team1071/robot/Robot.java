@@ -21,6 +21,7 @@ public class Robot extends TimedRobot {
     private static final String kCustomAuto = "My Auto";
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
+    DriveHelper driveHelper = new DriveHelper();
 
     // Create the joystick for the driver and the operator.
     Joystick driverJoystick = new Joystick(0);
@@ -99,10 +100,9 @@ public class Robot extends TimedRobot {
     // This function is called periodically during operator control.
     @Override
     public void teleopPeriodic() {
-        double driverVertical = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getY(), 0.1);
-        double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getZ(), 0.1);
-        DriveHelper driveHelper = new DriveHelper();
-        DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getTrigger(), false);
+        double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
+        double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
+        DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(5), false);
         leftMaster.set(vals.leftDrive);
         rightMaster.set(vals.rightDrive);
         System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
