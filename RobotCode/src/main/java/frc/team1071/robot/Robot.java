@@ -35,6 +35,9 @@ public class Robot extends TimedRobot {
     CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
     CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
+    // Create the OSC sender on the robot.
+    // OSCPort OscSender;
+
     // This function is run when the robot is first started up.
     @Override
     public void robotInit() {
@@ -50,6 +53,9 @@ public class Robot extends TimedRobot {
         rightMaster.setInverted(true);
         rightSlavePrimary.setInverted(true);
         rightSlaveSecondary.setInverted(true);
+
+        // Create the actual OSC port.
+        // OscSender = new OSCPort();
     }
 
     /**
@@ -102,9 +108,16 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
         double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
-        DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(5), false);
-        leftMaster.set(vals.leftDrive);
-        rightMaster.set(vals.rightDrive);
+        DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
+
+        if (driverJoystick.getRawButton((5))){
+            leftMaster.set(vals.leftDrive/4);
+            rightMaster.set(vals.rightDrive/4);
+        } else {
+            leftMaster.set(vals.leftDrive);
+            rightMaster.set(vals.rightDrive);
+        }
+
         System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
     }
 
