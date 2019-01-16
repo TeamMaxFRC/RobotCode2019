@@ -1,13 +1,16 @@
 package frc.team1071.robot;
 
+import com.illposed.osc.OSCMessage;
+import com.illposed.osc.OSCPortOut;
+import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import com.revrobotics.*;
-import com.illposed.osc.*;
+
+import java.net.InetAddress;
+
 import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
-import static java.lang.Math.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -19,14 +22,11 @@ import static java.lang.Math.*;
 public class Robot extends TimedRobot {
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
-    private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
     DriveHelper driveHelper = new DriveHelper();
-
     // Create the joystick for the driver and the operator.
     Joystick driverJoystick = new Joystick(0);
     Joystick operatorJoystick = new Joystick(1);
-
     // Create the drive motors and set configure them to their PDB number.
     CANSparkMax leftMaster = new CANSparkMax(0, kBrushless);
     CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
@@ -34,9 +34,10 @@ public class Robot extends TimedRobot {
     CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
     CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
     CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
-
     // Create the OSC sender on the robot.
-    // OSCPort OscSender;
+    OSCPortOut oscSender;
+
+    private String m_autoSelected;
 
     // This function is run when the robot is first started up.
     @Override
@@ -54,8 +55,13 @@ public class Robot extends TimedRobot {
         rightSlavePrimary.setInverted(true);
         rightSlaveSecondary.setInverted(true);
 
-        // Create the actual OSC port.
-        // OscSender = new OSCPort();
+        // Try to open the OSC socket.
+        try {
+            // TODO: Set to a default IP. Download an application that auto-sets the IPs for each PC.
+            oscSender = new OSCPortOut(InetAddress.getByName("10.10.71.199"), 5801);
+        } catch (Exception Ex) {
+            System.out.println("OSC Initialization Exception: " + Ex.getMessage());
+        }
     }
 
     /**
@@ -110,15 +116,38 @@ public class Robot extends TimedRobot {
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
         DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
 
-        if (driverJoystick.getRawButton((5))){
-            leftMaster.set(vals.leftDrive/4);
-            rightMaster.set(vals.rightDrive/4);
+        if (driverJoystick.getRawButton((5))) {
+            leftMaster.set(vals.leftDrive / 4);
+            rightMaster.set(vals.rightDrive / 4);
         } else {
             leftMaster.set(vals.leftDrive);
             rightMaster.set(vals.rightDrive);
         }
 
+        // Create messages for the current motor values.
+        OSCMessage leftMotorValueMessage = new OSCMessage();
+        OSCMessage rightMotorValueMessage = new OSCMessage();
+
+        try {
+
+            // Set the current motor values in the OSC messages.
+            leftMotorValueMessage.setAddress("/Robot/Motors/Left/Value");
+            leftMotorValueMessage.addArgument(vals.leftDrive);
+
+            rightMotorValueMessage.setAddress("/Robot/Motors/Right/Value");
+            rightMotorValueMessage.addArgument(vals.rightDrive);
+
+            // Send the message.
+            // TODO: Bundle these in the future.
+            oscSender.send(leftMotorValueMessage);
+            oscSender.send(rightMotorValueMessage);
+
+        } catch (Exception Ex) {
+            System.out.println("Exception in OSC sending! " + Ex.getMessage());
+        }
+
         System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
+        
     }
 
     // This function is called periodically during test mode.
