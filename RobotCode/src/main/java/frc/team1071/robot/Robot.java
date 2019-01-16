@@ -57,8 +57,7 @@ public class Robot extends TimedRobot {
 
         // Try to open the OSC socket.
         try {
-            // TODO: Set to a default IP. Download an application that auto-sets the IPs for each PC.
-            oscSender = new OSCPortOut(InetAddress.getByName("10.10.71.199"), 5801);
+            oscSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5801);
         } catch (Exception Ex) {
             System.out.println("OSC Initialization Exception: " + Ex.getMessage());
         }
@@ -147,7 +146,7 @@ public class Robot extends TimedRobot {
         }
 
         System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
-        
+
     }
 
     // This function is called periodically during test mode.
