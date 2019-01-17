@@ -34,6 +34,7 @@ public class Robot extends TimedRobot {
     CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
     CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
     CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+
     // Create the OSC sender on the robot.
     OSCPortOut oscSender;
 
