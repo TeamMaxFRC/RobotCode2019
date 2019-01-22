@@ -27,16 +27,19 @@ public class Robot extends TimedRobot {
     // Create the joystick for the driver and the operator.
     Joystick driverJoystick = new Joystick(0);
     Joystick operatorJoystick = new Joystick(1);
-    // Create the drive motors and set configure them to their PDB number.
-    CANSparkMax leftMaster = new CANSparkMax(0, kBrushless);
-    CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
-    CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
-    CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
-    CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
-    CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+
+    // Create the drive motors.
+    CANSparkMax leftMaster;
+    CANSparkMax leftSlavePrimary;
+    CANSparkMax leftSlaveSecondary;
+    CANSparkMax rightMaster;
+    CANSparkMax rightSlavePrimary;
+    CANSparkMax rightSlaveSecondary;
+
 
     // Create the OSC sender on the robot.
-    OSCPortOut oscSender;
+    OSCPortOut oscWirelessSender;
+    OSCPortOut oscWiredSender;
 
     private String m_autoSelected;
 
@@ -47,18 +50,33 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        // Define the motors as master or slave
-        leftSlavePrimary.follow(leftMaster);
-        leftSlaveSecondary.follow(leftMaster);
-        rightSlavePrimary.follow(rightMaster);
-        rightSlaveSecondary.follow(rightMaster);
-        rightMaster.setInverted(true);
-        rightSlavePrimary.setInverted(true);
-        rightSlaveSecondary.setInverted(true);
+        // Initialize all the motor controllers.
+        try {
+            leftMaster = new CANSparkMax(0, kBrushless);
+            leftSlavePrimary = new CANSparkMax(1, kBrushless);
+            leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+            rightMaster = new CANSparkMax(13, kBrushless);
+            rightSlavePrimary = new CANSparkMax(14, kBrushless);
+            rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+
+            // Define the motors as master or slave
+            leftSlavePrimary.follow(leftMaster);
+            leftSlaveSecondary.follow(leftMaster);
+            rightSlavePrimary.follow(rightMaster);
+            rightSlaveSecondary.follow(rightMaster);
+            rightMaster.setInverted(true);
+            rightSlavePrimary.setInverted(true);
+            rightSlaveSecondary.setInverted(true);
+        }
+        catch (Exception Ex){
+
+        }
+
 
         // Try to open the OSC socket.
         try {
-            oscSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5801);
+            oscWirelessSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5801);
+            oscWiredSender = new OSCPortOut(InetAddress.getByName("10.10.71.5"), 5801);
         } catch (Exception Ex) {
             System.out.println("OSC Initialization Exception: " + Ex.getMessage());
         }
@@ -116,12 +134,38 @@ public class Robot extends TimedRobot {
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
         DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
 
-        if (driverJoystick.getRawButton((5))) {
-            leftMaster.set(vals.leftDrive / 4);
-            rightMaster.set(vals.rightDrive / 4);
-        } else {
-            leftMaster.set(vals.leftDrive);
-            rightMaster.set(vals.rightDrive);
+        try {
+            if (driverJoystick.getRawButton(5)) {
+                leftMaster.set(vals.leftDrive / 4);
+                rightMaster.set(vals.rightDrive / 4);
+            } else {
+                leftMaster.set(vals.leftDrive);
+                rightMaster.set(vals.rightDrive);
+            }
+        }
+        catch (Exception Ex) {
+
+        }
+
+        //Create messages for the errors.
+        OSCMessage Error1 = new OSCMessage();
+
+        try {
+
+            Error1.setAddress("/Robot/Error/Test");
+
+            if (driverJoystick.getRawButton(2)) {
+                Error1.addArgument(1);
+                System.out.println("Sending true...");
+            } else {
+                Error1.addArgument(0);
+                // System.out.println("Sending false...");
+            }
+            oscWirelessSender.send(Error1);
+            oscWiredSender.send(Error1);
+
+        } catch (Exception Ex) {
+            System.out.println("Exception in OSC error sending! " + Ex.getMessage());
         }
 
         // Create messages for the current motor values.
@@ -139,14 +183,22 @@ public class Robot extends TimedRobot {
 
             // Send the message.
             // TODO: Bundle these in the future.
-            oscSender.send(leftMotorValueMessage);
-            oscSender.send(rightMotorValueMessage);
+            oscWirelessSender.send(leftMotorValueMessage);
+            oscWiredSender.send(leftMotorValueMessage);
+            oscWirelessSender.send(rightMotorValueMessage);
+            oscWiredSender.send(rightMotorValueMessage);
 
-        } catch (Exception Ex) {
+        } catch (
+                Exception Ex) {
             System.out.println("Exception in OSC sending! " + Ex.getMessage());
         }
 
-        System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
+        try {
+            // System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
+        }
+        catch (Exception Ex) {
+
+        }
 
     }
 
