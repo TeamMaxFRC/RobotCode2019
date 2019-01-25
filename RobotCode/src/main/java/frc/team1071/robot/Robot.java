@@ -1,9 +1,12 @@
 package frc.team1071.robot;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -36,6 +39,13 @@ public class Robot extends TimedRobot {
     CANSparkMax rightSlavePrimary;
     CANSparkMax rightSlaveSecondary;
 
+    // Create the gathering motors.
+    TalonSRX leftGatherer;
+    TalonSRX rightGatherer;
+
+    // Create the gatherer solenoid and its state variable.
+    Solenoid gathererSolenoid;
+    Boolean gathererSolenoidState = false;
 
     // Create the OSC sender on the robot.
     OSCPortOut oscWirelessSender;
@@ -50,14 +60,22 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        // Initialize all the motor controllers.
+
         try {
+
+            // Initialize the left drive motor controllers.
             leftMaster = new CANSparkMax(0, kBrushless);
             leftSlavePrimary = new CANSparkMax(1, kBrushless);
             leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+
+            // Initialize the right drive motor controllers.
             rightMaster = new CANSparkMax(13, kBrushless);
             rightSlavePrimary = new CANSparkMax(14, kBrushless);
             rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+
+            // Initialize the gathering motor controllers.
+            leftGatherer = new TalonSRX(10);
+            rightGatherer = new TalonSRX(11);
 
             // Define the motors as master or slave
             leftSlavePrimary.follow(leftMaster);
@@ -67,8 +85,16 @@ public class Robot extends TimedRobot {
             rightMaster.setInverted(true);
             rightSlavePrimary.setInverted(true);
             rightSlaveSecondary.setInverted(true);
-        }
-        catch (Exception Ex){
+
+            // Have the right gatherer follow the left gatherer, but also invert it.
+            rightGatherer.follow(leftGatherer);
+            rightGatherer.setInverted(true);
+
+            // Initialize the gatherer solenoid.
+            gathererSolenoid = new Solenoid(0);
+            gathererSolenoid.set(gathererSolenoidState);
+
+        } catch (Exception Ex) {
 
         }
 
@@ -135,15 +161,27 @@ public class Robot extends TimedRobot {
         DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
 
         try {
-            if (driverJoystick.getRawButton(5)) {
-                leftMaster.set(vals.leftDrive / 4);
-                rightMaster.set(vals.rightDrive / 4);
+
+            // Attach trigger presses to the gathering speed.
+            if (driverJoystick.getRawAxis(2) > 0.1) {
+                leftGatherer.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(2));
+            } else if (driverJoystick.getRawAxis(3) > 0.1) {
+                leftGatherer.set(ControlMode.PercentOutput, -driverJoystick.getRawAxis(3));
             } else {
-                leftMaster.set(vals.leftDrive);
-                rightMaster.set(vals.rightDrive);
+                leftGatherer.set(ControlMode.PercentOutput, 0);
             }
-        }
-        catch (Exception Ex) {
+
+            // Set the motors to quarter speed.
+            leftMaster.set(vals.leftDrive / 4);
+            rightMaster.set(vals.rightDrive / 4);
+
+            // When the "A" button is pressed, actuate the gatherer.
+            if (driverJoystick.getRawButton(1)) {
+                gathererSolenoidState = !gathererSolenoidState;
+                gathererSolenoid.set(gathererSolenoidState);
+            }
+
+        } catch (Exception Ex) {
 
         }
 
@@ -195,8 +233,7 @@ public class Robot extends TimedRobot {
 
         try {
             // System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
-        }
-        catch (Exception Ex) {
+        } catch (Exception Ex) {
 
         }
 
