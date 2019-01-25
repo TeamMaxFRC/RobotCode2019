@@ -44,8 +44,9 @@ public class Robot extends TimedRobot {
     TalonSRX rightGatherer;
 
     // Create the gatherer solenoid and its state variable.
-    Solenoid gathererSolenoid;
-    Boolean gathererSolenoidState = false;
+    Solenoid gathererSolenoidOpen;
+    Solenoid gathererSolenoidClose;
+    Boolean gathererOpen = false;
 
     // Create the OSC sender on the robot.
     OSCPortOut oscWirelessSender;
@@ -91,8 +92,10 @@ public class Robot extends TimedRobot {
             rightGatherer.setInverted(true);
 
             // Initialize the gatherer solenoid.
-            gathererSolenoid = new Solenoid(0);
-            gathererSolenoid.set(gathererSolenoidState);
+            gathererSolenoidOpen = new Solenoid(0);
+            gathererSolenoidClose = new Solenoid(7);
+            gathererSolenoidOpen.set(gathererOpen);
+            gathererSolenoidClose.set(!gathererOpen);
 
         } catch (Exception Ex) {
 
@@ -164,9 +167,9 @@ public class Robot extends TimedRobot {
 
             // Attach trigger presses to the gathering speed.
             if (driverJoystick.getRawAxis(2) > 0.1) {
-                leftGatherer.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(2));
+                leftGatherer.set(ControlMode.PercentOutput, -driverJoystick.getRawAxis(2));
             } else if (driverJoystick.getRawAxis(3) > 0.1) {
-                leftGatherer.set(ControlMode.PercentOutput, -driverJoystick.getRawAxis(3));
+                leftGatherer.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(3));
             } else {
                 leftGatherer.set(ControlMode.PercentOutput, 0);
             }
@@ -176,9 +179,10 @@ public class Robot extends TimedRobot {
             rightMaster.set(vals.rightDrive / 4);
 
             // When the "A" button is pressed, actuate the gatherer.
-            if (driverJoystick.getRawButton(1)) {
-                gathererSolenoidState = !gathererSolenoidState;
-                gathererSolenoid.set(gathererSolenoidState);
+            if (driverJoystick.getRawButtonPressed(1)) {
+                gathererOpen = !gathererOpen;
+                gathererSolenoidOpen.set(gathererOpen);
+                gathererSolenoidClose.set(!gathererOpen);
             }
 
         } catch (Exception Ex) {

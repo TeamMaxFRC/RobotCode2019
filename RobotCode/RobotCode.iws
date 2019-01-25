@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="14cfdab9-839e-44bb-a46b-66f4e49188e6" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/RobotCode.iws" beforeDir="false" afterPath="$PROJECT_DIR$/RobotCode.iws" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/frc/team1071/robot/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/team1071/robot/Robot.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.gradle/" />
@@ -98,8 +97,21 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/frc/team1071/robot/Robot.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="513">
-              <caret line="93" column="47" selection-start-line="93" selection-start-column="47" selection-end-line="93" selection-end-column="47" />
+            <state relative-caret-position="144">
+              <caret line="181" column="50" selection-start-line="181" selection-start-column="50" selection-end-line="181" selection-end-column="50" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.wpilibj/wpilibj-java/2019.1.1/db163458e3b3460c8b0aa2949e66f6fe87a66d4c/wpilibj-java-2019.1.1-sources.jar!/edu/wpi/first/wpilibj/Solenoid.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="246">
+              <caret line="71" column="4" lean-forward="true" selection-start-line="71" selection-start-column="4" selection-end-line="71" selection-end-column="4" />
+              <folding>
+                <element signature="e#2299#2300#0" expanded="true" />
+                <element signature="e#2354#2355#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -175,7 +187,7 @@
     <property name="MemberChooser.sorted" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1548377043683" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1548380655143" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/build/libs/javaoscfull.jar!/" />
     <property name="project.structure.last.edited" value="Artifacts" />
     <property name="project.structure.proportion" value="0.15" />
@@ -194,7 +206,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Gradle.RobotCode [build]">
+  <component name="RunManager" selected="Gradle.RobotCode [deploy]">
     <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
       <Host>localhost</Host>
       <Port>5050</Port>
@@ -313,8 +325,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.RobotCode [build]" />
         <item itemvalue="Gradle.RobotCode [deploy]" />
+        <item itemvalue="Gradle.RobotCode [build]" />
         <item itemvalue="Gradle.RobotCode [buildDependents]" />
         <item itemvalue="Gradle.RobotCode [discoverRoborio]" />
       </list>
@@ -337,12 +349,12 @@
       <workItem from="1547600864288" duration="978000" />
       <workItem from="1547682352404" duration="1072000" />
       <workItem from="1547767666698" duration="805000" />
-      <workItem from="1548371465652" duration="3921000" />
+      <workItem from="1548371465652" duration="6355000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="13675000" />
+    <option name="totallyTimeSpent" value="16109000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -448,10 +460,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.wpilibj/wpilibj-java/2019.1.1/db163458e3b3460c8b0aa2949e66f6fe87a66d4c/wpilibj-java-2019.1.1-sources.jar!/edu/wpi/first/wpilibj/Solenoid.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="246">
+          <caret line="71" column="4" lean-forward="true" selection-start-line="71" selection-start-column="4" selection-end-line="71" selection-end-column="4" />
+          <folding>
+            <element signature="e#2299#2300#0" expanded="true" />
+            <element signature="e#2354#2355#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/frc/team1071/robot/Robot.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="513">
-          <caret line="93" column="47" selection-start-line="93" selection-start-column="47" selection-end-line="93" selection-end-column="47" />
+        <state relative-caret-position="144">
+          <caret line="181" column="50" selection-start-line="181" selection-start-column="50" selection-end-line="181" selection-end-column="50" />
         </state>
       </provider>
     </entry>
