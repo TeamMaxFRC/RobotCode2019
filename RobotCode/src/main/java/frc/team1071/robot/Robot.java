@@ -1,10 +1,13 @@
 package frc.team1071.robot;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,17 +31,29 @@ public class Robot extends TimedRobot {
     // Create the joystick for the driver and the operator.
     Joystick driverJoystick = new Joystick(0);
     Joystick operatorJoystick = new Joystick(1);
-    // Create the drive motors and set configure them to their PDB number.
-    CANSparkMax leftMaster = new CANSparkMax(0, kBrushless);
-    CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
-    CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
-    CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
-    CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
-    CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+
     PowerDistributionPanel PDP = new PowerDistributionPanel();
 
+    // Create the drive motors.
+    CANSparkMax leftMaster;
+    CANSparkMax leftSlavePrimary;
+    CANSparkMax leftSlaveSecondary;
+    CANSparkMax rightMaster;
+    CANSparkMax rightSlavePrimary;
+    CANSparkMax rightSlaveSecondary;
+
+    // Create the gathering motors.
+    TalonSRX leftGatherer;
+    TalonSRX rightGatherer;
+
+    // Create the gatherer solenoid and its state variable.
+    Solenoid gathererSolenoidOpen;
+    Solenoid gathererSolenoidClose;
+    Boolean gathererOpen = false;
+
     // Create the OSC sender on the robot.
-    OSCPortOut oscSender;
+    OSCPortOut oscWirelessSender;
+    OSCPortOut oscWiredSender;
 
     private String m_autoSelected;
 
@@ -49,18 +64,51 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        // Define the motors as master or slave
-        leftSlavePrimary.follow(leftMaster);
-        leftSlaveSecondary.follow(leftMaster);
-        rightSlavePrimary.follow(rightMaster);
-        rightSlaveSecondary.follow(rightMaster);
-        rightMaster.setInverted(true);
-        rightSlavePrimary.setInverted(true);
-        rightSlaveSecondary.setInverted(true);
+
+        try {
+
+            // Initialize the left drive motor controllers.
+            leftMaster = new CANSparkMax(0, kBrushless);
+            leftSlavePrimary = new CANSparkMax(1, kBrushless);
+            leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+
+            // Initialize the right drive motor controllers.
+            rightMaster = new CANSparkMax(13, kBrushless);
+            rightSlavePrimary = new CANSparkMax(14, kBrushless);
+            rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+
+            // Initialize the gathering motor controllers.
+            leftGatherer = new TalonSRX(10);
+            rightGatherer = new TalonSRX(11);
+
+            // Define the motors as master or slave
+            leftSlavePrimary.follow(leftMaster);
+            leftSlaveSecondary.follow(leftMaster);
+            rightSlavePrimary.follow(rightMaster);
+            rightSlaveSecondary.follow(rightMaster);
+            rightMaster.setInverted(true);
+            rightSlavePrimary.setInverted(true);
+            rightSlaveSecondary.setInverted(true);
+
+            // Have the right gatherer follow the left gatherer, but also invert it.
+            rightGatherer.follow(leftGatherer);
+            rightGatherer.setInverted(true);
+
+            // Initialize the gatherer solenoid.
+            gathererSolenoidOpen = new Solenoid(0);
+            gathererSolenoidClose = new Solenoid(7);
+            gathererSolenoidOpen.set(gathererOpen);
+            gathererSolenoidClose.set(!gathererOpen);
+
+        } catch (Exception Ex) {
+
+        }
+
 
         // Try to open the OSC socket.
         try {
-            oscSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5801);
+            oscWirelessSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5801);
+            oscWiredSender = new OSCPortOut(InetAddress.getByName("10.10.71.5"), 5801);
         } catch (Exception Ex) {
             System.out.println("OSC Initialization Exception: " + Ex.getMessage());
         }
@@ -118,12 +166,51 @@ public class Robot extends TimedRobot {
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
         DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
 
-        if (driverJoystick.getRawButton((5))) {
+        try {
+
+            // Attach trigger presses to the gathering speed.
+            if (driverJoystick.getRawAxis(2) > 0.1) {
+                leftGatherer.set(ControlMode.PercentOutput, -driverJoystick.getRawAxis(2));
+            } else if (driverJoystick.getRawAxis(3) > 0.1) {
+                leftGatherer.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(3));
+            } else {
+                leftGatherer.set(ControlMode.PercentOutput, 0);
+            }
+
+            // Set the motors to quarter speed.
             leftMaster.set(vals.leftDrive / 4);
             rightMaster.set(vals.rightDrive / 4);
-        } else {
-            leftMaster.set(vals.leftDrive);
-            rightMaster.set(vals.rightDrive);
+
+            // When the "A" button is pressed, actuate the gatherer.
+            if (driverJoystick.getRawButtonPressed(1)) {
+                gathererOpen = !gathererOpen;
+                gathererSolenoidOpen.set(gathererOpen);
+                gathererSolenoidClose.set(!gathererOpen);
+            }
+
+        } catch (Exception Ex) {
+
+        }
+
+        //Create messages for the errors.
+        OSCMessage Error1 = new OSCMessage();
+
+        try {
+
+            Error1.setAddress("/Robot/Error/Test");
+
+            if (driverJoystick.getRawButton(2)) {
+                Error1.addArgument(1);
+                System.out.println("Sending true...");
+            } else {
+                Error1.addArgument(0);
+                // System.out.println("Sending false...");
+            }
+            oscWirelessSender.send(Error1);
+            oscWiredSender.send(Error1);
+
+        } catch (Exception Ex) {
+            System.out.println("Exception in OSC error sending! " + Ex.getMessage());
         }
 
         // Create messages for the current motor values.
@@ -162,14 +249,20 @@ public class Robot extends TimedRobot {
 
             // Send the message.
             // TODO: Bundle these in the future.
-            oscSender.send(leftMotorValueMessage);
-            oscSender.send(rightMotorValueMessage);
+            oscWirelessSender.send(leftMotorValueMessage);
+            oscWiredSender.send(leftMotorValueMessage);
+            oscWirelessSender.send(rightMotorValueMessage);
+            oscWiredSender.send(rightMotorValueMessage);
 
         } catch (Exception Ex) {
             System.out.println("Exception in OSC sending! " + Ex.getMessage());
         }
 
-        System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
+        try {
+            // System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
+        } catch (Exception Ex) {
+
+        }
 
     }
 
