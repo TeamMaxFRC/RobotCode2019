@@ -4,6 +4,7 @@ import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -34,6 +35,7 @@ public class Robot extends TimedRobot {
     CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
     CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
     CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+    PowerDistributionPanel PDP = new PowerDistributionPanel();
 
     // Create the OSC sender on the robot.
     OSCPortOut oscSender;
@@ -127,6 +129,7 @@ public class Robot extends TimedRobot {
         // Create messages for the current motor values.
         OSCMessage leftMotorValueMessage = new OSCMessage();
         OSCMessage rightMotorValueMessage = new OSCMessage();
+        OSCMessage leftMasterCurrentMessage = new OSCMessage();
 
         try {
 
@@ -136,6 +139,26 @@ public class Robot extends TimedRobot {
 
             rightMotorValueMessage.setAddress("/Robot/Motors/Right/Value");
             rightMotorValueMessage.addArgument(vals.rightDrive);
+
+            // Send Current Meter values
+            // left Master
+            leftMasterCurrentMessage.setAddress("/Robot/Motors/LeftMaster/Current");
+            leftMasterCurrentMessage.addArgument(leftMaster.getOutputCurrent());
+            // left Slave Primary
+            leftMasterCurrentMessage.setAddress("/Robot/Motors/LeftSlavePrimary/Current");
+            leftMasterCurrentMessage.addArgument(leftSlavePrimary.getOutputCurrent());
+            // left Slave Secondary
+            leftMasterCurrentMessage.setAddress("/Robot/Motors/LeftSlaveSecondary/Current");
+            leftMasterCurrentMessage.addArgument(leftSlaveSecondary.getOutputCurrent());
+            // right Master
+            leftMasterCurrentMessage.setAddress("/Robot/Motors/RightMaster/Current");
+            leftMasterCurrentMessage.addArgument(rightMaster.getOutputCurrent());
+            // right Slave Primary
+            leftMasterCurrentMessage.setAddress("/Robot/Motors/RightSlavePrimary/Current");
+            leftMasterCurrentMessage.addArgument(rightSlavePrimary.getOutputCurrent());
+            // right Slave Secondary
+            leftMasterCurrentMessage.setAddress("/Robot/Motors/RightSlaveSecondary/Current");
+            leftMasterCurrentMessage.addArgument(rightSlaveSecondary.getOutputCurrent());
 
             // Send the message.
             // TODO: Bundle these in the future.

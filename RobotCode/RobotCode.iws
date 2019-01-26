@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="14cfdab9-839e-44bb-a46b-66f4e49188e6" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/RobotCode.ipr" beforeDir="false" afterPath="$PROJECT_DIR$/RobotCode.ipr" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/RobotCode.iws" beforeDir="false" afterPath="$PROJECT_DIR$/RobotCode.iws" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/frc/team1071/robot/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/team1071/robot/Robot.java" afterDir="false" />
     </list>
@@ -98,8 +99,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/frc/team1071/robot/Robot.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="637">
-              <caret line="141" column="16" selection-start-line="141" selection-start-column="16" selection-end-line="141" selection-end-column="16" />
+            <state relative-caret-position="17">
+              <caret line="1" selection-start-line="1" selection-end-line="1" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -144,8 +145,8 @@
     <option name="LAST_EDITED_MODULE_NAME" />
     <option name="LAST_EDITED_TAB_NAME" />
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="14" />
+  <component name="ProjectFrameBounds" extendedState="7">
+    <option name="x" value="12" />
     <option name="y" value="30" />
     <option name="width" value="1890" />
     <option name="height" value="960" />
@@ -193,7 +194,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Gradle.RobotCode [deploy]">
+  <component name="RunManager" selected="Gradle.RobotCode [build]">
     <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
       <Host>localhost</Host>
       <Port>5050</Port>
@@ -289,6 +290,7 @@
       <method v="2" />
     </configuration>
     <configuration default="true" type="JUnit" factoryName="JUnit">
+      <option name="TEST_OBJECT" value="class" />
       <option name="VM_PARAMETERS" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="TEST_SEARCH_SCOPE">
@@ -351,7 +353,8 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-6" y="-6" width="1933" height="1053" extended-state="6" />
+    <frame x="-7" y="-7" width="1295" height="695" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.28097165" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -362,7 +365,7 @@
       <window_info id="Favorites" order="6" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.17118093" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.23801066" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -379,7 +382,7 @@
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Palette" order="3" />
       <window_info anchor="right" id="Maven" order="4" />
-      <window_info active="true" anchor="right" id="Gradle" order="5" visible="true" weight="0.070933335" />
+      <window_info anchor="right" id="Gradle" order="5" visible="true" weight="0.18866397" />
       <window_info anchor="right" id="Theme Preview" order="6" />
       <window_info anchor="right" id="Capture Analysis" order="7" />
       <window_info anchor="right" id="Palette&#9;" order="8" />
@@ -446,8 +449,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/frc/team1071/robot/Robot.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="637">
-          <caret line="141" column="16" selection-start-line="141" selection-start-column="16" selection-end-line="141" selection-end-column="16" />
+        <state relative-caret-position="17">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
