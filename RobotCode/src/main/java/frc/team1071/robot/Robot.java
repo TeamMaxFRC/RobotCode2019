@@ -45,11 +45,16 @@ public class Robot extends TimedRobot {
     // Create the gathering motors.
     TalonSRX leftGatherer;
     TalonSRX rightGatherer;
+    TalonSRX wheels;
+    TalonSRX fourBar;
 
     // Create the gatherer solenoid and its state variable.
     Solenoid gathererSolenoidOpen;
     Solenoid gathererSolenoidClose;
     Boolean gathererOpen = false;
+
+    // Drive inverter.
+    Boolean driveInverted = false;
 
     // Create the OSC sender on the robot.
     OSCPortOut oscWirelessSender;
@@ -80,6 +85,8 @@ public class Robot extends TimedRobot {
             // Initialize the gathering motor controllers.
             leftGatherer = new TalonSRX(10);
             rightGatherer = new TalonSRX(11);
+            wheels = new TalonSRX(8);
+            fourBar = new TalonSRX(9);
 
             // Define the motors as master or slave
             leftSlavePrimary.follow(leftMaster);
@@ -162,17 +169,39 @@ public class Robot extends TimedRobot {
     // This function is called periodically during operator control.
     @Override
     public void teleopPeriodic() {
-        double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
+
+        double forwardMotionAxis = driveInverted ? driverJoystick.getRawAxis(1) : -driverJoystick.getRawAxis(1);
+
+        double driverVertical = QuickMaths.normalizeJoystickWithDeadband(forwardMotionAxis, 0.05);
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
         DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
 
         try {
 
+            // Attach left and right bumper presses to wheels on the box gatherer.
+            if (operatorJoystick.getRawButton(5)) {
+                wheels.set(ControlMode.PercentOutput, -0.5);
+            }
+            else if (operatorJoystick.getRawButton(6)) {
+                wheels.set(ControlMode.PercentOutput, 0.5);
+            }
+            else {
+                wheels.set(ControlMode.PercentOutput, 0);
+            }
+
+            // Attaching y-axis of the right joystick to the four bar.
+            if (Math.abs(operatorJoystick.getRawAxis(5)) > 0.1) {
+                fourBar.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(5)/8);
+            }
+            else {
+                fourBar.set(ControlMode.PercentOutput, 0);
+            }
+
             // Attach trigger presses to the gathering speed.
-            if (driverJoystick.getRawAxis(2) > 0.1) {
-                leftGatherer.set(ControlMode.PercentOutput, -driverJoystick.getRawAxis(2));
-            } else if (driverJoystick.getRawAxis(3) > 0.1) {
-                leftGatherer.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(3));
+            if (operatorJoystick.getRawAxis(2) > 0.1) {
+                leftGatherer.set(ControlMode.PercentOutput, -operatorJoystick.getRawAxis(2));
+            } else if (operatorJoystick.getRawAxis(3) > 0.1) {
+                leftGatherer.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(3));
             } else {
                 leftGatherer.set(ControlMode.PercentOutput, 0);
             }
@@ -182,10 +211,15 @@ public class Robot extends TimedRobot {
             rightMaster.set(vals.rightDrive / 4);
 
             // When the "A" button is pressed, actuate the gatherer.
-            if (driverJoystick.getRawButtonPressed(1)) {
+            if (operatorJoystick.getRawButtonPressed(1)) {
                 gathererOpen = !gathererOpen;
                 gathererSolenoidOpen.set(gathererOpen);
                 gathererSolenoidClose.set(!gathererOpen);
+            }
+
+            // When the "B" button is pressed, invert the driving.
+            if (driverJoystick.getRawButtonPressed(2)){
+                driveInverted = !driveInverted;
             }
 
         } catch (Exception Ex) {
@@ -228,6 +262,9 @@ public class Robot extends TimedRobot {
             rightMotorValueMessage.addArgument(vals.rightDrive);
 
             // Send Current Meter values
+            //PDP
+            //PDPCurrentMessage.setAddress("/Robot/Motors/PDP/Current");
+            //PDPCurrentMessage.addArgument(PDP.getOutputCurrent());
             // left Master
             leftMasterCurrentMessage.setAddress("/Robot/Motors/LeftMaster/Current");
             leftMasterCurrentMessage.addArgument(leftMaster.getOutputCurrent());
