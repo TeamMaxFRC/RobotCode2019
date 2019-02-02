@@ -5,12 +5,10 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.revrobotics.CANSparkMax;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PowerDistributionPanel;
-import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import com.kauailabs.navx.frc.*;
 
 import java.net.InetAddress;
 
@@ -55,6 +53,9 @@ public class Robot extends TimedRobot {
 
     // Drive inverter.
     Boolean driveInverted = false;
+
+    // Create the NavX.
+    AHRS navX;
 
     // Create the OSC sender on the robot.
     OSCPortOut oscWirelessSender;
@@ -107,10 +108,13 @@ public class Robot extends TimedRobot {
             gathererSolenoidOpen.set(gathererOpen);
             gathererSolenoidClose.set(!gathererOpen);
 
+            // Initialize the NavX.
+            // Alternatives:  SPI.Port.kMXP, I2C.Port.kMXP, or SerialPort.Port.kUSB
+            navX = new AHRS(SerialPort.Port.kMXP);
+
         } catch (Exception Ex) {
 
         }
-
 
         // Try to open the OSC socket.
         try {
@@ -179,15 +183,9 @@ public class Robot extends TimedRobot {
         try {
 
             // Attach left and right bumper presses to wheels on the box gatherer.
-            if (operatorJoystick.getRawButton(5)) {
-                wheels.set(ControlMode.PercentOutput, -0.5);
-            }
-            else if (operatorJoystick.getRawButton(6)) {
-                wheels.set(ControlMode.PercentOutput, 0.5);
-            }
-            else {
-                wheels.set(ControlMode.PercentOutput, 0);
-            }
+            if (operatorJoystick.getRawButton(5)) { wheels.set(ControlMode.PercentOutput, -1); }
+            else if (operatorJoystick.getRawButton(6)) { wheels.set(ControlMode.PercentOutput, 1); }
+            else { wheels.set(ControlMode.PercentOutput, 0); }
 
             // Attaching y-axis of the right joystick to the four bar.
             if (Math.abs(operatorJoystick.getRawAxis(5)) > 0.1) {
@@ -251,13 +249,20 @@ public class Robot extends TimedRobot {
         OSCMessage leftMotorValueMessage = new OSCMessage();
         OSCMessage rightMotorValueMessage = new OSCMessage();
         OSCMessage leftMasterCurrentMessage = new OSCMessage();
+        OSCMessage rightMasterCurrentMessage = new OSCMessage();
+
+        // Create message for navX gyro values
+        OSCMessage navXGyroMessage = new OSCMessage();
 
         try {
 
-            // Set the current motor values in the OSC messages.
+            // Send navX Gyro values
+            navXGyroMessage.setAddress("/Robot/NavX/Gyro");
+            navXGyroMessage.addArgument(navX.getRawGyroZ());
+
+            // Send the current motor values
             leftMotorValueMessage.setAddress("/Robot/Motors/Left/Value");
             leftMotorValueMessage.addArgument(vals.leftDrive);
-
             rightMotorValueMessage.setAddress("/Robot/Motors/Right/Value");
             rightMotorValueMessage.addArgument(vals.rightDrive);
 
@@ -275,14 +280,14 @@ public class Robot extends TimedRobot {
             leftMasterCurrentMessage.setAddress("/Robot/Motors/LeftSlaveSecondary/Current");
             leftMasterCurrentMessage.addArgument(leftSlaveSecondary.getOutputCurrent());
             // right Master
-            leftMasterCurrentMessage.setAddress("/Robot/Motors/RightMaster/Current");
-            leftMasterCurrentMessage.addArgument(rightMaster.getOutputCurrent());
+            rightMasterCurrentMessage.setAddress("/Robot/Motors/RightMaster/Current");
+            rightMasterCurrentMessage.addArgument(rightMaster.getOutputCurrent());
             // right Slave Primary
-            leftMasterCurrentMessage.setAddress("/Robot/Motors/RightSlavePrimary/Current");
-            leftMasterCurrentMessage.addArgument(rightSlavePrimary.getOutputCurrent());
+            rightMasterCurrentMessage.setAddress("/Robot/Motors/RightSlavePrimary/Current");
+            rightMasterCurrentMessage.addArgument(rightSlavePrimary.getOutputCurrent());
             // right Slave Secondary
-            leftMasterCurrentMessage.setAddress("/Robot/Motors/RightSlaveSecondary/Current");
-            leftMasterCurrentMessage.addArgument(rightSlaveSecondary.getOutputCurrent());
+            rightMasterCurrentMessage.setAddress("/Robot/Motors/RightSlaveSecondary/Current");
+            rightMasterCurrentMessage.addArgument(rightSlaveSecondary.getOutputCurrent());
 
             // Send the message.
             // TODO: Bundle these in the future.
@@ -290,6 +295,12 @@ public class Robot extends TimedRobot {
             oscWiredSender.send(leftMotorValueMessage);
             oscWirelessSender.send(rightMotorValueMessage);
             oscWiredSender.send(rightMotorValueMessage);
+            oscWirelessSender.send(leftMasterCurrentMessage);
+            oscWiredSender.send(leftMasterCurrentMessage);
+            oscWirelessSender.send(rightMasterCurrentMessage);
+            oscWiredSender.send(rightMasterCurrentMessage);
+            oscWirelessSender.send(navXGyroMessage);
+            oscWiredSender.send(navXGyroMessage);
 
         } catch (Exception Ex) {
             System.out.println("Exception in OSC sending! " + Ex.getMessage());
