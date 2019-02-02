@@ -2,8 +2,12 @@ package frc.team1071.robot;
 
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
+import com.kauailabs.navx.AHRSProtocol;
+import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,9 +28,13 @@ public class Robot extends TimedRobot {
     private static final String kCustomAuto = "My Auto";
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
     DriveHelper driveHelper = new DriveHelper();
+
     // Create the joystick for the driver and the operator.
     Joystick driverJoystick = new Joystick(0);
     Joystick operatorJoystick = new Joystick(1);
+
+    // Create and initialize the power distribution board.
+    PowerDistributionPanel PDP = new PowerDistributionPanel();
 
     // Create the drive motors.
     CANSparkMax leftMaster;
@@ -35,6 +43,9 @@ public class Robot extends TimedRobot {
     CANSparkMax rightMaster;
     CANSparkMax rightSlavePrimary;
     CANSparkMax rightSlaveSecondary;
+
+    // Create the NavX.
+    AHRS navX;
 
     // Create the OSC sender on the robot.
     OSCPortOut oscWirelessSender;
@@ -51,6 +62,8 @@ public class Robot extends TimedRobot {
 
         // Initialize all the motor controllers.
         try {
+
+            // Initialize the left drive motor controllers.
             leftMaster = new CANSparkMax(0, kBrushless);
             leftSlavePrimary = new CANSparkMax(1, kBrushless);
             leftSlaveSecondary = new CANSparkMax(2, kBrushless);
@@ -66,6 +79,11 @@ public class Robot extends TimedRobot {
             rightMaster.setInverted(true);
             rightSlavePrimary.setInverted(true);
             rightSlaveSecondary.setInverted(true);
+
+            // Initialize the NavX.
+            // Alternatives:  SPI.Port.kMXP, I2C.Port.kMXP, or SerialPort.Port.kUSB
+            navX = new AHRS(SPI.Port.kMXP);
+
         } catch (Exception Ex) {
 
         }
@@ -124,6 +142,7 @@ public class Robot extends TimedRobot {
                 break;
         }
     }
+
     // Create actions for the console.
     public void writeConsole(String Line) {
 
@@ -137,9 +156,7 @@ public class Robot extends TimedRobot {
         try {
             oscWirelessSender.send(ConsoleText);
             oscWiredSender.send(ConsoleText);
-        }
-        catch (Exception Ex)
-        {
+        } catch (Exception Ex) {
 
         }
     }
@@ -166,8 +183,7 @@ public class Robot extends TimedRobot {
             if (operatorJoystick.getRawButton(1)) {
 
             }
-        }
-        catch (Exception Ex) {
+        } catch (Exception Ex) {
 
         }
 
@@ -192,13 +208,25 @@ public class Robot extends TimedRobot {
             System.out.println("Exception in OSC error sending! " + Ex.getMessage());
         }
 
-        // Create messages for the current motor values.
-        OSCMessage leftMotorValueMessage = new OSCMessage();
-        OSCMessage rightMotorValueMessage = new OSCMessage();
-
         try {
 
+            // Create messages for the current motor values.
+            OSCMessage leftMotorValueMessage = new OSCMessage();
+            OSCMessage rightMotorValueMessage = new OSCMessage();
+
             // Set the current motor values in the OSC messages.
+            OSCMessage leftMasterCurrentMessage = new OSCMessage();
+            OSCMessage rightMasterCurrentMessage = new OSCMessage();
+            OSCMessage ControllerButtonsMessage = new OSCMessage();
+
+            // Create message for navX gyro values
+            OSCMessage navXGyroMessage = new OSCMessage();
+
+            // Send navX Gyro values
+            navXGyroMessage.setAddress("/Robot/NavX/Gyro");
+            navXGyroMessage.addArgument(navX.getFusedHeading());
+
+            // Send the current motor values
             leftMotorValueMessage.setAddress("/Robot/Motors/Left/Value");
             leftMotorValueMessage.addArgument(vals.leftDrive);
 
@@ -211,6 +239,14 @@ public class Robot extends TimedRobot {
             oscWiredSender.send(leftMotorValueMessage);
             oscWirelessSender.send(rightMotorValueMessage);
             oscWiredSender.send(rightMotorValueMessage);
+            oscWirelessSender.send(leftMasterCurrentMessage);
+            oscWiredSender.send(leftMasterCurrentMessage);
+            oscWirelessSender.send(rightMasterCurrentMessage);
+            oscWiredSender.send(rightMasterCurrentMessage);
+            oscWirelessSender.send(navXGyroMessage);
+            oscWiredSender.send(navXGyroMessage);
+            oscWirelessSender.send(ControllerButtonsMessage);
+            oscWiredSender.send(ControllerButtonsMessage);
 
         } catch (
                 Exception Ex) {
@@ -218,6 +254,7 @@ public class Robot extends TimedRobot {
         }
 
         try {
+            //System.out.println("Test: " + navX.getRawGyroZ());
             // System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
         } catch (Exception Ex) {
 
