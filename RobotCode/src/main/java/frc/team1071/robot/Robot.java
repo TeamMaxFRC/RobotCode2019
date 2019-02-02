@@ -67,8 +67,7 @@ public class Robot extends TimedRobot {
             rightMaster.setInverted(true);
             rightSlavePrimary.setInverted(true);
             rightSlaveSecondary.setInverted(true);
-        }
-        catch (Exception Ex){
+        } catch (Exception Ex) {
 
         }
 
@@ -126,6 +125,25 @@ public class Robot extends TimedRobot {
                 break;
         }
     }
+    // Create actions for the console.
+    public void writeConsole(String Line) {
+
+        OSCMessage ConsoleText = new OSCMessage();
+        try {
+            ConsoleText.setAddress("/Robot/Console/Text");
+            ConsoleText.addArgument(Line);
+        } catch (Exception Ex) {
+            System.out.println("ConsoleText" + Ex.getMessage());
+        }
+        try {
+            oscWirelessSender.send(ConsoleText);
+            oscWiredSender.send(ConsoleText);
+        }
+        catch (Exception Ex)
+        {
+
+        }
+    }
 
     // This function is called periodically during operator control.
     @Override
@@ -133,7 +151,7 @@ public class Robot extends TimedRobot {
         double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
         DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
-
+        writeConsole("test");
         try {
             if (driverJoystick.getRawButton(5)) {
                 leftMaster.set(vals.leftDrive / 4);
@@ -142,8 +160,7 @@ public class Robot extends TimedRobot {
                 leftMaster.set(vals.leftDrive);
                 rightMaster.set(vals.rightDrive);
             }
-        }
-        catch (Exception Ex) {
+        } catch (Exception Ex) {
 
         }
 
@@ -195,8 +212,7 @@ public class Robot extends TimedRobot {
 
         try {
             // System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
-        }
-        catch (Exception Ex) {
+        } catch (Exception Ex) {
 
         }
 
