@@ -36,7 +36,6 @@ public class Robot extends TimedRobot {
     CANSparkMax rightSlavePrimary;
     CANSparkMax rightSlaveSecondary;
 
-
     // Create the OSC sender on the robot.
     OSCPortOut oscWirelessSender;
     OSCPortOut oscWiredSender;
@@ -151,7 +150,6 @@ public class Robot extends TimedRobot {
         double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
         DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
-        writeConsole("test");
         try {
             if (driverJoystick.getRawButton(5)) {
                 leftMaster.set(vals.leftDrive / 4);
@@ -161,6 +159,15 @@ public class Robot extends TimedRobot {
                 rightMaster.set(vals.rightDrive);
             }
         } catch (Exception Ex) {
+
+        }
+
+        try {
+            if (operatorJoystick.getRawButton(1)) {
+
+            }
+        }
+        catch (Exception Ex) {
 
         }
 
