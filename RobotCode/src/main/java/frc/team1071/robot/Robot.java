@@ -1,5 +1,6 @@
 package frc.team1071.robot;
 
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.kauailabs.navx.AHRSProtocol;
@@ -11,6 +12,10 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 
 import java.net.InetAddress;
 
@@ -44,6 +49,12 @@ public class Robot extends TimedRobot {
     CANSparkMax rightSlavePrimary;
     CANSparkMax rightSlaveSecondary;
 
+    // Create the lift motors.
+    TalonSRX liftMaster;
+    TalonSRX liftSlavePrimary;
+    TalonSRX liftSlaveSecondary;
+    TalonSRX liftSlaveTertiary;
+
     // Create the NavX.
     AHRS navX;
 
@@ -63,7 +74,7 @@ public class Robot extends TimedRobot {
         // Initialize all the motor controllers.
         try {
 
-            // Initialize the left drive motor controllers.
+            // Initialize the drive motor controllers.
             leftMaster = new CANSparkMax(0, kBrushless);
             leftSlavePrimary = new CANSparkMax(1, kBrushless);
             leftSlaveSecondary = new CANSparkMax(2, kBrushless);
@@ -71,7 +82,7 @@ public class Robot extends TimedRobot {
             rightSlavePrimary = new CANSparkMax(14, kBrushless);
             rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
-            // Define the motors as master or slave
+            // Define the lift motors as master or slave.
             leftSlavePrimary.follow(leftMaster);
             leftSlaveSecondary.follow(leftMaster);
             rightSlavePrimary.follow(rightMaster);
@@ -79,6 +90,17 @@ public class Robot extends TimedRobot {
             rightMaster.setInverted(true);
             rightSlavePrimary.setInverted(true);
             rightSlaveSecondary.setInverted(true);
+
+            // Initialize the lift motor controllers.
+            liftMaster = new TalonSRX(7);
+            liftSlavePrimary = new TalonSRX(4);
+            liftSlaveSecondary = new TalonSRX(9);
+            liftSlaveTertiary = new TalonSRX(8);
+
+            // Define the lift motors as master or slave.
+            liftSlavePrimary.follow(liftMaster);
+            liftSlaveSecondary.follow(liftMaster);
+            liftSlaveTertiary.follow(liftMaster);
 
             // Initialize the NavX.
             // Alternatives:  SPI.Port.kMXP, I2C.Port.kMXP, or SerialPort.Port.kUSB
@@ -91,8 +113,8 @@ public class Robot extends TimedRobot {
 
         // Try to open the OSC socket.
         try {
-            oscWirelessSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5801);
-            oscWiredSender = new OSCPortOut(InetAddress.getByName("10.10.71.5"), 5801);
+            oscWirelessSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5803);
+            oscWiredSender = new OSCPortOut(InetAddress.getByName("10.10.71.5"), 5803);
         } catch (Exception Ex) {
             System.out.println("OSC Initialization Exception: " + Ex.getMessage());
         }
