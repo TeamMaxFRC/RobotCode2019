@@ -3,7 +3,6 @@ package frc.team1071.robot;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
-import com.kauailabs.navx.AHRSProtocol;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.Joystick;
@@ -12,10 +11,6 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 
 import java.net.InetAddress;
 
@@ -92,8 +87,8 @@ public class Robot extends TimedRobot {
             rightSlaveSecondary.setInverted(true);
 
             // Initialize the lift motor controllers.
-            liftMaster = new TalonSRX(7);
-            liftSlavePrimary = new TalonSRX(4);
+            liftMaster = new TalonSRX(4);
+            liftSlavePrimary = new TalonSRX(7);
             liftSlaveSecondary = new TalonSRX(9);
             liftSlaveTertiary = new TalonSRX(8);
 
@@ -254,6 +249,24 @@ public class Robot extends TimedRobot {
 
             rightMotorValueMessage.setAddress("/Robot/Motors/Right/Value");
             rightMotorValueMessage.addArgument(vals.rightDrive);
+
+            // Send the current values for the lift motors.
+            OSCMessage liftMasterCurrent = new OSCMessage();
+            OSCMessage liftPrimaryCurrent = new OSCMessage();
+            OSCMessage liftSecondaryCurrent = new OSCMessage();
+            OSCMessage liftTertiaryCurrent = new OSCMessage();
+
+            liftMasterCurrent.setAddress("/Robot/Motors/liftMaster/Current");
+            liftMasterCurrent.addArgument(PDP.getCurrent(4));
+
+            liftPrimaryCurrent.setAddress("/Robot/Motors/liftPrimary/Current");
+            liftMasterCurrent.addArgument(PDP.getCurrent(7));
+
+            liftSecondaryCurrent.setAddress("/Robot/Motors/liftSecondary/Current");
+            liftMasterCurrent.addArgument(PDP.getCurrent(9));
+
+            liftTertiaryCurrent.setAddress("/Robot/Motors/liftTertiary/Current");
+            liftMasterCurrent.addArgument(PDP.getCurrent(8));
 
             // Send the message.
             // TODO: Bundle these in the future.
