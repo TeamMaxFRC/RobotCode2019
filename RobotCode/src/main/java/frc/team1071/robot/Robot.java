@@ -73,7 +73,6 @@ public class Robot extends TimedRobot {
 
         // Initialize all the motor controllers.
         try {
-
             // Initialize the drive motor controllers.
             leftMaster = new CANSparkMax(0, kBrushless);
             leftSlavePrimary = new CANSparkMax(1, kBrushless);
@@ -130,7 +129,18 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+        // Update the Limelight's values.
+        NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+        NetworkTableEntry tx = table.getEntry("tx");
+        NetworkTableEntry ty = table.getEntry("ty");
+        NetworkTableEntry ta = table.getEntry("ta");
+        double limelightX = tx.getDouble(0.0);
+        double limelightY = ty.getDouble(0.0);
+        double limelightArea = ta.getDouble(0.0);
 
+        System.out.println("X: " + limelightX);
+        System.out.println("Y: " + limelightY);
+        System.out.println("Area: " + limelightArea);
     }
 
     /**
@@ -197,12 +207,16 @@ public class Robot extends TimedRobot {
                 leftMaster.set(vals.leftDrive);
                 rightMaster.set(vals.rightDrive);
             }
+
+            // Set the target lift speed from the operator's joystick.
+            double targetLift = operatorJoystick.getRawAxis(1);
+
         } catch (Exception Ex) {
 
         }
 
         try {
-            if (operatorJoystick.getRawButton(1)) {
+            if (operatorJoystick.getRawButtonPressed(1)) {
 
             }
         } catch (Exception Ex) {
