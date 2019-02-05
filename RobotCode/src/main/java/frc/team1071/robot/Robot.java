@@ -5,15 +5,14 @@ import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import java.net.InetAddress;
-
 import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 
 /**
@@ -56,6 +55,15 @@ public class Robot extends TimedRobot {
     // Create the OSC sender on the robot.
     OSCPortOut oscWirelessSender;
     OSCPortOut oscWiredSender;
+
+    // Initialize the Limelight.
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry tx = table.getEntry("tx");
+    NetworkTableEntry ty = table.getEntry("ty");
+    NetworkTableEntry ta = table.getEntry("ta");
+    NetworkTableEntry tv = table.getEntry("tv");
+    double limelightX, limelightY, limelightArea;
+    boolean limelightTarget;
 
     private String m_autoSelected;
 
@@ -125,13 +133,10 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         // Update the Limelight's values.
-        NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-        NetworkTableEntry tx = table.getEntry("tx");
-        NetworkTableEntry ty = table.getEntry("ty");
-        NetworkTableEntry ta = table.getEntry("ta");
-        double limelightX = tx.getDouble(0.0);
-        double limelightY = ty.getDouble(0.0);
-        double limelightArea = ta.getDouble(0.0);
+        limelightX = tx.getDouble(0.0);
+        limelightY = ty.getDouble(0.0);
+        limelightArea = ta.getDouble(0.0);
+        limelightTarget = tv.getDouble(0.0) == 1;
 
         System.out.println("X: " + limelightX);
         System.out.println("Y: " + limelightY);
