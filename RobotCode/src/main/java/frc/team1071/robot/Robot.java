@@ -1,8 +1,10 @@
 package frc.team1071.robot;
 
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
+import com.illposed.osc.utility.OSCByteArrayToJavaConverter;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.networktables.*;
@@ -56,7 +58,7 @@ public class Robot extends TimedRobot {
     OSCPortOut oscWirelessSender;
     OSCPortOut oscWiredSender;
 
-    // Initialize the Limelight.
+    // Create the Limelight.
     NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
     NetworkTableEntry tx = table.getEntry("tx");
     NetworkTableEntry ty = table.getEntry("ty");
@@ -64,6 +66,9 @@ public class Robot extends TimedRobot {
     NetworkTableEntry tv = table.getEntry("tv");
     double limelightX, limelightY, limelightArea;
     boolean limelightTarget;
+
+    // Set constants for Limelight targeting
+    double targetCenter;
 
     private String m_autoSelected;
 
@@ -137,10 +142,6 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) == 1;
-
-        System.out.println("X: " + limelightX);
-        System.out.println("Y: " + limelightY);
-        System.out.println("Area: " + limelightArea);
     }
 
     /**
@@ -245,7 +246,6 @@ public class Robot extends TimedRobot {
         }
 
         try {
-
             // Create messages for the current motor values.
             OSCMessage leftMotorValueMessage = new OSCMessage();
             OSCMessage rightMotorValueMessage = new OSCMessage();
@@ -286,6 +286,24 @@ public class Robot extends TimedRobot {
 
             liftTertiaryCurrent.setAddress("/Robot/Motors/liftTertiary/Current");
             liftMasterCurrent.addArgument(PDP.getCurrent(8));
+
+            // Send the values for the Limelight
+            OSCMessage limelightMessageX = new OSCMessage();
+            OSCMessage limelightMessageY = new OSCMessage();
+            OSCMessage limelightMessageA = new OSCMessage();
+            OSCMessage limelightMessageV = new OSCMessage();
+            limelightMessageX.setAddress("/Robot/Limelight/X");
+            limelightMessageY.setAddress("/Robot/Limelight/Y");
+            limelightMessageA.setAddress("/Robot/Limelight/A");
+            limelightMessageV.setAddress("/Robot/Limelight/V");
+            limelightMessageX.addArgument(limelightX);
+            limelightMessageY.addArgument(limelightY);
+            limelightMessageA.addArgument(limelightArea);
+            limelightMessageV.addArgument(limelightTarget);
+            oscWirelessSender.send(limelightMessageX);
+            oscWirelessSender.send(limelightMessageY);
+            oscWirelessSender.send(limelightMessageA);
+            oscWirelessSender.send(limelightMessageV);
 
             // Send the message.
             // TODO: Bundle these in the future.
