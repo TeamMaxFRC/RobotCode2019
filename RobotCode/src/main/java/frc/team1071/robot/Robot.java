@@ -1,20 +1,23 @@
 package frc.team1071.robot;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
-import com.illposed.osc.utility.OSCByteArrayToJavaConverter;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
-import edu.wpi.first.networktables.*;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import java.net.InetAddress;
+
 import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 
 /**
@@ -72,6 +75,15 @@ public class Robot extends TimedRobot {
 
     private String m_autoSelected;
 
+    private static void configLiftMotorPower(TalonSRX t) {
+        t.configPeakCurrentLimit(60);
+        t.configPeakCurrentDuration(1200);
+        t.configContinuousCurrentLimit(30);
+        t.enableCurrentLimit(true);
+        t.configVoltageCompSaturation(12);
+        t.enableVoltageCompensation(true);
+    }
+
     // This function is run when the robot is first started up.
     @Override
     public void robotInit() {
@@ -103,6 +115,25 @@ public class Robot extends TimedRobot {
             liftSlavePrimary = new TalonSRX(7);
             liftSlaveSecondary = new TalonSRX(9);
             liftSlaveTertiary = new TalonSRX(8);
+
+            // Invert the motors.
+            liftMaster.setInverted(true);
+            liftSlavePrimary.setInverted(true);
+            liftSlaveSecondary.setInverted(true);
+            liftSlaveTertiary.setInverted(true);
+
+            liftMaster.setSensorPhase(true);
+            configLiftMotorPower(liftMaster);
+            configLiftMotorPower(liftSlavePrimary);
+            configLiftMotorPower(liftSlaveSecondary);
+            configLiftMotorPower(liftSlaveTertiary);
+
+            liftMaster.config_kF(0, 0.32058916);
+            liftMaster.config_kP(0, 1.4);
+            liftMaster.config_kD(0, 2.8);
+
+            liftMaster.configMotionCruiseVelocity(2900);
+            liftMaster.configMotionAcceleration(5200);
 
             // Define the lift motors as master or slave.
             liftSlavePrimary.follow(liftMaster);
@@ -195,6 +226,13 @@ public class Robot extends TimedRobot {
         }
     }
 
+    @Override
+    public void teleopInit() {
+
+        liftMaster.setSelectedSensorPosition(0);
+
+    }
+
     // This function is called periodically during operator control.
     @Override
     public void teleopPeriodic() {
@@ -247,6 +285,23 @@ public class Robot extends TimedRobot {
         }
 
         try {
+
+            //if (operatorJoystick.getRawButton(1)) {
+//            liftMaster.set(ControlMode.PercentOutput, operatorJoystick.getX());
+            /*} else if (operatorJoystick.getRawButton(4)) {
+                liftMaster.set(ControlMode.PercentOutput, -0.2);
+            } else {
+                liftMaster.set(ControlMode.PercentOutput, 0);
+            }*/
+
+            if (operatorJoystick.getRawButtonPressed(3)) {
+                liftMaster.set(ControlMode.MotionMagic, 24000);
+            }
+
+            if (operatorJoystick.getRawButtonPressed(1)) {
+                liftMaster.set(ControlMode.MotionMagic, 3000);
+            }
+
             // Create messages for the current motor values.
             OSCMessage leftMotorValueMessage = new OSCMessage();
             OSCMessage rightMotorValueMessage = new OSCMessage();
@@ -277,16 +332,88 @@ public class Robot extends TimedRobot {
             OSCMessage liftTertiaryCurrent = new OSCMessage();
 
             liftMasterCurrent.setAddress("/Robot/Motors/liftMaster/Current");
-            liftMasterCurrent.addArgument(PDP.getCurrent(4));
+            liftMasterCurrent.addArgument(liftMaster.getOutputCurrent());
 
-            liftPrimaryCurrent.setAddress("/Robot/Motors/liftPrimary/Current");
-            liftMasterCurrent.addArgument(PDP.getCurrent(7));
+            liftPrimaryCurrent.setAddress("/Robot/Motors/liftSlavePrimary/Current");
+            liftPrimaryCurrent.addArgument(liftSlavePrimary.getOutputCurrent());
 
-            liftSecondaryCurrent.setAddress("/Robot/Motors/liftSecondary/Current");
-            liftMasterCurrent.addArgument(PDP.getCurrent(9));
+            liftSecondaryCurrent.setAddress("/Robot/Motors/liftSlaveSecondary/Current");
+            liftSecondaryCurrent.addArgument(liftSlaveSecondary.getOutputCurrent());
 
-            liftTertiaryCurrent.setAddress("/Robot/Motors/liftTertiary/Current");
-            liftMasterCurrent.addArgument(PDP.getCurrent(8));
+            liftTertiaryCurrent.setAddress("/Robot/Motors/liftSlaveTertiary/Current");
+            liftTertiaryCurrent.addArgument(liftSlaveTertiary.getOutputCurrent());
+//
+//            oscWiredSender.send(liftMasterCurrent);
+//            oscWirelessSender.send(liftMasterCurrent);
+//            oscWiredSender.send(liftPrimaryCurrent);
+//            oscWirelessSender.send(liftPrimaryCurrent);
+//            oscWiredSender.send(liftSecondaryCurrent);
+//            oscWirelessSender.send(liftSecondaryCurrent);
+//            oscWiredSender.send(liftTertiaryCurrent);
+//            oscWirelessSender.send(liftTertiaryCurrent);
+
+            // Send the current values for the lift motors.
+            OSCMessage liftMasterVoltage = new OSCMessage();
+            OSCMessage liftPrimaryVoltage = new OSCMessage();
+            OSCMessage liftSecondaryVoltage = new OSCMessage();
+            OSCMessage liftTertiaryVoltage = new OSCMessage();
+
+            liftMasterVoltage.setAddress("/Robot/Motors/liftMaster/Voltage");
+            liftMasterVoltage.addArgument(liftMaster.getBusVoltage());
+
+            liftPrimaryVoltage.setAddress("/Robot/Motors/liftSlavePrimary/Voltage");
+            liftPrimaryVoltage.addArgument(liftSlavePrimary.getBusVoltage());
+
+            liftSecondaryVoltage.setAddress("/Robot/Motors/liftSlaveSecondary/Voltage");
+            liftSecondaryVoltage.addArgument(liftSlaveSecondary.getBusVoltage());
+
+            liftTertiaryVoltage.setAddress("/Robot/Motors/liftSlaveTertiary/Voltage");
+            liftTertiaryVoltage.addArgument(liftSlaveTertiary.getBusVoltage());
+//
+//            oscWiredSender.send(liftMasterVoltage);
+//            oscWirelessSender.send(liftMasterVoltage);
+//            oscWiredSender.send(liftPrimaryVoltage);
+//            oscWirelessSender.send(liftPrimaryVoltage);
+//            oscWiredSender.send(liftSecondaryVoltage);
+//            oscWirelessSender.send(liftSecondaryVoltage);
+//            oscWiredSender.send(liftTertiaryVoltage);
+//            oscWirelessSender.send(liftTertiaryVoltage);
+
+            // Send the lift encoder velocity.
+            OSCMessage liftEncoderVelocity = new OSCMessage();
+
+            liftEncoderVelocity.setAddress("/Robot/Motors/liftMaster/EncoderVelocity");
+            liftEncoderVelocity.addArgument((double) liftMaster.getSelectedSensorVelocity());
+
+//            oscWiredSender.send(liftEncoderVelocity);
+//            oscWirelessSender.send(liftEncoderVelocity);
+
+            // Send the lift encoder position.
+            OSCMessage liftEncoderPosition = new OSCMessage();
+
+            liftEncoderPosition.setAddress("/Robot/Motors/liftMaster/EncoderPosition");
+            liftEncoderPosition.addArgument((double) liftMaster.getSelectedSensorPosition());
+//
+//            oscWiredSender.send(liftEncoderPosition);
+//            oscWirelessSender.send(liftEncoderPosition);
+//
+//            // Send the message.
+//            // TODO: Bundle these in the future.
+//            oscWirelessSender.send(leftMotorValueMessage);
+//            oscWiredSender.send(leftMotorValueMessage);
+//            oscWirelessSender.send(rightMotorValueMessage);
+//            oscWiredSender.send(rightMotorValueMessage);
+//            oscWirelessSender.send(leftMasterCurrentMessage);
+//            oscWiredSender.send(leftMasterCurrentMessage);
+//            oscWirelessSender.send(rightMasterCurrentMessage);
+//            oscWiredSender.send(rightMasterCurrentMessage);
+//            oscWirelessSender.send(navXGyroMessage);
+//            oscWiredSender.send(navXGyroMessage);
+//            oscWirelessSender.send(ControllerButtonsMessage);
+//            oscWiredSender.send(ControllerButtonsMessage);
+
+            System.out.println("Currents: " + liftMaster.getOutputCurrent() + " " + liftSlaveSecondary.getOutputCurrent() + " " + liftSlaveTertiary.getOutputCurrent() + " " + liftSlavePrimary.getOutputCurrent());
+            System.out.println("Position: " + liftMaster.getSelectedSensorPosition() + " Velocity: " + liftMaster.getSelectedSensorVelocity());
 
             // Send the values for the Limelight
             OSCMessage limelightMessageX = new OSCMessage();
@@ -306,23 +433,7 @@ public class Robot extends TimedRobot {
             oscWirelessSender.send(limelightMessageA);
             oscWirelessSender.send(limelightMessageV);
 
-            // Send the message.
-            // TODO: Bundle these in the future.
-            oscWirelessSender.send(leftMotorValueMessage);
-            oscWiredSender.send(leftMotorValueMessage);
-            oscWirelessSender.send(rightMotorValueMessage);
-            oscWiredSender.send(rightMotorValueMessage);
-            oscWirelessSender.send(leftMasterCurrentMessage);
-            oscWiredSender.send(leftMasterCurrentMessage);
-            oscWirelessSender.send(rightMasterCurrentMessage);
-            oscWiredSender.send(rightMasterCurrentMessage);
-            oscWirelessSender.send(navXGyroMessage);
-            oscWiredSender.send(navXGyroMessage);
-            oscWirelessSender.send(ControllerButtonsMessage);
-            oscWiredSender.send(ControllerButtonsMessage);
-
-        } catch (
-                Exception Ex) {
+        } catch (Exception Ex) {
             System.out.println("Exception in OSC sending! " + Ex.getMessage());
         }
 
