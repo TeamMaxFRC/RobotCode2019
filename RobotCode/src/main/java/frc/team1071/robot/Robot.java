@@ -142,6 +142,7 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) == 1;
+        System.out.println(limelightArea);
     }
 
     /**
