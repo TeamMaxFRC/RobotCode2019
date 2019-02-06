@@ -6,6 +6,9 @@ import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
@@ -58,6 +61,18 @@ public class Robot extends TimedRobot {
     OSCPortOut oscWirelessSender;
     OSCPortOut oscWiredSender;
 
+    // Create the Limelight.
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry tx = table.getEntry("tx");
+    NetworkTableEntry ty = table.getEntry("ty");
+    NetworkTableEntry ta = table.getEntry("ta");
+    NetworkTableEntry tv = table.getEntry("tv");
+    double limelightX, limelightY, limelightArea;
+    boolean limelightTarget;
+
+    // Set constants for Limelight targeting
+    double targetCenter;
+
     private String m_autoSelected;
 
     private static void configLiftMotorPower(TalonSRX t) {
@@ -78,7 +93,6 @@ public class Robot extends TimedRobot {
 
         // Initialize all the motor controllers.
         try {
-
             // Initialize the drive motor controllers.
             leftMaster = new CANSparkMax(0, kBrushless);
             leftSlavePrimary = new CANSparkMax(1, kBrushless);
@@ -154,7 +168,11 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-
+        // Update the Limelight's values.
+        limelightX = tx.getDouble(0.0);
+        limelightY = ty.getDouble(0.0);
+        limelightArea = ta.getDouble(0.0);
+        limelightTarget = tv.getDouble(0.0) == 1;
     }
 
     /**
@@ -228,12 +246,16 @@ public class Robot extends TimedRobot {
                 leftMaster.set(vals.leftDrive);
                 rightMaster.set(vals.rightDrive);
             }
+
+            // Set the target lift speed from the operator's joystick.
+            double targetLift = operatorJoystick.getRawAxis(1);
+
         } catch (Exception Ex) {
 
         }
 
         try {
-            if (operatorJoystick.getRawButton(1)) {
+            if (operatorJoystick.getRawButtonPressed(1)) {
 
             }
         } catch (Exception Ex) {
@@ -262,6 +284,7 @@ public class Robot extends TimedRobot {
         }
 
         try {
+
             //if (operatorJoystick.getRawButton(1)) {
 //            liftMaster.set(ControlMode.PercentOutput, operatorJoystick.getX());
             /*} else if (operatorJoystick.getRawButton(4)) {
@@ -391,8 +414,25 @@ public class Robot extends TimedRobot {
             System.out.println("Currents: " + liftMaster.getOutputCurrent() + " " + liftSlaveSecondary.getOutputCurrent() + " " + liftSlaveTertiary.getOutputCurrent() + " " + liftSlavePrimary.getOutputCurrent());
             System.out.println("Position: " + liftMaster.getSelectedSensorPosition() + " Velocity: " + liftMaster.getSelectedSensorVelocity());
 
-        } catch (
-                Exception Ex) {
+            // Send the values for the Limelight
+            OSCMessage limelightMessageX = new OSCMessage();
+            OSCMessage limelightMessageY = new OSCMessage();
+            OSCMessage limelightMessageA = new OSCMessage();
+            OSCMessage limelightMessageV = new OSCMessage();
+            limelightMessageX.setAddress("/Robot/Limelight/X");
+            limelightMessageY.setAddress("/Robot/Limelight/Y");
+            limelightMessageA.setAddress("/Robot/Limelight/A");
+            limelightMessageV.setAddress("/Robot/Limelight/V");
+            limelightMessageX.addArgument(limelightX);
+            limelightMessageY.addArgument(limelightY);
+            limelightMessageA.addArgument(limelightArea);
+            limelightMessageV.addArgument(limelightTarget);
+            oscWirelessSender.send(limelightMessageX);
+            oscWirelessSender.send(limelightMessageY);
+            oscWirelessSender.send(limelightMessageA);
+            oscWirelessSender.send(limelightMessageV);
+
+        } catch (Exception Ex) {
             System.out.println("Exception in OSC sending! " + Ex.getMessage());
         }
 

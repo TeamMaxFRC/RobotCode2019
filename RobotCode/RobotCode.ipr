@@ -12,8 +12,8 @@
       <entry name="!?*.java" />
     </wildcardResourcePatterns>
     <bytecodeTargetLevel target="11">
-      <module name="RobotCode.main" target="1.8" />
-      <module name="RobotCode.test" target="1.8" />
+      <module name="RobotCode.main" target="11" />
+      <module name="RobotCode.test" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="CopyrightManager" default="" />
