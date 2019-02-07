@@ -352,31 +352,13 @@ public class Robot extends TimedRobot {
                 fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScore);
             }
 
-            if (operatorJoystick.getRawButton(5)) {
-                gathererMotor.set(ControlMode.PercentOutput, .75);
-            } else if (operatorJoystick.getRawButton(6)) {
-                gathererMotor.set(ControlMode.PercentOutput, -.75);
+            if (operatorJoystick.getRawAxis(2) > 0.1) {
+                gathererMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(2));
+            } else if (operatorJoystick.getRawAxis(3) > 0.1) {
+                gathererMotor.set(ControlMode.PercentOutput, -operatorJoystick.getRawAxis(3));
             } else {
                 gathererMotor.set(ControlMode.PercentOutput, 0);
             }
-
-            /*
-            if (Math.abs(operatorJoystick.getRawAxis(5)) > 0.1) {
-                fourBarMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(5));
-            } else {
-                fourBarMotor.set(ControlMode.PercentOutput, 0);
-            }
-            */
-
-            /*
-            if (operatorJoystick.getRawAxis(2)) {
-                gathererMotor.set(ControlMode.PercentOutput, 0.5);
-            } else if (operatorJoystick.getRawAxis(3)) {
-                gathererMotor.set(ControlMode.PercentOutput, -0.5);
-            } else {
-                gathererMotor.set(ControlMode.PercentOutput, 0);
-            }
-            */
 
             // Create messages for the current motor values.
             OSCMessage leftMotorValueMessage = new OSCMessage();
