@@ -33,9 +33,6 @@ public class Robot extends TimedRobot {
     private static final String kCustomAuto = "My Auto";
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
-    // Set constants for Limelight targeting
-    double targetCenter;
-
     // Create the NavX.
     private AHRS navX;
 
@@ -69,22 +66,25 @@ public class Robot extends TimedRobot {
 
     // Create the drive motors.
     private CANSparkMax leftMaster;
-    private CANSparkMax leftSlavePrimary;
-    private CANSparkMax leftSlaveSecondary;
     private CANSparkMax rightMaster;
-    private CANSparkMax rightSlavePrimary;
-    private CANSparkMax rightSlaveSecondary;
 
-    private static void configLiftMotorPower(TalonSRX t) {
-        t.configPeakCurrentLimit(60);
-        t.configPeakCurrentDuration(1200);
-        t.configContinuousCurrentLimit(30);
-        t.enableCurrentLimit(true);
-        t.configVoltageCompSaturation(12);
-        t.enableVoltageCompensation(true);
+    /**
+     * Function that configures a lift motor's power.
+     *
+     * @param liftTalon The talon being power limited.
+     */
+    private static void configLiftMotorPower(TalonSRX liftTalon) {
+        liftTalon.configPeakCurrentLimit(60);
+        liftTalon.configPeakCurrentDuration(1200);
+        liftTalon.configContinuousCurrentLimit(30);
+        liftTalon.enableCurrentLimit(true);
+        liftTalon.configVoltageCompSaturation(12);
+        liftTalon.enableVoltageCompensation(true);
     }
 
-    // This function is run when the robot is first started up.
+    /**
+     * This function is run when the robot is first started up.
+     */
     @Override
     public void robotInit() {
 
@@ -101,15 +101,17 @@ public class Robot extends TimedRobot {
 
             // Initialize the drive motors.
             leftMaster = new CANSparkMax(0, kBrushless);
-            leftSlavePrimary = new CANSparkMax(1, kBrushless);
-            leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+            CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
+            CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+
             rightMaster = new CANSparkMax(13, kBrushless);
-            rightSlavePrimary = new CANSparkMax(14, kBrushless);
-            rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+            CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
+            CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
             // Have the drive slaves follow their respective masters.
             leftSlavePrimary.follow(leftMaster);
             leftSlaveSecondary.follow(leftMaster);
+
             rightSlavePrimary.follow(rightMaster);
             rightSlaveSecondary.follow(rightMaster);
 
@@ -165,16 +167,24 @@ public class Robot extends TimedRobot {
             fourBarMotor = new TalonSRX(5);
 
             // Set the encoder mode to absolute position.
-            fourBarMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
+            fourBarMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
+            fourBarMotor.setInverted(true);
+            fourBarMotor.setSensorPhase(true);
 
             // Set the PID values for the four bar.
-            fourBarMotor.config_kF(0, 0.32058916 / 5);
-            fourBarMotor.config_kP(0, 1.4 / 5);
-            fourBarMotor.config_kD(0, 2.8 / 5);
+            fourBarMotor.config_kF(0, 2);
+            fourBarMotor.config_kP(0, 1.5);// 3.5 / 2);
+            fourBarMotor.config_kD(0, 4);// 7 / 2);
 
             // Establish the cruise velocity and max acceleration for the motion magic.
-            fourBarMotor.configMotionCruiseVelocity(750);
-            fourBarMotor.configMotionAcceleration(1250);
+            fourBarMotor.configMotionCruiseVelocity(100);
+            fourBarMotor.configMotionAcceleration(200);
+
+            // Current limit the four bar motor.
+            fourBarMotor.configPeakCurrentLimit(0);
+            fourBarMotor.configPeakCurrentDuration(0);
+            fourBarMotor.configContinuousCurrentLimit(5);
+            fourBarMotor.enableCurrentLimit(true);
 
             //----------------------------------------------------------------------------------------------------------
             // Other Initialization
@@ -217,11 +227,8 @@ public class Robot extends TimedRobot {
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) == 1;
 
-        // Print the four bar arm's exact position.
-        System.out.println(("Four Bar Arm Position: " + fourBarMotor.getSelectedSensorPosition()));
-
         // Print the Limelight area.
-        System.out.println(limelightArea);
+        //System.out.println(limelightArea);
     }
 
     /**
@@ -240,13 +247,19 @@ public class Robot extends TimedRobot {
 
     }
 
-    // This function is called periodically during autonomous.
+    /**
+     * This function is called periodically during autonomous.
+     */
     @Override
     public void autonomousPeriodic() {
 
     }
 
-    // This function writes the provided line to the console.
+    /**
+     * This function writes the provided line to the console.
+     *
+     * @param Line The string being written to the dashboard console.
+     */
     public void writeConsole(String Line) {
 
         try {
@@ -272,88 +285,98 @@ public class Robot extends TimedRobot {
         // Reset the lift's encoder position.
         liftMaster.setSelectedSensorPosition(0);
 
+        // TODO REMOVE
+        //fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(0, 0, false);
+        fourBarMotor.setSelectedSensorPosition(fourBarMotor.getSensorCollection().getPulseWidthPosition());
+
     }
 
-    // This function is called periodically during operator control.
+    /**
+     * This function is called periodically during operator control.
+     */
     @Override
     public void teleopPeriodic() {
+
+        // Print the four bar arm's exact position.
+        System.out.println("Four Bar Arm Position: " + fourBarMotor.getSelectedSensorPosition() + " Target: " + fourBarMotor.getActiveTrajectoryPosition() + " Duty Cycle: " + fourBarMotor.getMotorOutputPercent() + " Speed: " + fourBarMotor.getSelectedSensorVelocity());
+
+        //--------------------------------------------------------------------------------------------------------------
+        // Drive Controls
+        //--------------------------------------------------------------------------------------------------------------
+
+        // Determine the proper motor values based on the joystick data.
         double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
-        DriveMotorValues vals = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
+        DriveMotorValues motorValues = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
+
         try {
-            if (driverJoystick.getRawButton(5)) {
-                leftMaster.set(vals.leftDrive / 4);
-                rightMaster.set(vals.rightDrive / 4);
-            } else {
-                leftMaster.set(vals.leftDrive);
-                rightMaster.set(vals.rightDrive);
-            }
-
-            // Set the target lift speed from the operator's joystick.
-            double targetLift = operatorJoystick.getRawAxis(1);
-
+            leftMaster.set(motorValues.leftDrive / 4);
+            rightMaster.set(motorValues.rightDrive / 4);
         } catch (Exception Ex) {
-
+            System.out.println("Drive Motor Exception: " + Ex.getMessage());
         }
 
+        //--------------------------------------------------------------------------------------------------------------
+        // Operator Controls
+        //--------------------------------------------------------------------------------------------------------------
+
         try {
+
+            // Four bar set positions.
+            int fourBarGatheringPosition = 3332;
+            int fourBarHighScore = 4500;
+
+            // Lift set positions.
+            int liftGatheringPosition = 0;
+            int liftHighScore = 24500;
+
+            // If the 'A' button is pressed, then set the lift to a short height.
             if (operatorJoystick.getRawButtonPressed(1)) {
-
-            }
-        } catch (Exception Ex) {
-
-        }
-
-        //Create messages for the errors.
-        OSCMessage Error1 = new OSCMessage();
-
-        try {
-
-            Error1.setAddress("/Robot/Error/Test");
-
-            if (driverJoystick.getRawButton(2)) {
-                Error1.addArgument(1);
-                System.out.println("Sending true...");
-            } else {
-                Error1.addArgument(0);
-                // System.out.println("Sending false...");
-            }
-            oscWirelessSender.send(Error1);
-            oscWiredSender.send(Error1);
-
-        } catch (Exception Ex) {
-            System.out.println("Exception in OSC error sending! " + Ex.getMessage());
-        }
-
-        try {
-
-            //if (operatorJoystick.getRawButton(1)) {
-//            liftMaster.set(ControlMode.PercentOutput, operatorJoystick.getX());
-            /*} else if (operatorJoystick.getRawButton(4)) {
-                liftMaster.set(ControlMode.PercentOutput, -0.2);
-            } else {
-                liftMaster.set(ControlMode.PercentOutput, 0);
-            }*/
-
-            if (operatorJoystick.getRawButtonPressed(3)) {
-                liftMaster.set(ControlMode.MotionMagic, 24000);
+                liftMaster.set(ControlMode.MotionMagic, liftGatheringPosition);
             }
 
-            if (operatorJoystick.getRawButtonPressed(1)) {
-                liftMaster.set(ControlMode.MotionMagic, 3000);
-            }
-
+            // If the 'B' button is pressed, then set the lift to about max height.
             if (operatorJoystick.getRawButtonPressed(2)) {
-                fourBarMotor.set(ControlMode.MotionMagic, 0);
+                liftMaster.set(ControlMode.MotionMagic, liftHighScore);
             }
 
-            if (operatorJoystick.getRawButton(6)) {
+            // If the 'X' button is pressed, then set the four bar to gathering position.
+            if (operatorJoystick.getRawButtonPressed(3)) {
+                System.out.println("Setting DOwn");
+                fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPosition);
+            }
+
+            // If the 'Y' button is pressed, then set the four bar to the up position.
+            if (operatorJoystick.getRawButtonPressed(4)) {
+                System.out.println("Setting Up");
+                fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScore);
+            }
+
+            if (operatorJoystick.getRawButton(5)) {
+                gathererMotor.set(ControlMode.PercentOutput, .75);
+            } else if (operatorJoystick.getRawButton(6)) {
+                gathererMotor.set(ControlMode.PercentOutput, -.75);
+            } else {
+                gathererMotor.set(ControlMode.PercentOutput, 0);
+            }
+
+            /*
+            if (Math.abs(operatorJoystick.getRawAxis(5)) > 0.1) {
+                fourBarMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(5));
+            } else {
+                fourBarMotor.set(ControlMode.PercentOutput, 0);
+            }
+            */
+
+            /*
+            if (operatorJoystick.getRawAxis(2)) {
                 gathererMotor.set(ControlMode.PercentOutput, 0.5);
-            } else if (operatorJoystick.getRawButton(5)) {
+            } else if (operatorJoystick.getRawAxis(3)) {
                 gathererMotor.set(ControlMode.PercentOutput, -0.5);
             } else {
                 gathererMotor.set(ControlMode.PercentOutput, 0);
             }
+            */
 
             // Create messages for the current motor values.
             OSCMessage leftMotorValueMessage = new OSCMessage();
@@ -373,10 +396,10 @@ public class Robot extends TimedRobot {
 
             // Send the current motor values
             leftMotorValueMessage.setAddress("/Robot/Motors/Left/Value");
-            leftMotorValueMessage.addArgument(vals.leftDrive);
+            leftMotorValueMessage.addArgument(motorValues.leftDrive);
 
             rightMotorValueMessage.setAddress("/Robot/Motors/Right/Value");
-            rightMotorValueMessage.addArgument(vals.rightDrive);
+            rightMotorValueMessage.addArgument(motorValues.rightDrive);
 
             // Send the current values for the lift motors.
             OSCMessage liftMasterCurrent = new OSCMessage();
