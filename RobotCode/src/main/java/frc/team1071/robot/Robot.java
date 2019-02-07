@@ -330,26 +330,33 @@ public class Robot extends TimedRobot {
             int liftGatheringPosition = 0;
             int liftHighScore = 24500;
 
-            // If the 'A' button is pressed, then set the lift to a short height.
-            if (operatorJoystick.getRawButtonPressed(1)) {
-                liftMaster.set(ControlMode.MotionMagic, liftGatheringPosition);
-            }
+            //when the right bumper is pressed, set the lift to ball positions
+            if (operatorJoystick.getRawButton(6)) {
 
-            // If the 'B' button is pressed, then set the lift to about max height.
-            if (operatorJoystick.getRawButtonPressed(2)) {
-                liftMaster.set(ControlMode.MotionMagic, liftHighScore);
-            }
+                // If the 'A' button is pressed, then set the mechanism to gathering height.
+                if (operatorJoystick.getRawButtonPressed(1)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPosition);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPosition);
+                }
 
-            // If the 'X' button is pressed, then set the four bar to gathering position.
-            if (operatorJoystick.getRawButtonPressed(3)) {
-                System.out.println("Setting DOwn");
-                fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPosition);
-            }
+                // If the 'B' button is pressed, then set the lift to about max height.
+                if (operatorJoystick.getRawButtonPressed(2)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftHighScore);
+                }
 
-            // If the 'Y' button is pressed, then set the four bar to the up position.
-            if (operatorJoystick.getRawButtonPressed(4)) {
-                System.out.println("Setting Up");
-                fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScore);
+                // If the 'X' button is pressed, then set the four bar to gathering position.
+                if (operatorJoystick.getRawButtonPressed(3)) {
+                    System.out.println("Setting DOwn");
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPosition);
+                }
+
+                // If the 'Y' button is pressed, then set the four bar to the up position and lift to the highest position.
+                if (operatorJoystick.getRawButtonPressed(4)) {
+                    System.out.println("Setting Up");
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScore);
+                    liftMaster.set(ControlMode.MotionMagic, liftHighScore);
+                }
+
             }
 
             if (operatorJoystick.getRawAxis(2) > 0.1) {
