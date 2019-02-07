@@ -219,6 +219,9 @@ public class Robot extends TimedRobot {
 
         // Print the four bar arm's exact position.
         System.out.println(("Four Bar Arm Position: " + fourBarMotor.getSelectedSensorPosition()));
+
+        // Print the Limelight area.
+        System.out.println(limelightArea);
     }
 
     /**
