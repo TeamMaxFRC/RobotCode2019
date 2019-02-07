@@ -10,9 +10,7 @@ import com.revrobotics.CANSparkMax;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -67,6 +65,13 @@ public class Robot extends TimedRobot {
     // Create the drive motors.
     private CANSparkMax leftMaster;
     private CANSparkMax rightMaster;
+
+    //Create and initialize the compressor.
+    private Compressor compressor = new Compressor(0);
+
+    //Create the Solenoid and Solenoid state for hatch gathering.
+    private Solenoid hatchSolenoid;
+    private boolean hatchSolenoidState = false;
 
     /**
      * Function that configures a lift motor's power.
@@ -195,6 +200,9 @@ public class Robot extends TimedRobot {
 
             // Initialize the NavX.
             navX = new AHRS(SPI.Port.kMXP);
+
+            //Initialize the Solenoid.
+            hatchSolenoid = new Solenoid(0);
 
         } catch (Exception Ex) {
             System.out.println("General Initialization Exception: " + Ex.getMessage());
@@ -357,6 +365,12 @@ public class Robot extends TimedRobot {
                     liftMaster.set(ControlMode.MotionMagic, liftHighScore);
                 }
 
+            }
+
+            // Actuate the solenoid.
+            if (operatorJoystick.getRawButtonPressed(5)) {
+                hatchSolenoidState = !hatchSolenoidState;
+                hatchSolenoid.set(hatchSolenoidState);
             }
 
             if (operatorJoystick.getRawAxis(2) > 0.1) {
