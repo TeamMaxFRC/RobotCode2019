@@ -1,6 +1,7 @@
 package frc.team1071.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
@@ -10,7 +11,6 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -28,52 +28,52 @@ import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
  * project.
  */
 public class Robot extends TimedRobot {
+
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
-    DriveHelper driveHelper = new DriveHelper();
-
-    // Create the joystick for the driver and the operator.
-    Joystick driverJoystick = new Joystick(0);
-    Joystick operatorJoystick = new Joystick(1);
-
-    // Create and initialize the power distribution board.
-    PowerDistributionPanel PDP = new PowerDistributionPanel();
-
-    // Create the drive motors.
-    CANSparkMax leftMaster;
-    CANSparkMax leftSlavePrimary;
-    CANSparkMax leftSlaveSecondary;
-    CANSparkMax rightMaster;
-    CANSparkMax rightSlavePrimary;
-    CANSparkMax rightSlaveSecondary;
-
-    // Create the lift motors.
-    TalonSRX liftMaster;
-    TalonSRX liftSlavePrimary;
-    TalonSRX liftSlaveSecondary;
-    TalonSRX liftSlaveTertiary;
-
-    // Create the NavX.
-    AHRS navX;
-
-    // Create the OSC sender on the robot.
-    OSCPortOut oscWirelessSender;
-    OSCPortOut oscWiredSender;
-
-    // Create the Limelight.
-    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-    NetworkTableEntry tx = table.getEntry("tx");
-    NetworkTableEntry ty = table.getEntry("ty");
-    NetworkTableEntry ta = table.getEntry("ta");
-    NetworkTableEntry tv = table.getEntry("tv");
-    double limelightX, limelightY, limelightArea;
-    boolean limelightTarget;
 
     // Set constants for Limelight targeting
     double targetCenter;
 
-    private String m_autoSelected;
+    // Create the NavX.
+    private AHRS navX;
+
+    // Create the OSC sender on the robot.
+    private OSCPortOut oscWirelessSender;
+    private OSCPortOut oscWiredSender;
+
+    // Create the Limelight.
+    private NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    private NetworkTableEntry tx = table.getEntry("tx");
+    private NetworkTableEntry ty = table.getEntry("ty");
+    private NetworkTableEntry ta = table.getEntry("ta");
+    private NetworkTableEntry tv = table.getEntry("tv");
+    private double limelightX, limelightY, limelightArea;
+    private boolean limelightTarget;
+
+    // Create the auxiliary motors.
+    private TalonSRX liftMaster;
+    private TalonSRX liftSlavePrimary;
+    private TalonSRX liftSlaveSecondary;
+    private TalonSRX liftSlaveTertiary;
+    private TalonSRX gathererMotor;
+    private TalonSRX fourBarMotor;
+
+    // Helper class for calculating drive motor speeds.
+    private DriveHelper driveHelper = new DriveHelper();
+
+    // Create the joysticks for the driver and the operator.
+    private Joystick driverJoystick = new Joystick(0);
+    private Joystick operatorJoystick = new Joystick(1);
+
+    // Create the drive motors.
+    private CANSparkMax leftMaster;
+    private CANSparkMax leftSlavePrimary;
+    private CANSparkMax leftSlaveSecondary;
+    private CANSparkMax rightMaster;
+    private CANSparkMax rightSlavePrimary;
+    private CANSparkMax rightSlaveSecondary;
 
     private static void configLiftMotorPower(TalonSRX t) {
         t.configPeakCurrentLimit(60);
@@ -87,13 +87,19 @@ public class Robot extends TimedRobot {
     // This function is run when the robot is first started up.
     @Override
     public void robotInit() {
+
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
         // Initialize all the motor controllers.
         try {
-            // Initialize the drive motor controllers.
+
+            //----------------------------------------------------------------------------------------------------------
+            // Drive Motors
+            //----------------------------------------------------------------------------------------------------------
+
+            // Initialize the drive motors.
             leftMaster = new CANSparkMax(0, kBrushless);
             leftSlavePrimary = new CANSparkMax(1, kBrushless);
             leftSlaveSecondary = new CANSparkMax(2, kBrushless);
@@ -101,61 +107,97 @@ public class Robot extends TimedRobot {
             rightSlavePrimary = new CANSparkMax(14, kBrushless);
             rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
-            // Define the lift motors as master or slave.
+            // Have the drive slaves follow their respective masters.
             leftSlavePrimary.follow(leftMaster);
             leftSlaveSecondary.follow(leftMaster);
             rightSlavePrimary.follow(rightMaster);
             rightSlaveSecondary.follow(rightMaster);
+
+            // Invert the right side of the drive train.
             rightMaster.setInverted(true);
             rightSlavePrimary.setInverted(true);
             rightSlaveSecondary.setInverted(true);
 
-            // Initialize the lift motor controllers.
+            //----------------------------------------------------------------------------------------------------------
+            // Lift Motors
+            //----------------------------------------------------------------------------------------------------------
+
+            // Initialize the lift motors.
             liftMaster = new TalonSRX(4);
             liftSlavePrimary = new TalonSRX(7);
             liftSlaveSecondary = new TalonSRX(9);
             liftSlaveTertiary = new TalonSRX(8);
 
-            // Invert the motors.
-            liftMaster.setInverted(true);
-            liftSlavePrimary.setInverted(true);
-            liftSlaveSecondary.setInverted(true);
-            liftSlaveTertiary.setInverted(true);
-
-            liftMaster.setSensorPhase(true);
+            // Configure lift motor power.
             configLiftMotorPower(liftMaster);
             configLiftMotorPower(liftSlavePrimary);
             configLiftMotorPower(liftSlaveSecondary);
             configLiftMotorPower(liftSlaveTertiary);
 
-            liftMaster.config_kF(0, 0.32058916);
-            liftMaster.config_kP(0, 1.4);
-            liftMaster.config_kD(0, 2.8);
-
-            liftMaster.configMotionCruiseVelocity(2900);
-            liftMaster.configMotionAcceleration(5200);
-
-            // Define the lift motors as master or slave.
+            // Have lift slaves follow the master.
             liftSlavePrimary.follow(liftMaster);
             liftSlaveSecondary.follow(liftMaster);
             liftSlaveTertiary.follow(liftMaster);
 
+            // Invert the lift motors.
+            liftMaster.setInverted(true);
+            liftSlavePrimary.setInverted(true);
+            liftSlaveSecondary.setInverted(true);
+            liftSlaveTertiary.setInverted(true);
+
+            // Invert the lift encoder.
+            liftMaster.setSensorPhase(true);
+
+            // Set the PID values for the lift.
+            liftMaster.config_kF(0, 0.32058916);
+            liftMaster.config_kP(0, 1.4);
+            liftMaster.config_kD(0, 2.8);
+
+            // Establish the cruise velocity and max acceleration for motion magic.
+            liftMaster.configMotionCruiseVelocity(2900);
+            liftMaster.configMotionAcceleration(5200);
+
+            //----------------------------------------------------------------------------------------------------------
+            // Four Bar Motor
+            //----------------------------------------------------------------------------------------------------------
+
+            // Initialize the four bar motor.
+            fourBarMotor = new TalonSRX(5);
+
+            // Set the encoder mode to absolute position.
+            fourBarMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
+
+            // Set the PID values for the four bar.
+            fourBarMotor.config_kF(0, 0.32058916 / 5);
+            fourBarMotor.config_kP(0, 1.4 / 5);
+            fourBarMotor.config_kD(0, 2.8 / 5);
+
+            // Establish the cruise velocity and max acceleration for the motion magic.
+            fourBarMotor.configMotionCruiseVelocity(750);
+            fourBarMotor.configMotionAcceleration(1250);
+
+            //----------------------------------------------------------------------------------------------------------
+            // Other Initialization
+            //----------------------------------------------------------------------------------------------------------
+
+            // Initialize the gatherer.
+            gathererMotor = new TalonSRX(6);
+
             // Initialize the NavX.
-            // Alternatives:  SPI.Port.kMXP, I2C.Port.kMXP, or SerialPort.Port.kUSB
             navX = new AHRS(SPI.Port.kMXP);
 
         } catch (Exception Ex) {
-
+            System.out.println("General Initialization Exception: " + Ex.getMessage());
         }
 
-
-        // Try to open the OSC socket.
+        // Try to open the OSC sockets.
         try {
             oscWirelessSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5803);
             oscWiredSender = new OSCPortOut(InetAddress.getByName("10.10.71.5"), 5803);
         } catch (Exception Ex) {
             System.out.println("OSC Initialization Exception: " + Ex.getMessage());
         }
+
     }
 
     /**
@@ -168,11 +210,15 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+
         // Update the Limelight's values.
         limelightX = tx.getDouble(0.0);
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) == 1;
+
+        // Print the four bar arm's exact position.
+        System.out.println(("Four Bar Arm Position: " + fourBarMotor.getSelectedSensorPosition()));
     }
 
     /**
@@ -188,46 +234,39 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousInit() {
-        m_autoSelected = m_chooser.getSelected();
-        // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-        System.out.println("Auto selected: " + m_autoSelected);
+
     }
 
     // This function is called periodically during autonomous.
     @Override
     public void autonomousPeriodic() {
-        switch (m_autoSelected) {
-            case kCustomAuto:
-                // Put custom auto code here
-                break;
-            case kDefaultAuto:
-            default:
-                // Put default auto code here
-                break;
-        }
+
     }
 
-    // Create actions for the console.
+    // This function writes the provided line to the console.
     public void writeConsole(String Line) {
 
-        OSCMessage ConsoleText = new OSCMessage();
         try {
-            ConsoleText.setAddress("/Robot/Console/Text");
-            ConsoleText.addArgument(Line);
-        } catch (Exception Ex) {
-            System.out.println("ConsoleText" + Ex.getMessage());
-        }
-        try {
-            oscWirelessSender.send(ConsoleText);
-            oscWiredSender.send(ConsoleText);
-        } catch (Exception Ex) {
+            // Create the console message.
+            OSCMessage ConsoleMessage = new OSCMessage();
 
+            // Set the address and arguments for the message.
+            ConsoleMessage.setAddress("/Robot/Console/Text");
+            ConsoleMessage.addArgument(Line);
+
+            // Send the console message.
+            oscWirelessSender.send(ConsoleMessage);
+            oscWiredSender.send(ConsoleMessage);
+
+        } catch (Exception Ex) {
+            System.out.println("Console Sending Exception: " + Ex.getMessage());
         }
     }
 
     @Override
     public void teleopInit() {
 
+        // Reset the lift's encoder position.
         liftMaster.setSelectedSensorPosition(0);
 
     }
@@ -299,6 +338,18 @@ public class Robot extends TimedRobot {
 
             if (operatorJoystick.getRawButtonPressed(1)) {
                 liftMaster.set(ControlMode.MotionMagic, 3000);
+            }
+
+            if (operatorJoystick.getRawButtonPressed(2)) {
+                fourBarMotor.set(ControlMode.MotionMagic, 0);
+            }
+
+            if (operatorJoystick.getRawButton(6)) {
+                gathererMotor.set(ControlMode.PercentOutput, 0.5);
+            } else if (operatorJoystick.getRawButton(5)) {
+                gathererMotor.set(ControlMode.PercentOutput, -0.5);
+            } else {
+                gathererMotor.set(ControlMode.PercentOutput, 0);
             }
 
             // Create messages for the current motor values.
@@ -411,8 +462,8 @@ public class Robot extends TimedRobot {
 //            oscWirelessSender.send(ControllerButtonsMessage);
 //            oscWiredSender.send(ControllerButtonsMessage);
 
-            System.out.println("Currents: " + liftMaster.getOutputCurrent() + " " + liftSlaveSecondary.getOutputCurrent() + " " + liftSlaveTertiary.getOutputCurrent() + " " + liftSlavePrimary.getOutputCurrent());
-            System.out.println("Position: " + liftMaster.getSelectedSensorPosition() + " Velocity: " + liftMaster.getSelectedSensorVelocity());
+            // System.out.println("Currents: " + liftMaster.getOutputCurrent() + " " + liftSlaveSecondary.getOutputCurrent() + " " + liftSlaveTertiary.getOutputCurrent() + " " + liftSlavePrimary.getOutputCurrent());
+            // System.out.println("Position: " + liftMaster.getSelectedSensorPosition() + " Velocity: " + liftMaster.getSelectedSensorVelocity());
 
             // Send the values for the Limelight
             OSCMessage limelightMessageX = new OSCMessage();
@@ -437,7 +488,7 @@ public class Robot extends TimedRobot {
         }
 
         try {
-            //System.out.println("Test: " + navX.getRawGyroZ());
+            // System.out.println("Test: " + navX.getRawGyroZ());
             // System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
         } catch (Exception Ex) {
 
