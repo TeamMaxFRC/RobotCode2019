@@ -96,22 +96,22 @@
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
   </component>
   <component name="libraryTable">
-    <library name="Gradle: com.ctre.phoenix:api-java:5.12.0">
+    <library name="Gradle: com.ctre.phoenix:api-java:5.13.0">
       <CLASSES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ctre.phoenix/api-java/5.12.0/67bee152c70e47d981b1ecb1b7d6b59465aa506e/api-java-5.12.0.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ctre.phoenix/api-java/5.13.0/f9b2c1e7b6f2cabc3204e791386c47a856654fc5/api-java-5.13.0.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ctre.phoenix/api-java/5.12.0/aca8d84775394631caa2992da07e3b11f14bc513/api-java-5.12.0-sources.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ctre.phoenix/api-java/5.13.0/d556f9757205f08a4106a6072291b7a8f2f00b9c/api-java-5.13.0-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Gradle: com.ctre.phoenix:wpiapi-java:5.12.0">
+    <library name="Gradle: com.ctre.phoenix:wpiapi-java:5.13.0">
       <CLASSES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ctre.phoenix/wpiapi-java/5.12.0/a355071240b46081f86795119258fa2ffa1401e5/wpiapi-java-5.12.0.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ctre.phoenix/wpiapi-java/5.13.0/d37ff722315cf93181d9f28b10a6bbcb023306ff/wpiapi-java-5.13.0.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ctre.phoenix/wpiapi-java/5.12.0/7ba7915eee25afd745d0c76be698132d71c8f519/wpiapi-java-5.12.0-sources.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ctre.phoenix/wpiapi-java/5.13.0/1176e3b7dc8b05a37d92c1e2fc398cef726ede28/wpiapi-java-5.13.0-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: com.kauailabs.navx.frc:navx-java:3.1.344">
@@ -123,92 +123,108 @@
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.kauailabs.navx.frc/navx-java/3.1.344/d4d52e9506c6d7a139b3a473ce62d4b2d2ed6019/navx-java-3.1.344-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Gradle: com.revrobotics.frc:SparkMax-java:1.0.26">
+    <library name="Gradle: com.revrobotics.frc:SparkMax-java:1.1.5">
       <CLASSES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.revrobotics.frc/SparkMax-java/1.0.26/e527062dac6f8cecda9b70001561d32b2b9f0416/SparkMax-java-1.0.26.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/com/revrobotics/frc/SparkMax-java/1.1.5/SparkMax-java-1.1.5.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/frc2019/maven/com/revrobotics/frc/SparkMax-java/1.1.5/SparkMax-java-1.1.5-sources.jar!/" />
+      </SOURCES>
     </library>
     <library name="Gradle: edu.wpi.first.cameraserver:cameraserver-java:2019.1.1">
       <CLASSES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.cameraserver/cameraserver-java/2019.1.1/bbb8d8cccfe7611d8bd0b2d0cf176b9384ce4a7d/cameraserver-java-2019.1.1.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/cameraserver/cameraserver-java/2019.1.1/cameraserver-java-2019.1.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.cameraserver/cameraserver-java/2019.1.1/f1624bdf278c3799cd2f44d9521a3c3e444025b5/cameraserver-java-2019.1.1-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/cameraserver/cameraserver-java/2019.1.1/cameraserver-java-2019.1.1-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: edu.wpi.first.cscore:cscore-java:2019.1.1">
       <CLASSES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.cscore/cscore-java/2019.1.1/cd13486e32f85bcaaf7af3d17a0b3c4e05b28f5a/cscore-java-2019.1.1.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/cscore/cscore-java/2019.1.1/cscore-java-2019.1.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.cscore/cscore-java/2019.1.1/9187b9252be5041f1254a22fcaefb8eaea8acfc8/cscore-java-2019.1.1-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/cscore/cscore-java/2019.1.1/cscore-java-2019.1.1-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: edu.wpi.first.hal:hal-java:2019.1.1">
       <CLASSES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.hal/hal-java/2019.1.1/25f1d9902c887a79facaa2633b08dcfb0e391b/hal-java-2019.1.1.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/hal/hal-java/2019.1.1/hal-java-2019.1.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.hal/hal-java/2019.1.1/e2be849d137482913a4bdd0f9eef839804cd5761/hal-java-2019.1.1-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/hal/hal-java/2019.1.1/hal-java-2019.1.1-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: edu.wpi.first.ntcore:ntcore-java:2019.1.1">
       <CLASSES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.ntcore/ntcore-java/2019.1.1/9fb5185868a9a7025b51377b60dd3e56b54007b2/ntcore-java-2019.1.1.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/ntcore/ntcore-java/2019.1.1/ntcore-java-2019.1.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.ntcore/ntcore-java/2019.1.1/9beb99ce78dc5da9f43532140dd80fa671018ab7/ntcore-java-2019.1.1-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/ntcore/ntcore-java/2019.1.1/ntcore-java-2019.1.1-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: edu.wpi.first.thirdparty.frc2019.opencv:opencv-java:3.4.4-4">
       <CLASSES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.thirdparty.frc2019.opencv/opencv-java/3.4.4-4/5c546c223045ef680e643d97726623031831b1c5/opencv-java-3.4.4-4.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/thirdparty/frc2019/opencv/opencv-java/3.4.4-4/opencv-java-3.4.4-4.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.thirdparty.frc2019.opencv/opencv-java/3.4.4-4/d433924d21ac1a7c0375495d982f61eb047484cb/opencv-java-3.4.4-4-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/thirdparty/frc2019/opencv/opencv-java/3.4.4-4/opencv-java-3.4.4-4-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: edu.wpi.first.wpilibj:wpilibj-java:2019.1.1">
       <CLASSES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.wpilibj/wpilibj-java/2019.1.1/5b473f4cba856d65f2567b631e63d43e9eac71b1/wpilibj-java-2019.1.1.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/wpilibj/wpilibj-java/2019.1.1/wpilibj-java-2019.1.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.wpilibj/wpilibj-java/2019.1.1/db163458e3b3460c8b0aa2949e66f6fe87a66d4c/wpilibj-java-2019.1.1-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/wpilibj/wpilibj-java/2019.1.1/wpilibj-java-2019.1.1-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: edu.wpi.first.wpiutil:wpiutil-java:2019.1.1">
       <CLASSES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.wpiutil/wpiutil-java/2019.1.1/bc11cf2e970c111c9eb5fa9080b28d8326496b9e/wpiutil-java-2019.1.1.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/wpiutil/wpiutil-java/2019.1.1/wpiutil-java-2019.1.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.wpiutil/wpiutil-java/2019.1.1/d197e1c91a131589ae5915d74a637eff85f8bf62/wpiutil-java-2019.1.1-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/edu/wpi/first/wpiutil/wpiutil-java/2019.1.1/wpiutil-java-2019.1.1-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: junit:junit:4.12">
       <CLASSES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/junit/junit/4.12/junit-4.12.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/a6c32b40bf3d76eca54e3c601e5d1470c86fcdfa/junit-4.12-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/junit/junit/4.12/junit-4.12-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: org.hamcrest:hamcrest-core:1.3">
       <CLASSES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/1dc37250fbc78e23a65a67fbbaf71d2e9cbc3c0b/hamcrest-core-1.3-sources.jar!/" />
+        <root url="jar://$USER_HOME$/frc2019/maven/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/" />
       </SOURCES>
     </library>
   </component>
