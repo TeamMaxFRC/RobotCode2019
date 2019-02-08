@@ -96,6 +96,7 @@ public interface TuneableMotorController {
 			case MotionMagic:
 				output = convertRotationsToNativeUnits(demand);
 				break;
+			case MotionVoodooArbFF:
 			case Velocity:
 				output = convertRPMToNativeUnits(demand);
 				break;

@@ -66,6 +66,26 @@ public enum MCControlMode {
 			return ControlType.kSmartMotion;
 		}
 	},
+	SmartVelocity(6) {
+		@Override
+		public ControlMode CTRE() {
+			return ControlMode.Velocity;
+		}
+		@Override
+		public ControlType Rev() {
+			return ControlType.kSmartVelocity;
+		}
+	},
+	MotionVoodooArbFF(7) {
+		@Override
+		public ControlMode CTRE() {
+			return ControlMode.Velocity;
+		}
+		@Override
+		public ControlType Rev() {
+			return ControlType.kVelocity;
+		}
+	},
 	Disabled(15) {
 		@Override
 		public ControlMode CTRE() {
@@ -103,7 +123,7 @@ public enum MCControlMode {
 		revLookupMap.put(ControlType.kVelocity, Velocity);
 		revLookupMap.put(ControlType.kVoltage, Voltage);
 		revLookupMap.put(ControlType.kSmartMotion, MotionMagic);
-
+		revLookupMap.put(ControlType.kSmartVelocity, SmartVelocity);
 	}
 
 	public static MCControlMode valueOf(Object value) {

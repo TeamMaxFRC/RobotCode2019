@@ -6,6 +6,9 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import frc.team195.reporters.ConsoleReporter;
 import frc.team195.reporters.DiagnosticMessage;
 import frc.team195.reporters.MessageLevel;
+import frc.team195.utils.ThreadRateControl;
+import frc.team254.InterpolatingDouble;
+import frc.team254.InterpolatingTreeMap;
 
 public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 	private int currentSelectedSlot = 0;
@@ -19,6 +22,19 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 	private final Configuration fastMasterConfig = new Configuration(5, 5, 20);
 	private final Configuration normalMasterConfig = new Configuration(10, 10, 20);
 	private final Configuration normalSlaveConfig = new Configuration(10, 100, 100);
+
+	private double prevMotionVelocitySetpoint = 0;
+	private double minSetpointOutput = 0;
+	private double allowedClosedLoopError = 0;
+	private MCControlMode currentControlMode = MCControlMode.Disabled;  //Force an update
+
+	private Thread motionVoodooArbFFControlThread;
+	private double motionVoodooArbFFDemand = 0;
+	public InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> motionVoodooArbFFLookup = new InterpolatingTreeMap<>();
+	public double absoluteEncoderOffset = 0;
+
+	private double speedNew = 0;
+	private double decelVelocity = 0;
 
 	public CKTalonSRX(int deviceId, boolean fastMaster, PDPBreaker breakerCurrent) {
 		super(deviceId);
@@ -49,8 +65,11 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 			setSucceeded &= configPeakCurrentLimit(motorBreaker.value * 2, Constants.kLongCANTimeoutMs) == ErrorCode.OK;
 			setSucceeded &= configPeakCurrentDuration(getMSDurationForBreakerLimit(motorBreaker.value * 2, motorBreaker.value), Constants.kLongCANTimeoutMs) == ErrorCode.OK;
 			enableCurrentLimit(true);
+			setSucceeded &= configVoltageCompSaturation(12) == ErrorCode.OK;
 			setSucceeded &= configForwardSoftLimitEnable(false, Constants.kLongCANTimeoutMs) == ErrorCode.OK;
 			setSucceeded &= configReverseSoftLimitEnable(false, Constants.kLongCANTimeoutMs) == ErrorCode.OK;
+			setSucceeded &= configForwardLimitSwitchSource(LimitSwitchSource.Deactivated, LimitSwitchNormal.Disabled, Constants.kLongCANTimeoutMs) == ErrorCode.OK;
+			setSucceeded &= configReverseLimitSwitchSource(LimitSwitchSource.Deactivated, LimitSwitchNormal.Disabled, Constants.kLongCANTimeoutMs) == ErrorCode.OK;
 			set(MCControlMode.PercentOut, 0, 0, 0);
 		} while(!setSucceeded && retryCounter++ < Constants.kTalonRetryCount);
 		if (retryCounter >= Constants.kTalonRetryCount || !setSucceeded)
@@ -85,6 +104,10 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 	public ErrorCode configMotionCruiseVelocity(int sensorUnitsPer100ms, int slotIdx, int timeoutMs) {
 		setCurrentMMVel(sensorUnitsPer100ms, slotIdx);
 		return super.configMotionCruiseVelocity(sensorUnitsPer100ms, timeoutMs);
+	}
+
+	public synchronized void setAbsoluteEncoderOffset(double offset) {
+		absoluteEncoderOffset = offset;
 	}
 
 	/**
@@ -167,13 +190,70 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 		if (currentSelectedSlot != slotIdx)
 			selectProfileSlot(slotIdx, 0);
 
-		demand = convertDemandToNativeUnits(controlMode, demand);
+		if (demand + arbitraryFeedForward != prevOutput || currentSelectedSlot != slotIdx || controlMode != currentControlMode) {
+			currentControlMode = controlMode;
 
-		if (demand + arbitraryFeedForward != prevOutput || currentSelectedSlot != slotIdx || controlMode.CTRE() != getControlMode()) {
-			setpoint = demand;
-			set(controlMode.CTRE(), demand, DemandType.ArbitraryFeedForward, arbitraryFeedForward);
-			prevOutput = demand + arbitraryFeedForward;
+			if (controlMode == MCControlMode.MotionVoodooArbFF) {
+				motionVoodooArbFFDemand = demand;
+				startMotionVoodooArbFFControlThread();
+			} else {
+				demand = convertDemandToNativeUnits(controlMode, demand);
+				setpoint = demand;
+				set(controlMode.CTRE(), demand, DemandType.ArbitraryFeedForward, arbitraryFeedForward);
+				prevOutput = demand + arbitraryFeedForward;
+			}
 		}
+	}
+
+	private void startMotionVoodooArbFFControlThread() {
+		if (motionVoodooArbFFControlThread != null) {
+			if (!motionVoodooArbFFControlThread.isAlive()) {
+				resetMotionVoodooArbFFLambda();
+				motionVoodooArbFFControlThread.start();
+			}
+		} else {
+			resetMotionVoodooArbFFLambda();
+			motionVoodooArbFFControlThread.start();
+		}
+	}
+
+	private void resetMotionVoodooArbFFLambda() {
+		//Instantiate Motion Magic Thread
+		motionVoodooArbFFControlThread = new Thread(() -> {
+			ThreadRateControl trc = new ThreadRateControl();
+			trc.start();
+			while (currentControlMode == MCControlMode.MotionVoodooArbFF) {
+				double demandStep = generateMotionVoodooArbFFValue(getPosition(), motionVoodooArbFFDemand, getVelocity(), trc.getDt());
+				prevMotionVelocitySetpoint = demandStep;
+				demandStep = Math.abs(demandStep) < minSetpointOutput ? 0 : demandStep;
+				double arbFF = motionVoodooArbFFLookup.getInterpolated(new InterpolatingDouble(getPosition() - absoluteEncoderOffset)).value;
+				set(ControlMode.Velocity, convertDemandToNativeUnits(MCControlMode.MotionVoodooArbFF, demandStep), DemandType.ArbitraryFeedForward, arbFF);
+				System.out.println("ArbFF: " + arbFF + ", OutputDC: " + getMCOutputPercent() + ", Pos: " + getPosition() + ", Spd: " + demandStep);
+				trc.doRateControl(10);
+			}
+		});
+	}
+
+	private double generateMotionVoodooArbFFValue(double position, double setpoint, double speed, double dt) {
+		double motionVoodooArbFFVelocity = convertNativeUnitsToRPM(mMMVel[currentSelectedSlot]);
+		double motionVoodooArbFFMaxAccel = convertNativeUnitsToRPM(mMMAccel[currentSelectedSlot]);
+
+		double diffErr = setpoint - position;
+		double diffSign = Math.copySign(1.0, diffErr);
+		diffErr = Math.abs(diffErr);
+
+		if (motionVoodooArbFFVelocity == 0 || motionVoodooArbFFMaxAccel == 0 || diffErr <= allowedClosedLoopError)
+			return 0;
+
+		double decelVelocity = Math.sqrt(diffErr * 2.0 / (motionVoodooArbFFMaxAccel * 60.0)) * (motionVoodooArbFFVelocity * 60.0);
+
+		speedNew = prevMotionVelocitySetpoint + (motionVoodooArbFFMaxAccel * dt * diffSign);
+		double absoluteSpeed = Math.abs(speedNew);
+		speedNew = absoluteSpeed > motionVoodooArbFFVelocity ? Math.copySign(motionVoodooArbFFVelocity, speedNew) : speedNew;
+
+		speedNew = absoluteSpeed <= decelVelocity ? speedNew : Math.copySign(decelVelocity, speedNew);
+		speedNew = absoluteSpeed <= minSetpointOutput ? 0 : speedNew;
+		return speedNew;
 	}
 
 	@Override
@@ -311,6 +391,7 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 					break;
 				case Position:
 				case MotionMagic:
+				case MotionVoodooArbFF:
 					set(controlMode, getPosition(), currentSelectedSlot, 0);
 					break;
 				default:
@@ -321,7 +402,7 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 
 	@Override
 	public MCControlMode getMotionControlMode() {
-		return MCControlMode.valueOf(getControlMode());
+		return currentControlMode;
 	}
 
 	@Override
@@ -331,11 +412,12 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 
 	@Override
 	public double getActual() {
-		switch (getControlMode()) {
-			case PercentOutput:
-				return getMotorOutputPercent();
+		switch (currentControlMode) {
+			case PercentOut:
+//				return getMotorOutputPercent();
 			case Position:
 			case MotionMagic:
+			case MotionVoodooArbFF:
 				return getPosition();
 			case Velocity:
 				return getVelocity();
