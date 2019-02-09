@@ -329,7 +329,7 @@ public class Robot extends TimedRobot {
         //--------------------------------------------------------------------------------------------------------------
 
         try {
-
+            /*
             // Four bar ball set positions.
             int fourBarGatheringPositionBall = 3332;
             int fourBarHighScoreBall = 4500;
@@ -353,6 +353,7 @@ public class Robot extends TimedRobot {
             int liftHighScoreHatch = 0;
             int liftMiddleScoreHatch = 0;
             int liftLowScoreHatch = 0;
+
 
             //when the right bumper is pressed, set the lift to ball positions
             if (operatorJoystick.getRawButton(6)) {
@@ -409,6 +410,13 @@ public class Robot extends TimedRobot {
                     liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
                     fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreHatch);
                 }
+            }
+            */
+
+            if (Math.abs(operatorJoystick.getRawAxis(1)) > 0.1) {
+                liftMaster.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(1));
+            } else {
+                liftMaster.set(ControlMode.PercentOutput, 0);
             }
 
             // Actuate the solenoid.
