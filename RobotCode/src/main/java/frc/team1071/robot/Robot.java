@@ -221,12 +221,18 @@ public class Robot extends TimedRobot {
             fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.36), new InterpolatingDouble(0.00));
             fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.37), new InterpolatingDouble(0.00));
 
-            fourBarMotor.setPIDF(5, 0, 16, 1);
+//            fourBarMotor.setPIDF(5, 0, 16, 1);
+//            fourBarMotor.setMotionParameters(50, 100);
+            fourBarMotor.setPIDF(2.4, 0, 16, 1);
             fourBarMotor.setMotionParameters(50, 100);
 
-            fourBarMotor.configForwardSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(1.1843));
+            fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(3386, 4830, true);
+            //Absolute val of Min encoder position
+            fourBarMotor.setAbsoluteEncoderOffset(0.1743164063);
+
+            fourBarMotor.configForwardSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(0.1767578125));
             fourBarMotor.configForwardSoftLimitEnable(true);
-            fourBarMotor.configReverseSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(0.8242));
+            fourBarMotor.configReverseSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(-0.1743164063));
             fourBarMotor.configReverseSoftLimitEnable(true);
 
             fourBarMotor.setControlMode(MCControlMode.MotionVoodooArbFF);
@@ -292,6 +298,7 @@ public class Robot extends TimedRobot {
 
         // Print the Limelight area.
         //System.out.println(limelightArea);
+//        System.out.println(fourBarMotor.getPosition());
     }
 
     /**
@@ -347,12 +354,6 @@ public class Robot extends TimedRobot {
 
         // Reset the lift's encoder position.
         liftMaster.setSelectedSensorPosition(0);
-
-        // TODO REMOVE
-        fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(fourBarMotor.convertRotationsToNativeUnits(0.8242), fourBarMotor.convertRotationsToNativeUnits(1.1843), true);
-
-        //Max encoder position minus range encoder position -> Assumes starting at max
-        fourBarMotor.setAbsoluteEncoderOffset(fourBarMotor.getPosition() - 0.36);
     }
 
     /**

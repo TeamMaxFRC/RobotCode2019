@@ -197,8 +197,8 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 			} else {
 				demand = convertDemandToNativeUnits(controlMode, demand);
 				set(controlMode.CTRE(), demand, DemandType.ArbitraryFeedForward, arbitraryFeedForward);
-				prevOutput = demand + arbitraryFeedForward;
 			}
+			prevOutput = demand + arbitraryFeedForward;
 		}
 	}
 
@@ -223,9 +223,9 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 				double demandStep = generateMotionVoodooArbFFValue(getPosition(), motionVoodooArbFFDemand, getVelocity(), trc.getDt());
 				prevMotionVelocitySetpoint = demandStep;
 				demandStep = Math.abs(demandStep) < minSetpointOutput ? 0 : demandStep;
-				double arbFF = motionVoodooArbFFLookup.getInterpolated(new InterpolatingDouble(getPosition() - absoluteEncoderOffset)).value;
+				double arbFF = motionVoodooArbFFLookup.getInterpolated(new InterpolatingDouble(getPosition() + absoluteEncoderOffset)).value;
 				set(ControlMode.Velocity, convertDemandToNativeUnits(MCControlMode.MotionVoodooArbFF, demandStep), DemandType.ArbitraryFeedForward, arbFF);
-				System.out.println("ArbFF: " + arbFF + ", OutputDC: " + getMCOutputPercent() + ", Pos: " + getPosition() + ", Spd: " + demandStep);
+//				System.out.println("ArbFF: " + arbFF + ", OutputDC: " + getMCOutputPercent() + ", Set: " + motionVoodooArbFFDemand + ", Pos: " + (getPosition()) + ", Spd: " + demandStep);
 				trc.doRateControl(10);
 			}
 		});
