@@ -471,6 +471,12 @@ public class Robot extends TimedRobot {
                 }
             }
 
+            if (Math.abs(operatorJoystick.getRawAxis(1)) > 0.1) {
+                liftMaster.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(1));
+            } else {
+                liftMaster.set(ControlMode.PercentOutput, 0);
+            }
+
             // Actuate the solenoid.
             if (operatorJoystick.getRawButtonPressed(5)) {
                 hatchSolenoidState = !hatchSolenoidState;
