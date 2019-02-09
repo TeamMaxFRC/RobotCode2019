@@ -13,6 +13,11 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.team195.motorcontrol.CKTalonSRX;
+import frc.team195.motorcontrol.MCControlMode;
+import frc.team195.motorcontrol.PDPBreaker;
+import frc.team195.motorcontrol.TuneablePIDOSC;
+import frc.team254.InterpolatingDouble;
 
 import java.net.InetAddress;
 
@@ -53,7 +58,7 @@ public class Robot extends TimedRobot {
     private TalonSRX liftSlaveSecondary;
     private TalonSRX liftSlaveTertiary;
     private TalonSRX gathererMotor;
-    private TalonSRX fourBarMotor;
+    private CKTalonSRX fourBarMotor;
 
     // Helper class for calculating drive motor speeds.
     private DriveHelper driveHelper = new DriveHelper();
@@ -97,6 +102,7 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
+        compressor.setClosedLoopControl(false);
         // Initialize all the motor controllers.
         try {
 
@@ -169,27 +175,71 @@ public class Robot extends TimedRobot {
             //----------------------------------------------------------------------------------------------------------
 
             // Initialize the four bar motor.
-            fourBarMotor = new TalonSRX(5);
+            fourBarMotor = new CKTalonSRX(5, false, PDPBreaker.B30A);
 
             // Set the encoder mode to absolute position.
             fourBarMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
             fourBarMotor.setInverted(true);
             fourBarMotor.setSensorPhase(true);
 
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.00), new InterpolatingDouble(0.00));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.01), new InterpolatingDouble(0.00));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.02), new InterpolatingDouble(0.00));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.03), new InterpolatingDouble(0.15));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.04), new InterpolatingDouble(0.17));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.05), new InterpolatingDouble(0.17));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.06), new InterpolatingDouble(0.18));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.07), new InterpolatingDouble(0.19));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.08), new InterpolatingDouble(0.11));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.09), new InterpolatingDouble(0.16));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.1), new InterpolatingDouble(0.17));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.11), new InterpolatingDouble(0.17));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.12), new InterpolatingDouble(0.16));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.13), new InterpolatingDouble(0.14));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.14), new InterpolatingDouble(0.14));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.15), new InterpolatingDouble(0.14));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.16), new InterpolatingDouble(0.21));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.17), new InterpolatingDouble(0.14));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.18), new InterpolatingDouble(0.14));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.19), new InterpolatingDouble(0.14));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.2), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.21), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.22), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.23), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.24), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.25), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.26), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.27), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.28), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.29), new InterpolatingDouble(0.12));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.3), new InterpolatingDouble(0.1));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.31), new InterpolatingDouble(0.05));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.32), new InterpolatingDouble(0.00));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.33), new InterpolatingDouble(0.00));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.34), new InterpolatingDouble(0.00));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.35), new InterpolatingDouble(0.00));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.36), new InterpolatingDouble(0.00));
+            fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.37), new InterpolatingDouble(0.00));
+
+            fourBarMotor.setPIDF(5, 0, 16, 1);
+            fourBarMotor.setMotionParameters(50, 100);
+
+            fourBarMotor.setControlMode(MCControlMode.MotionVoodooArbFF);
+            TuneablePIDOSC t = new TuneablePIDOSC("FourBar", 5805, true, fourBarMotor);
             // Set the PID values for the four bar.
-            fourBarMotor.config_kF(0, 2);
-            fourBarMotor.config_kP(0, 1.5);// 3.5 / 2);
-            fourBarMotor.config_kD(0, 4);// 7 / 2);
+//            fourBarMotor.config_kF(0, 2);
+//            fourBarMotor.config_kP(0, 1.5);// 3.5 / 2);
+//            fourBarMotor.config_kD(0, 4);// 7 / 2);
 
             // Establish the cruise velocity and max acceleration for the motion magic.
-            fourBarMotor.configMotionCruiseVelocity(100);
-            fourBarMotor.configMotionAcceleration(200);
+//            fourBarMotor.configMotionCruiseVelocity(100);
+//            fourBarMotor.configMotionAcceleration(200);
 
             // Current limit the four bar motor.
-            fourBarMotor.configPeakCurrentLimit(0);
-            fourBarMotor.configPeakCurrentDuration(0);
-            fourBarMotor.configContinuousCurrentLimit(5);
-            fourBarMotor.enableCurrentLimit(true);
+//            fourBarMotor.configPeakCurrentLimit(0);
+//            fourBarMotor.configPeakCurrentDuration(0);
+//            fourBarMotor.configContinuousCurrentLimit(5);
+//            fourBarMotor.enableCurrentLimit(true);
 
             //----------------------------------------------------------------------------------------------------------
             // Other Initialization
@@ -297,6 +347,8 @@ public class Robot extends TimedRobot {
         //fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(0, 0, false);
         fourBarMotor.setSelectedSensorPosition(fourBarMotor.getSensorCollection().getPulseWidthPosition());
 
+        //Max encoder position minus range encoder position -> Assumes starting at max
+        fourBarMotor.setAbsoluteEncoderOffset(fourBarMotor.getPosition() - 0.36);
     }
 
     /**
@@ -306,7 +358,7 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
 
         // Print the four bar arm's exact position.
-        System.out.println("Four Bar Arm Position: " + fourBarMotor.getSelectedSensorPosition() + " Target: " + fourBarMotor.getActiveTrajectoryPosition() + " Duty Cycle: " + fourBarMotor.getMotorOutputPercent() + " Speed: " + fourBarMotor.getSelectedSensorVelocity());
+//        System.out.println("Four Bar Arm Position: " + fourBarMotor.getSelectedSensorPosition() + " Target: " + fourBarMotor.getActiveTrajectoryPosition() + " Duty Cycle: " + fourBarMotor.getMotorOutputPercent() + " Speed: " + fourBarMotor.getSelectedSensorVelocity());
 
         //--------------------------------------------------------------------------------------------------------------
         // Drive Controls
@@ -329,7 +381,7 @@ public class Robot extends TimedRobot {
         //--------------------------------------------------------------------------------------------------------------
 
         try {
-            /*
+
             // Four bar ball set positions.
             int fourBarGatheringPositionBall = 3332;
             int fourBarHighScoreBall = 4500;
@@ -354,64 +406,63 @@ public class Robot extends TimedRobot {
             int liftMiddleScoreHatch = 0;
             int liftLowScoreHatch = 0;
 
-
+            //Disable when tuning PIDs
             //when the right bumper is pressed, set the lift to ball positions
-            if (operatorJoystick.getRawButton(6)) {
-
-                // If the 'A' button is pressed, then set the ball gathering height.
-                if (operatorJoystick.getRawButtonPressed(1)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionBall);
-                }
-
-                // If the 'B' button is pressed, then set the low ball position.
-                if (operatorJoystick.getRawButtonPressed(2)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreBall);
-                }
-
-                // If the 'X' button is pressed, then set the middle ball position.
-                if (operatorJoystick.getRawButtonPressed(3)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreBall);
-                }
-
-                // If the 'Y' button is pressed, then set the high ball position.
-                if (operatorJoystick.getRawButtonPressed(4)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreBall);
-                }
-
-            }
-
-            // When the right bumper isn't pressed, set the lift to hatch positions.
-            else {
-
-                // If the 'A' button is pressed, then set the hatch gathering position.
-                if (operatorJoystick.getRawButtonPressed(1)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionHatch);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionHatch);
-                }
-
-                // If the 'B' button is pressed, set the low hatch position.
-                if (operatorJoystick.getRawButtonPressed(2)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreHatch);
-                }
-
-                // If the 'X' button is pressed, set the middle hatch position.
-                if (operatorJoystick.getRawButtonPressed(3)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreHatch);
-                }
-
-                // If the 'Y' button is pressed, set the high hatch position.
-                if (operatorJoystick.getRawButtonPressed(4)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreHatch);
-                }
-            }
-            */
+//            if (operatorJoystick.getRawButton(6)) {
+//
+//                // If the 'A' button is pressed, then set the ball gathering height.
+//                if (operatorJoystick.getRawButtonPressed(1)) {
+//                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
+//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionBall);
+//                }
+//
+//                // If the 'B' button is pressed, then set the low ball position.
+//                if (operatorJoystick.getRawButtonPressed(2)) {
+//                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
+//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreBall);
+//                }
+//
+//                // If the 'X' button is pressed, then set the middle ball position.
+//                if (operatorJoystick.getRawButtonPressed(3)) {
+//                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
+//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreBall);
+//                }
+//
+//                // If the 'Y' button is pressed, then set the high ball position.
+//                if (operatorJoystick.getRawButtonPressed(4)) {
+//                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
+//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreBall);
+//                }
+//
+//            }
+//
+//            // When the right bumper isn't pressed, set the lift to hatch positions.
+//            else {
+//
+//                // If the 'A' button is pressed, then set the hatch gathering position.
+//                if (operatorJoystick.getRawButtonPressed(1)) {
+//                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionHatch);
+//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionHatch);
+//                }
+//
+//                // If the 'B' button is pressed, set the low hatch position.
+//                if (operatorJoystick.getRawButtonPressed(2)) {
+//                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
+//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreHatch);
+//                }
+//
+//                // If the 'X' button is pressed, set the middle hatch position.
+//                if (operatorJoystick.getRawButtonPressed(3)) {
+//                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
+//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreHatch);
+//                }
+//
+//                // If the 'Y' button is pressed, set the high hatch position.
+//                if (operatorJoystick.getRawButtonPressed(4)) {
+//                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
+//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreHatch);
+//                }
+//            }
 
             if (Math.abs(operatorJoystick.getRawAxis(1)) > 0.1) {
                 liftMaster.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(1));
