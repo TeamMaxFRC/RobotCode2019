@@ -116,11 +116,13 @@
     </library>
     <library name="Gradle: com.kauailabs.navx.frc:navx-java:3.1.344">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../../../Public/frc2019/maven/com/kauailabs/navx/frc/navx-java/3.1.344/navx-java-3.1.344.jar!/" />
+        <root url="jar://$USER_HOME$/Public/frc2019/maven/com/kauailabs/navx/frc/navx-java/3.1.344/navx-java-3.1.344.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.kauailabs.navx.frc/navx-java/3.1.344/30981bb5cf08864cfdca75cfd21418470e16c167/navx-java-3.1.344.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/../../../../Public/frc2019/maven/com/kauailabs/navx/frc/navx-java/3.1.344/navx-java-3.1.344-sources.jar!/" />
+        <root url="jar://$USER_HOME$/Public/frc2019/maven/com/kauailabs/navx/frc/navx-java/3.1.344/navx-java-3.1.344-sources.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.kauailabs.navx.frc/navx-java/3.1.344/d4d52e9506c6d7a139b3a473ce62d4b2d2ed6019/navx-java-3.1.344-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: com.revrobotics.frc:SparkMax-java:1.1.5">
@@ -214,23 +216,19 @@
     <library name="Gradle: junit:junit:4.12">
       <CLASSES>
         <root url="jar://$USER_HOME$/frc2019/maven/junit/junit/4.12/junit-4.12.jar!/" />
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/frc2019/maven/junit/junit/4.12/junit-4.12-sources.jar!/" />
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/a6c32b40bf3d76eca54e3c601e5d1470c86fcdfa/junit-4.12-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: org.hamcrest:hamcrest-core:1.3">
       <CLASSES>
         <root url="jar://$USER_HOME$/frc2019/maven/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/" />
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/frc2019/maven/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/" />
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/1dc37250fbc78e23a65a67fbbaf71d2e9cbc3c0b/hamcrest-core-1.3-sources.jar!/" />
       </SOURCES>
     </library>
   </component>

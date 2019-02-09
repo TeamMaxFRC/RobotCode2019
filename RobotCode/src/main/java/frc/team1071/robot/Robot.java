@@ -350,7 +350,6 @@ public class Robot extends TimedRobot {
 
         // TODO REMOVE
         fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(fourBarMotor.convertRotationsToNativeUnits(0.8242), fourBarMotor.convertRotationsToNativeUnits(1.1843), true);
-//        fourBarMotor.setSelectedSensorPosition(fourBarMotor.getSensorCollection().getPulseWidthPosition());
 
         //Max encoder position minus range encoder position -> Assumes starting at max
         fourBarMotor.setAbsoluteEncoderOffset(fourBarMotor.getPosition() - 0.36);
@@ -420,25 +419,25 @@ public class Robot extends TimedRobot {
                 // If the 'A' button is pressed, then set the ball gathering height.
                 if (operatorJoystick.getRawButtonPressed(1)) {
                     liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionBall);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
                 }
 
                 // If the 'B' button is pressed, then set the low ball position.
                 if (operatorJoystick.getRawButtonPressed(2)) {
                     liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreBall);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
                 }
 
                 // If the 'X' button is pressed, then set the middle ball position.
                 if (operatorJoystick.getRawButtonPressed(3)) {
                     liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreBall);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
                 }
 
                 // If the 'Y' button is pressed, then set the high ball position.
                 if (operatorJoystick.getRawButtonPressed(4)) {
                     liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreBall);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
                 }
 
             }
@@ -449,25 +448,25 @@ public class Robot extends TimedRobot {
                 // If the 'A' button is pressed, then set the hatch gathering position.
                 if (operatorJoystick.getRawButtonPressed(1)) {
                     liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionHatch);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionHatch);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionHatch, 0, 0);
                 }
 
                 // If the 'B' button is pressed, set the low hatch position.
                 if (operatorJoystick.getRawButtonPressed(2)) {
                     liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreHatch);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreHatch, 0, 0);
                 }
 
                 // If the 'X' button is pressed, set the middle hatch position.
                 if (operatorJoystick.getRawButtonPressed(3)) {
                     liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreHatch);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreHatch, 0, 0);
                 }
 
                 // If the 'Y' button is pressed, set the high hatch position.
                 if (operatorJoystick.getRawButtonPressed(4)) {
                     liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
-                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreHatch);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreHatch, 0, 0);
                 }
             }
 
