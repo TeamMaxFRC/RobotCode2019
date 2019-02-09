@@ -224,6 +224,11 @@ public class Robot extends TimedRobot {
             fourBarMotor.setPIDF(5, 0, 16, 1);
             fourBarMotor.setMotionParameters(50, 100);
 
+            fourBarMotor.configForwardSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(1.1843));
+            fourBarMotor.configForwardSoftLimitEnable(true);
+            fourBarMotor.configReverseSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(0.8242));
+            fourBarMotor.configReverseSoftLimitEnable(true);
+
             fourBarMotor.setControlMode(MCControlMode.MotionVoodooArbFF);
             TuneablePIDOSC t = new TuneablePIDOSC("FourBar", 5805, true, fourBarMotor);
             // Set the PID values for the four bar.
@@ -344,8 +349,8 @@ public class Robot extends TimedRobot {
         liftMaster.setSelectedSensorPosition(0);
 
         // TODO REMOVE
-        //fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(0, 0, false);
-        fourBarMotor.setSelectedSensorPosition(fourBarMotor.getSensorCollection().getPulseWidthPosition());
+        fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(fourBarMotor.convertRotationsToNativeUnits(0.8242), fourBarMotor.convertRotationsToNativeUnits(1.1843), true);
+//        fourBarMotor.setSelectedSensorPosition(fourBarMotor.getSensorCollection().getPulseWidthPosition());
 
         //Max encoder position minus range encoder position -> Assumes starting at max
         fourBarMotor.setAbsoluteEncoderOffset(fourBarMotor.getPosition() - 0.36);
@@ -382,9 +387,11 @@ public class Robot extends TimedRobot {
 
         try {
 
+            //All setpoints must be in rotations. Measure using getPosition()
+
             // Four bar ball set positions.
-            int fourBarGatheringPositionBall = 3332;
-            int fourBarHighScoreBall = 4500;
+            int fourBarGatheringPositionBall = 0;
+            int fourBarHighScoreBall = 0;
             int fourBarMiddleScoreBall = 0;
             int fourBarLowScoreBall = 0;
 
@@ -396,7 +403,7 @@ public class Robot extends TimedRobot {
 
             // Lift ball set positions.
             int liftGatheringPositionBall = 0;
-            int liftHighScoreBall = 24500;
+            int liftHighScoreBall = 0;
             int liftMiddleScoreBall = 0;
             int liftLowScoreBall = 0;
 
@@ -408,61 +415,61 @@ public class Robot extends TimedRobot {
 
             //Disable when tuning PIDs
             //when the right bumper is pressed, set the lift to ball positions
-//            if (operatorJoystick.getRawButton(6)) {
-//
-//                // If the 'A' button is pressed, then set the ball gathering height.
-//                if (operatorJoystick.getRawButtonPressed(1)) {
-//                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
-//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionBall);
-//                }
-//
-//                // If the 'B' button is pressed, then set the low ball position.
-//                if (operatorJoystick.getRawButtonPressed(2)) {
-//                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
-//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreBall);
-//                }
-//
-//                // If the 'X' button is pressed, then set the middle ball position.
-//                if (operatorJoystick.getRawButtonPressed(3)) {
-//                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
-//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreBall);
-//                }
-//
-//                // If the 'Y' button is pressed, then set the high ball position.
-//                if (operatorJoystick.getRawButtonPressed(4)) {
-//                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
-//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreBall);
-//                }
-//
-//            }
-//
-//            // When the right bumper isn't pressed, set the lift to hatch positions.
-//            else {
-//
-//                // If the 'A' button is pressed, then set the hatch gathering position.
-//                if (operatorJoystick.getRawButtonPressed(1)) {
-//                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionHatch);
-//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionHatch);
-//                }
-//
-//                // If the 'B' button is pressed, set the low hatch position.
-//                if (operatorJoystick.getRawButtonPressed(2)) {
-//                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
-//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreHatch);
-//                }
-//
-//                // If the 'X' button is pressed, set the middle hatch position.
-//                if (operatorJoystick.getRawButtonPressed(3)) {
-//                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
-//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreHatch);
-//                }
-//
-//                // If the 'Y' button is pressed, set the high hatch position.
-//                if (operatorJoystick.getRawButtonPressed(4)) {
-//                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
-//                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreHatch);
-//                }
-//            }
+            if (operatorJoystick.getRawButton(6)) {
+
+                // If the 'A' button is pressed, then set the ball gathering height.
+                if (operatorJoystick.getRawButtonPressed(1)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionBall);
+                }
+
+                // If the 'B' button is pressed, then set the low ball position.
+                if (operatorJoystick.getRawButtonPressed(2)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreBall);
+                }
+
+                // If the 'X' button is pressed, then set the middle ball position.
+                if (operatorJoystick.getRawButtonPressed(3)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreBall);
+                }
+
+                // If the 'Y' button is pressed, then set the high ball position.
+                if (operatorJoystick.getRawButtonPressed(4)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreBall);
+                }
+
+            }
+
+            // When the right bumper isn't pressed, set the lift to hatch positions.
+            else {
+
+                // If the 'A' button is pressed, then set the hatch gathering position.
+                if (operatorJoystick.getRawButtonPressed(1)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionHatch);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarGatheringPositionHatch);
+                }
+
+                // If the 'B' button is pressed, set the low hatch position.
+                if (operatorJoystick.getRawButtonPressed(2)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarLowScoreHatch);
+                }
+
+                // If the 'X' button is pressed, set the middle hatch position.
+                if (operatorJoystick.getRawButtonPressed(3)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarMiddleScoreHatch);
+                }
+
+                // If the 'Y' button is pressed, set the high hatch position.
+                if (operatorJoystick.getRawButtonPressed(4)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
+                    fourBarMotor.set(ControlMode.MotionMagic, fourBarHighScoreHatch);
+                }
+            }
 
             // Actuate the solenoid.
             if (operatorJoystick.getRawButtonPressed(5)) {

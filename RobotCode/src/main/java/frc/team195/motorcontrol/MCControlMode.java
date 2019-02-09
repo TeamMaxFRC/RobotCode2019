@@ -73,7 +73,7 @@ public enum MCControlMode {
 		}
 		@Override
 		public ControlType Rev() {
-			return ControlType.kSmartVelocity;
+			return ControlType.kVelocity;
 		}
 	},
 	MotionVoodooArbFF(7) {
@@ -123,7 +123,7 @@ public enum MCControlMode {
 		revLookupMap.put(ControlType.kVelocity, Velocity);
 		revLookupMap.put(ControlType.kVoltage, Voltage);
 		revLookupMap.put(ControlType.kSmartMotion, MotionMagic);
-		revLookupMap.put(ControlType.kSmartVelocity, SmartVelocity);
+//		revLookupMap.put(ControlType.kSmartVelocity, SmartVelocity);
 	}
 
 	public static MCControlMode valueOf(Object value) {

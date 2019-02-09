@@ -22,7 +22,6 @@ public class CKSparkMax extends CANSparkMax implements TuneableMotorController {
 	private Configuration normalMasterConfig = new Configuration(10, 10, 10, 10);
 	private Configuration normalSlaveConfig = new Configuration(10, 100, 100, 100);
 
-	private double voltageCompensation = 12;
 	private final PDPBreaker motorBreaker;
 
 	private MCControlMode currentControlMode = MCControlMode.PercentOut;
@@ -34,7 +33,6 @@ public class CKSparkMax extends CANSparkMax implements TuneableMotorController {
 		canEncoder = getEncoder();
 		canPIDController.setOutputRange(-1, 1);
 		doDefaultConfig(fastMaster ? fastMasterConfig : normalMasterConfig);
-		setMinimumSetpointOutput(25);
 		setBrakeCoastMode(MCNeutralMode.Brake);
 	}
 
@@ -60,6 +58,8 @@ public class CKSparkMax extends CANSparkMax implements TuneableMotorController {
 			setSucceeded &= setPeriodicFramePeriod(PeriodicFrame.kStatus1, config.STATUS_FRAME_1_MS) == CANError.kOK;
 			setSucceeded &= setPeriodicFramePeriod(PeriodicFrame.kStatus2, config.STATUS_FRAME_2_MS) == CANError.kOK;
 			setSucceeded &= setSmartCurrentLimit(motorBreaker.value * 2) == CANError.kOK;
+			setSucceeded &= enableVoltageCompensation(12) == CANError.kOK;
+
 			//Erase previously stored values
 			set(MCControlMode.PercentOut, 0, 0, 0);
 		} while(!setSucceeded && retryCounter++ < Constants.kTalonRetryCount);
@@ -89,7 +89,7 @@ public class CKSparkMax extends CANSparkMax implements TuneableMotorController {
 
 			do {
 				System.out.println(getPosition());
-				setSucceeded = canPIDController.setReference(demand, controlMode.Rev(), slotIdx, arbitraryFeedForward * voltageCompensation) == CANError.kOK;
+				setSucceeded = canPIDController.setReference(demand, controlMode.Rev(), slotIdx, arbitraryFeedForward) == CANError.kOK;
 			} while (!setSucceeded && retryCounter++ < Constants.kTalonRetryCount);
 
 			if (retryCounter >= Constants.kTalonRetryCount || !setSucceeded)
@@ -137,14 +137,6 @@ public class CKSparkMax extends CANSparkMax implements TuneableMotorController {
 		return 1.0;
 	}
 
-
-	/**
-	 * Config voltage compensation for arbitrary feed forward
-	 * @param voltage Nominal voltage setting for arbitrary feed forward compensation
-	 */
-	public synchronized void configVoltageCompSaturation(double voltage) {
-		voltageCompensation = voltage;
-	}
 
 	@Override
 	public void setPIDF(double kP, double kI, double kD, double kF) {
@@ -282,7 +274,7 @@ public class CKSparkMax extends CANSparkMax implements TuneableMotorController {
 			case kVelocity:
 				return canEncoder.getVelocity();
 			case kVoltage:
-				return getAppliedOutput() * voltageCompensation;
+				return getAppliedOutput();
 			case kPosition:
 			case kSmartMotion:
 				return canEncoder.getPosition();

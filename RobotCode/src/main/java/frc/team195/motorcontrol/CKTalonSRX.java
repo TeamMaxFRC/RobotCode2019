@@ -17,7 +17,6 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 	private int[] mMMVel = new int[4];
 	private double prevOutput = Double.MIN_VALUE;
 	private final PDPBreaker motorBreaker;
-	private double setpoint = 0;
 
 	private final Configuration fastMasterConfig = new Configuration(5, 5, 20);
 	private final Configuration normalMasterConfig = new Configuration(10, 10, 20);
@@ -34,7 +33,6 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 	public double absoluteEncoderOffset = 0;
 
 	private double speedNew = 0;
-	private double decelVelocity = 0;
 
 	public CKTalonSRX(int deviceId, boolean fastMaster, PDPBreaker breakerCurrent) {
 		super(deviceId);
@@ -198,7 +196,6 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 				startMotionVoodooArbFFControlThread();
 			} else {
 				demand = convertDemandToNativeUnits(controlMode, demand);
-				setpoint = demand;
 				set(controlMode.CTRE(), demand, DemandType.ArbitraryFeedForward, arbitraryFeedForward);
 				prevOutput = demand + arbitraryFeedForward;
 			}
