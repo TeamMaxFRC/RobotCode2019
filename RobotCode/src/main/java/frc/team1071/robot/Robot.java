@@ -100,7 +100,6 @@ public class Robot extends TimedRobot {
 
         // Initialize all the motor controllers.
         try {
-
             //----------------------------------------------------------------------------------------------------------
             // Drive Motors
             //----------------------------------------------------------------------------------------------------------
@@ -300,9 +299,6 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) == 1;
-
-        // Print the Limelight area.
-        //System.out.println(limelightArea);
     }
 
     /**
@@ -407,6 +403,7 @@ public class Robot extends TimedRobot {
         //--------------------------------------------------------------------------------------------------------------
 
         try {
+            NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(operatorJoystick.getRawButton(8) ? 1 : 0);
 
             //All set points must be in rotations. Measure using getPosition().
             // Four bar ball set positions.
@@ -636,7 +633,7 @@ public class Robot extends TimedRobot {
             limelightMessageX.addArgument(limelightX);
             limelightMessageY.addArgument(limelightY);
             limelightMessageA.addArgument(limelightArea);
-            limelightMessageV.addArgument(limelightTarget);
+            limelightMessageV.addArgument(limelightTarget ? 0 : 1);
             oscWirelessSender.send(limelightMessageX);
             oscWirelessSender.send(limelightMessageY);
             oscWirelessSender.send(limelightMessageA);
