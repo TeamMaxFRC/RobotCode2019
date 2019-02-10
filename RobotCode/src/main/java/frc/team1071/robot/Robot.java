@@ -2,6 +2,8 @@ package frc.team1071.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
+import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
@@ -17,7 +19,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team195.motorcontrol.CKTalonSRX;
 import frc.team195.motorcontrol.MCControlMode;
 import frc.team195.motorcontrol.PDPBreaker;
-import frc.team195.motorcontrol.TuneablePIDOSC;
 import frc.team254.InterpolatingDouble;
 
 import java.net.InetAddress;
@@ -62,14 +63,15 @@ public class Robot extends TimedRobot {
     private Joystick driverJoystick = new Joystick(0);
     private Joystick operatorJoystick = new Joystick(1);
     // Create the drive motors.
+    private Compressor compressor = new Compressor(0);
     private CANSparkMax leftMaster;
     private CANSparkMax rightMaster;
     //Create and initialize the compressor.
-    private Compressor compressor = new Compressor(0);
 
     //Create the Solenoid and Solenoid state for hatch gathering.
     private DoubleSolenoid hatchSolenoid;
-    private boolean hatchSolenoidState = false;
+    private boolean previousHatchSwitchValue = false;
+    private int hatchSwitchDebounceCounter = 0;
 
     /**
      * Function that configures a lift motor's power.
@@ -254,7 +256,7 @@ public class Robot extends TimedRobot {
             fourBarMotor.configReverseSoftLimitEnable(true);
 
             fourBarMotor.setControlMode(MCControlMode.MotionVoodooArbFF);
-            TuneablePIDOSC t = new TuneablePIDOSC("FourBar", 5805, true, fourBarMotor);
+            //TuneablePIDOSC t = new TuneablePIDOSC("FourBar", 5805, true, fourBarMotor);
 
             //----------------------------------------------------------------------------------------------------------
             // Other Initialization
@@ -262,12 +264,14 @@ public class Robot extends TimedRobot {
 
             // Initialize the gatherer.
             gathererMotor = new TalonSRX(6);
+            gathererMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
 
             // Initialize the NavX.
             navX = new AHRS(SPI.Port.kMXP);
 
             //Initialize the Solenoid.
             hatchSolenoid = new DoubleSolenoid(0, 1);
+            hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
 
         } catch (Exception Ex) {
             System.out.println("General Initialization Exception: " + Ex.getMessage());
@@ -354,6 +358,9 @@ public class Robot extends TimedRobot {
 
         // Reset the lift's encoder position.
         liftMaster.setSelectedSensorPosition(0);
+
+        // Reset the solenoid position
+        hatchSolenoid.set(DoubleSolenoid.Value.kForward);
     }
 
     /**
@@ -407,16 +414,16 @@ public class Robot extends TimedRobot {
 
             //All set points must be in rotations. Measure using getPosition().
             // Four bar ball set positions.
-            double fourBarGatheringPositionBall = -0.10;
+            double fourBarGatheringPositionBall = -0.123;
             double fourBarLowScoreBall = 0.12;
             double fourBarMiddleScoreBall = 0.12;
             double fourBarHighScoreBall = 0.12;
 
             // Four bar hatch set positions.
-            double fourBarGatheringPositionHatch = 0;
-            double fourBarLowScoreHatch = 0;
-            double fourBarMiddleScoreHatch = 0;
-            double fourBarHighScoreHatch = 0;
+            double fourBarGatheringPositionHatch = -0.10;
+            double fourBarLowScoreHatch = -0.10;
+            double fourBarMiddleScoreHatch = -0.10;
+            double fourBarHighScoreHatch = -0.05;
 
             // Lift ball set positions.
             int liftGatheringPositionBall = 0;
@@ -427,8 +434,8 @@ public class Robot extends TimedRobot {
             // Lift hatch set positions.
             int liftGatheringPositionHatch = 0;
             int liftLowScoreHatch = 0;
-            int liftMiddleScoreHatch = 0;
-            int liftHighScoreHatch = 0;
+            int liftMiddleScoreHatch = 15000;
+            int liftHighScoreHatch = 25200;
 
             //Disable when tuning PIDs
             //when the right bumper is pressed, set the lift to ball positions.
@@ -489,16 +496,24 @@ public class Robot extends TimedRobot {
             }
 
             //fourBarMotor.set(MCControlMode.PercentOut, 0, 0, 0);
-
+            boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
             // Actuate the solenoid.
             if (operatorJoystick.getRawButtonPressed(5)) {
-                hatchSolenoidState = !hatchSolenoidState;
-                if (hatchSolenoidState) {
-                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
-                } else {
+                if (hatchSolenoid.get() == DoubleSolenoid.Value.kForward) {
                     hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
                 }
+                else
+                {
+                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                }
+                hatchSwitchDebounceCounter = 40;
             }
+            else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse)
+            {
+                hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+            }
+
+            previousHatchSwitchValue = currentSwitchState;
 
             if (operatorJoystick.getRawAxis(2) > 0.1) {
                 gathererMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(2));
