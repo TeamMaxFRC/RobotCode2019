@@ -6,6 +6,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.kauailabs.navx.frc.AHRS;
+import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -35,14 +36,11 @@ public class Robot extends TimedRobot {
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
-
     // Create the NavX.
     private AHRS navX;
-
     // Create the OSC sender on the robot.
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
-
     // Create the Limelight.
     private NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
     private NetworkTableEntry tx = table.getEntry("tx");
@@ -51,7 +49,6 @@ public class Robot extends TimedRobot {
     private NetworkTableEntry tv = table.getEntry("tv");
     private double limelightX, limelightY, limelightArea;
     private boolean limelightTarget;
-
     // Create the auxiliary motors.
     private TalonSRX liftMaster;
     private TalonSRX liftSlavePrimary;
@@ -59,23 +56,19 @@ public class Robot extends TimedRobot {
     private TalonSRX liftSlaveTertiary;
     private TalonSRX gathererMotor;
     private CKTalonSRX fourBarMotor;
-
     // Helper class for calculating drive motor speeds.
     private DriveHelper driveHelper = new DriveHelper();
-
     // Create the joysticks for the driver and the operator.
     private Joystick driverJoystick = new Joystick(0);
     private Joystick operatorJoystick = new Joystick(1);
-
     // Create the drive motors.
     private CANSparkMax leftMaster;
     private CANSparkMax rightMaster;
-
     //Create and initialize the compressor.
     private Compressor compressor = new Compressor(0);
 
     //Create the Solenoid and Solenoid state for hatch gathering.
-    private Solenoid hatchSolenoid;
+    private DoubleSolenoid hatchSolenoid;
     private boolean hatchSolenoidState = false;
 
     /**
@@ -84,9 +77,9 @@ public class Robot extends TimedRobot {
      * @param liftTalon The talon being power limited.
      */
     private static void configLiftMotorPower(TalonSRX liftTalon) {
-        liftTalon.configPeakCurrentLimit(60);
-        liftTalon.configPeakCurrentDuration(1200);
-        liftTalon.configContinuousCurrentLimit(30);
+        liftTalon.configPeakCurrentLimit(0);
+        liftTalon.configPeakCurrentDuration(0);
+        liftTalon.configContinuousCurrentLimit(15);
         liftTalon.enableCurrentLimit(true);
         liftTalon.configVoltageCompSaturation(12);
         liftTalon.enableVoltageCompensation(true);
@@ -102,7 +95,9 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        compressor.setClosedLoopControl(false);
+        // Start the compressor. Toggle this value to turn the compressor off.
+        compressor.setClosedLoopControl(true);
+
         // Initialize all the motor controllers.
         try {
 
@@ -112,12 +107,37 @@ public class Robot extends TimedRobot {
 
             // Initialize the drive motors.
             leftMaster = new CANSparkMax(0, kBrushless);
+
             CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
             CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+
+            leftMaster.setSmartCurrentLimit(55);
+            leftSlavePrimary.setSmartCurrentLimit(55);
+            leftSlaveSecondary.setSmartCurrentLimit(55);
+
+            leftMaster.setOpenLoopRampRate(1);
+            leftSlavePrimary.setOpenLoopRampRate(1);
+            leftSlaveSecondary.setOpenLoopRampRate(1);
+
+            leftMaster.setIdleMode(CANSparkMax.IdleMode.kCoast);
+            leftSlavePrimary.setIdleMode(CANSparkMax.IdleMode.kCoast);
+            leftSlaveSecondary.setIdleMode(CANSparkMax.IdleMode.kCoast);
 
             rightMaster = new CANSparkMax(13, kBrushless);
             CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
             CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+
+            rightMaster.setSmartCurrentLimit(55);
+            rightSlavePrimary.setSmartCurrentLimit(55);
+            rightSlaveSecondary.setSmartCurrentLimit(55);
+
+            rightMaster.setOpenLoopRampRate(1);
+            rightSlavePrimary.setOpenLoopRampRate(1);
+            rightSlaveSecondary.setOpenLoopRampRate(1);
+
+            rightMaster.setIdleMode(CANSparkMax.IdleMode.kCoast);
+            rightSlavePrimary.setIdleMode(CANSparkMax.IdleMode.kCoast);
+            rightSlaveSecondary.setIdleMode(CANSparkMax.IdleMode.kCoast);
 
             // Have the drive slaves follow their respective masters.
             leftSlavePrimary.follow(leftMaster);
@@ -221,12 +241,11 @@ public class Robot extends TimedRobot {
             fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.36), new InterpolatingDouble(0.00));
             fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.37), new InterpolatingDouble(0.00));
 
-//            fourBarMotor.setPIDF(5, 0, 16, 1);
-//            fourBarMotor.setMotionParameters(50, 100);
             fourBarMotor.setPIDF(2.4, 0, 16, 1);
             fourBarMotor.setMotionParameters(50, 100);
 
             fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(3386, 4830, true);
+
             //Absolute val of Min encoder position
             fourBarMotor.setAbsoluteEncoderOffset(0.1743164063);
 
@@ -237,20 +256,6 @@ public class Robot extends TimedRobot {
 
             fourBarMotor.setControlMode(MCControlMode.MotionVoodooArbFF);
             TuneablePIDOSC t = new TuneablePIDOSC("FourBar", 5805, true, fourBarMotor);
-            // Set the PID values for the four bar.
-//            fourBarMotor.config_kF(0, 2);
-//            fourBarMotor.config_kP(0, 1.5);// 3.5 / 2);
-//            fourBarMotor.config_kD(0, 4);// 7 / 2);
-
-            // Establish the cruise velocity and max acceleration for the motion magic.
-//            fourBarMotor.configMotionCruiseVelocity(100);
-//            fourBarMotor.configMotionAcceleration(200);
-
-            // Current limit the four bar motor.
-//            fourBarMotor.configPeakCurrentLimit(0);
-//            fourBarMotor.configPeakCurrentDuration(0);
-//            fourBarMotor.configContinuousCurrentLimit(5);
-//            fourBarMotor.enableCurrentLimit(true);
 
             //----------------------------------------------------------------------------------------------------------
             // Other Initialization
@@ -263,7 +268,7 @@ public class Robot extends TimedRobot {
             navX = new AHRS(SPI.Port.kMXP);
 
             //Initialize the Solenoid.
-            hatchSolenoid = new Solenoid(0);
+            hatchSolenoid = new DoubleSolenoid(0, 1);
 
         } catch (Exception Ex) {
             System.out.println("General Initialization Exception: " + Ex.getMessage());
@@ -298,7 +303,6 @@ public class Robot extends TimedRobot {
 
         // Print the Limelight area.
         //System.out.println(limelightArea);
-//        System.out.println(fourBarMotor.getPosition());
     }
 
     /**
@@ -362,6 +366,14 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
 
+        CANEncoder leftenc = leftMaster.getEncoder();
+        CANEncoder rightenc = rightMaster.getEncoder();
+
+
+        //System.out.println("Left Vel: " + leftenc.getVelocity() + " Right Vel: " + rightenc.getVelocity());
+
+        compressor.setClosedLoopControl(true);
+
         // Print the four bar arm's exact position.
 //        System.out.println("Four Bar Arm Position: " + fourBarMotor.getSelectedSensorPosition() + " Target: " + fourBarMotor.getActiveTrajectoryPosition() + " Duty Cycle: " + fourBarMotor.getMotorOutputPercent() + " Speed: " + fourBarMotor.getSelectedSensorVelocity());
 
@@ -372,11 +384,20 @@ public class Robot extends TimedRobot {
         // Determine the proper motor values based on the joystick data.
         double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
-        DriveMotorValues motorValues = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false);
+
+        if (driverJoystick.getRawButton(6)) {
+            driverTwist *= 0.2;
+        }
+
+        driverVertical = Math.copySign(driverVertical * driverVertical, driverVertical);
+        driverTwist = Math.copySign(driverTwist * driverTwist, driverTwist);
+
+        DriveMotorValues motorValues = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false, 0.75);
 
         try {
-            leftMaster.set(motorValues.leftDrive / 4);
-            rightMaster.set(motorValues.rightDrive / 4);
+            leftMaster.set(motorValues.leftDrive);
+            rightMaster.set(motorValues.rightDrive);
+            System.out.println("Left Duty: " + leftMaster.getAppliedOutput() + " Right Duty: " + rightMaster.getAppliedOutput());
         } catch (Exception Ex) {
             System.out.println("Drive Motor Exception: " + Ex.getMessage());
         }
@@ -387,34 +408,33 @@ public class Robot extends TimedRobot {
 
         try {
 
-            //All setpoints must be in rotations. Measure using getPosition()
-
+            //All set points must be in rotations. Measure using getPosition().
             // Four bar ball set positions.
-            int fourBarGatheringPositionBall = 0;
-            int fourBarHighScoreBall = 0;
-            int fourBarMiddleScoreBall = 0;
-            int fourBarLowScoreBall = 0;
+            double fourBarGatheringPositionBall = -0.10;
+            double fourBarLowScoreBall = 0.12;
+            double fourBarMiddleScoreBall = 0.12;
+            double fourBarHighScoreBall = 0.12;
 
             // Four bar hatch set positions.
-            int fourBarGatheringPositionHatch = 0;
-            int fourBarHighScoreHatch = 0;
-            int fourBarMiddleScoreHatch = 0;
-            int fourBarLowScoreHatch = 0;
+            double fourBarGatheringPositionHatch = 0;
+            double fourBarLowScoreHatch = 0;
+            double fourBarMiddleScoreHatch = 0;
+            double fourBarHighScoreHatch = 0;
 
             // Lift ball set positions.
             int liftGatheringPositionBall = 0;
-            int liftHighScoreBall = 0;
-            int liftMiddleScoreBall = 0;
             int liftLowScoreBall = 0;
+            int liftMiddleScoreBall = 15000;
+            int liftHighScoreBall = 25200;
 
             // Lift hatch set positions.
             int liftGatheringPositionHatch = 0;
-            int liftHighScoreHatch = 0;
-            int liftMiddleScoreHatch = 0;
             int liftLowScoreHatch = 0;
+            int liftMiddleScoreHatch = 0;
+            int liftHighScoreHatch = 0;
 
             //Disable when tuning PIDs
-            //when the right bumper is pressed, set the lift to ball positions
+            //when the right bumper is pressed, set the lift to ball positions.
             if (operatorJoystick.getRawButton(6)) {
 
                 // If the 'A' button is pressed, then set the ball gathering height.
@@ -471,16 +491,16 @@ public class Robot extends TimedRobot {
                 }
             }
 
-            if (Math.abs(operatorJoystick.getRawAxis(1)) > 0.1) {
-                liftMaster.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(1));
-            } else {
-                liftMaster.set(ControlMode.PercentOutput, 0);
-            }
+            //fourBarMotor.set(MCControlMode.PercentOut, 0, 0, 0);
 
             // Actuate the solenoid.
             if (operatorJoystick.getRawButtonPressed(5)) {
                 hatchSolenoidState = !hatchSolenoidState;
-                hatchSolenoid.set(hatchSolenoidState);
+                if (hatchSolenoidState) {
+                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                } else {
+                    hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
+                }
             }
 
             if (operatorJoystick.getRawAxis(2) > 0.1) {
