@@ -162,6 +162,11 @@ public class Robot extends TimedRobot {
             liftSlaveSecondary = new TalonSRX(9);
             liftSlaveTertiary = new TalonSRX(8);
 
+            liftMaster.enableVoltageCompensation(true);
+            liftSlavePrimary.enableVoltageCompensation(true);
+            liftSlaveSecondary.enableVoltageCompensation(true);
+            liftSlaveTertiary.enableVoltageCompensation(true);
+
             // Configure lift motor power.
             configLiftMotorPower(liftMaster);
             configLiftMotorPower(liftSlavePrimary);
@@ -389,7 +394,7 @@ public class Robot extends TimedRobot {
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
 
         if (driverJoystick.getRawButton(6)) {
-            driverTwist *= 0.2;
+            driverTwist *= 0.7;
         }
 
         driverVertical = Math.copySign(driverVertical * driverVertical, driverVertical);
