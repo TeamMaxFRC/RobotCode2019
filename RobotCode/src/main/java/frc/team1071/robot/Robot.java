@@ -441,6 +441,7 @@ public class Robot extends TimedRobot {
             int liftLowScoreHatch = 0;
             int liftMiddleScoreHatch = 15000;
             int liftHighScoreHatch = 25200;
+            int liftInstaGatherHatch = 2000;
 
             //Disable when tuning PIDs
             //when the right bumper is pressed, set the lift to ball positions.
@@ -516,6 +517,7 @@ public class Robot extends TimedRobot {
             else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse)
             {
                 hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                liftMaster.set(ControlMode.MotionMagic, liftInstaGatherHatch);
             }
 
             previousHatchSwitchValue = currentSwitchState;
