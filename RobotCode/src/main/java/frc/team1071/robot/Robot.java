@@ -7,7 +7,6 @@ import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
-import com.illposed.osc.OSCPacket;
 import com.illposed.osc.OSCPortOut;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANEncoder;
@@ -74,9 +73,6 @@ public class Robot extends TimedRobot {
     private DoubleSolenoid hatchSolenoid;
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
-
-    // TODO: Remove after drive tuning.
-    public boolean driveState = false;
 
     /**
      * Function that configures a lift motor's power.
@@ -373,38 +369,45 @@ public class Robot extends TimedRobot {
         hatchSolenoid.set(DoubleSolenoid.Value.kForward);
     }
 
-    // Made to bundle packets.
-    public void SendDriveData()
-    {
+    /**
+     * Sends drive information to be logged by the dashboard.
+     */
+    public void SendDriveData() {
+
+        // Create an OSC bundle.
         OSCBundle bundle = new OSCBundle();
 
+        // Append an identifier for the bundle.
         OSCMessage bundleIdentifier = new OSCMessage();
         bundleIdentifier.setAddress("/BundleIdentifier");
         bundleIdentifier.addArgument("DriveTrain");
 
+        // Append the robot timestamp for the data.
         OSCMessage timestamp = new OSCMessage();
         timestamp.setAddress("/timestamp");
         timestamp.addArgument(Timer.getFPGATimestamp());
 
-        // Left encoder data.
-        CANEncoder leftenc = leftMaster.getEncoder();
+        // Append the left encoder data.
+        CANEncoder leftEncoder = leftMaster.getEncoder();
         OSCMessage leftVelocity = new OSCMessage();
-        leftVelocity.setAddress("/leftVelocity");
-        leftVelocity.addArgument(leftenc.getVelocity());
+        leftVelocity.setAddress("/LeftVelocity");
+        leftVelocity.addArgument(leftEncoder.getVelocity());
 
-        // Right encoder data.
-        CANEncoder rightenc = rightMaster.getEncoder();
+        // Append the right encoder data.
+        CANEncoder rightEncoder = rightMaster.getEncoder();
         OSCMessage rightVelocity = new OSCMessage();
-        rightVelocity.setAddress("/rightVelocity");
-        rightVelocity.addArgument(rightenc.getVelocity());
+        rightVelocity.setAddress("/RightVelocity");
+        rightVelocity.addArgument(rightEncoder.getVelocity());
 
+        // Append the bus voltage.
         OSCMessage Voltage = new OSCMessage();
         Voltage.setAddress("/Voltage");
         Voltage.addArgument(leftMaster.getBusVoltage());
 
-        OSCMessage fusedheading = new OSCMessage();
-        fusedheading.setAddress("/FusedHeading");
-        fusedheading.addArgument((double)navX.getFusedHeading());
+        // Append the fused heading from the Nav X.
+        OSCMessage fusedHeading = new OSCMessage();
+        fusedHeading.setAddress("/FusedHeading");
+        fusedHeading.addArgument((double) navX.getFusedHeading());
 
         // Add these packets to the bundle.
         bundle.addPacket(bundleIdentifier);
@@ -412,22 +415,21 @@ public class Robot extends TimedRobot {
         bundle.addPacket(leftVelocity);
         bundle.addPacket(Voltage);
         bundle.addPacket(rightVelocity);
-        bundle.addPacket(fusedheading);
+        bundle.addPacket(fusedHeading);
 
-
-        try
-        {
+        // Send the drive log data.
+        try {
             oscWiredSender.send(bundle);
             oscWirelessSender.send(bundle);
-        }
-        catch(Exception ex)
-        {
-
+        } catch (Exception ex) {
+            System.out.println("Error sending the drive log data! " + ex.getMessage());
         }
     }
 
-    public void SendOSCData()
-    {
+    /**
+     * Calls the necessary helpers to send all the relevant OSC data.
+     */
+    public void SendOSCData() {
         SendDriveData();
     }
 
@@ -436,17 +438,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
-
-        CANEncoder leftenc = leftMaster.getEncoder();
-        CANEncoder rightenc = rightMaster.getEncoder();
-
-
-        //System.out.println("Left Vel: " + leftenc.getVelocity() + " Right Vel: " + rightenc.getVelocity());
-
-        compressor.setClosedLoopControl(true);
-
-        // Print the four bar arm's exact position.
-//        System.out.println("Four Bar Arm Position: " + fourBarMotor.getSelectedSensorPosition() + " Target: " + fourBarMotor.getActiveTrajectoryPosition() + " Duty Cycle: " + fourBarMotor.getMotorOutputPercent() + " Speed: " + fourBarMotor.getSelectedSensorVelocity());
 
         //--------------------------------------------------------------------------------------------------------------
         // Drive Controls
@@ -473,7 +464,8 @@ public class Robot extends TimedRobot {
             System.out.println("Drive Motor Exception: " + Ex.getMessage());
         }
 
-        if (driverJoystick.getRawButton(1)){
+        // TODO: Remove this after drive train tuning has been completed.
+        if (driverJoystick.getRawButton(1)) {
             leftMaster.set(0.0);
             rightMaster.set(1.0);
         } else if (driverJoystick.getRawButton(2)) {
@@ -487,8 +479,9 @@ public class Robot extends TimedRobot {
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------
-
         try {
+
+            // TODO: Properly comment, or clean up this code.
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(operatorJoystick.getRawButton(8) ? 1 : 0);
 
             //All set points must be in rotations. Measure using getPosition().
@@ -515,7 +508,7 @@ public class Robot extends TimedRobot {
             int liftLowScoreHatch = 0;
             int liftMiddleScoreHatch = 15000;
             int liftHighScoreHatch = 25200;
-            int liftInstaGatherHatch = 2000;
+            int liftInstantGatherHatch = 2000;
 
             //Disable when tuning PIDs
             //when the right bumper is pressed, set the lift to ball positions.
@@ -575,27 +568,29 @@ public class Robot extends TimedRobot {
                 }
             }
 
-            //fourBarMotor.set(MCControlMode.PercentOut, 0, 0, 0);
+            // Detect the current state of the magnetic limit switch.
             boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
-            // Actuate the solenoid.
+
+            // Actuate the solenoid depending on the user button press and the magnetic switch.
             if (operatorJoystick.getRawButtonPressed(5)) {
+
                 if (hatchSolenoid.get() == DoubleSolenoid.Value.kForward) {
                     hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
-                }
-                else
-                {
+                } else {
                     hatchSolenoid.set(DoubleSolenoid.Value.kForward);
                 }
+
                 hatchSwitchDebounceCounter = 40;
-            }
-            else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse)
-            {
+
+            } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse) {
                 hatchSolenoid.set(DoubleSolenoid.Value.kForward);
-                liftMaster.set(ControlMode.MotionMagic, liftInstaGatherHatch);
+                liftMaster.set(ControlMode.MotionMagic, liftInstantGatherHatch);
             }
 
+            // Store the last magnetic switch value.
             previousHatchSwitchValue = currentSwitchState;
 
+            // Run the cargo gatherer based how hard the triggers are being pressed.
             if (operatorJoystick.getRawAxis(2) > 0.1) {
                 gathererMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(2));
             } else if (operatorJoystick.getRawAxis(3) > 0.1) {
@@ -603,6 +598,19 @@ public class Robot extends TimedRobot {
             } else {
                 gathererMotor.set(ControlMode.PercentOutput, 0);
             }
+
+        } catch (Exception Ex) {
+            System.out.println("Exception in operator controls! " + Ex.getMessage());
+        }
+
+        //----------------------------------------------------------------------------------------------------------
+        // Other Periodic Operations
+        //----------------------------------------------------------------------------------------------------------
+
+        // Send OSC data to the dashboard.
+        SendOSCData();
+
+        try {
 
             // Create messages for the current motor values.
             OSCMessage leftMotorValueMessage = new OSCMessage();
@@ -725,10 +733,10 @@ public class Robot extends TimedRobot {
             OSCMessage rightMasterGyro = new OSCMessage();
 
             leftMasterGyro.setAddress("/Robot/Motors/leftMaster/GyroZ");
-            leftMasterGyro.addArgument((double)navX.getVelocityZ());
+            leftMasterGyro.addArgument((double) navX.getVelocityZ());
 
             rightMasterGyro.setAddress("/Robot/Motors/rightMaster/GyroZ");
-            rightMasterGyro.addArgument((double)navX.getVelocityZ());
+            rightMasterGyro.addArgument((double) navX.getVelocityZ());
 
             oscWiredSender.send(leftMasterGyro);
             oscWirelessSender.send(leftMasterGyro);
@@ -783,15 +791,6 @@ public class Robot extends TimedRobot {
         } catch (Exception Ex) {
             System.out.println("Exception in OSC sending! " + Ex.getMessage());
         }
-
-        try {
-            // System.out.println("Test: " + navX.getRawGyroZ());
-            // System.out.println("Motor: " + vals.leftDrive + " / " + vals.rightDrive);
-        } catch (Exception Ex) {
-
-        }
-
-        SendOSCData();
 
     }
 

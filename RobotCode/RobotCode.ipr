@@ -16,9 +16,7 @@
       <module name="RobotCode.test" target="11" />
     </bytecodeTargetLevel>
   </component>
-  <component name="CopyrightManager" default="">
-    <module2copyright />
-  </component>
+  <component name="CopyrightManager" default="" />
   <component name="DependencyValidationManager">
     <option name="SKIP_IMPORT_STATEMENTS" value="false" />
   </component>
@@ -48,6 +46,7 @@
   <component name="InspectionProjectProfileManager">
     <profile version="1.0">
       <option name="myName" value="Project Default" />
+      <inspection_tool class="Duplicates" enabled="false" level="WARNING" enabled_by_default="false" />
     </profile>
     <version value="1.0" />
   </component>
