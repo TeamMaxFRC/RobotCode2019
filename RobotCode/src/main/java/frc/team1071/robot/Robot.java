@@ -464,18 +464,6 @@ public class Robot extends TimedRobot {
             System.out.println("Drive Motor Exception: " + Ex.getMessage());
         }
 
-        // TODO: Remove this after drive train tuning has been completed.
-        if (driverJoystick.getRawButton(1)) {
-            leftMaster.set(0.0);
-            rightMaster.set(1.0);
-        } else if (driverJoystick.getRawButton(2)) {
-            leftMaster.set(0.0);
-            rightMaster.set(1.0);
-        } else {
-            leftMaster.set(0);
-            rightMaster.set(0);
-        }
-
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------
@@ -625,8 +613,8 @@ public class Robot extends TimedRobot {
             OSCMessage navXGyroMessage = new OSCMessage();
 
             // Send navX Gyro values
-            navXGyroMessage.setAddress("/Robot/NavX/Gyro");
-            navXGyroMessage.addArgument(navX.getFusedHeading());
+            // navXGyroMessage.setAddress("/Robot/NavX/Gyro");
+            // navXGyroMessage.addArgument(navX.getFusedHeading());
 
             // Send the current motor values
             leftMotorValueMessage.setAddress("/Robot/Motors/Left/Value");
