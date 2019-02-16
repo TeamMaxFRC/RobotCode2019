@@ -75,6 +75,9 @@ public class Robot extends TimedRobot {
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
 
+    // TODO: Remove after drive tuning.
+    public boolean driveState = false;
+
     /**
      * Function that configures a lift motor's power.
      *
@@ -470,6 +473,17 @@ public class Robot extends TimedRobot {
             System.out.println("Drive Motor Exception: " + Ex.getMessage());
         }
 
+        if (driverJoystick.getRawButton(1)){
+            leftMaster.set(0.0);
+            rightMaster.set(1.0);
+        } else if (driverJoystick.getRawButton(2)) {
+            leftMaster.set(0.0);
+            rightMaster.set(1.0);
+        } else {
+            leftMaster.set(0);
+            rightMaster.set(0);
+        }
+
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------
@@ -667,6 +681,21 @@ public class Robot extends TimedRobot {
 //            oscWiredSender.send(liftTertiaryVoltage);
 //            oscWirelessSender.send(liftTertiaryVoltage);
 
+            // Send current values for the drive motors.
+            OSCMessage leftMasterVoltage = new OSCMessage();
+            OSCMessage rightMasterVoltage = new OSCMessage();
+
+            leftMasterVoltage.setAddress("/Robot/Motors/leftMaster/Voltage");
+            leftMasterVoltage.addArgument(leftMaster.getBusVoltage());
+
+            rightMasterVoltage.setAddress("/Robot/Motors/rightMaster/Voltage");
+            rightMasterVoltage.addArgument(rightMaster.getBusVoltage());
+
+            oscWiredSender.send(leftMasterVoltage);
+            oscWirelessSender.send(leftMasterVoltage);
+            oscWiredSender.send(rightMasterVoltage);
+            oscWirelessSender.send(rightMasterVoltage);
+
             // Send the lift encoder velocity.
             OSCMessage liftEncoderVelocity = new OSCMessage();
 
@@ -675,6 +704,36 @@ public class Robot extends TimedRobot {
 
 //            oscWiredSender.send(liftEncoderVelocity);
 //            oscWirelessSender.send(liftEncoderVelocity);
+
+            // Send the drive encoder velocity.
+            OSCMessage leftMasterVelocity = new OSCMessage();
+            OSCMessage rightMasterVelocity = new OSCMessage();
+
+            leftMasterVelocity.setAddress("/Robot/Motors/leftMaster/EncoderVelocity");
+            leftMasterVelocity.addArgument(leftMaster.getEncoder().getVelocity());
+
+            rightMasterVelocity.setAddress("/Robot/Motors/rightMaster/EncoderVelocity");
+            rightMasterVelocity.addArgument(rightMaster.getEncoder().getVelocity());
+
+            oscWiredSender.send(leftMasterVelocity);
+            oscWirelessSender.send(leftMasterVelocity);
+            oscWiredSender.send(rightMasterVelocity);
+            oscWirelessSender.send(rightMasterVelocity);
+
+            // Send the gyro data, packed with the master drive motors.
+            OSCMessage leftMasterGyro = new OSCMessage();
+            OSCMessage rightMasterGyro = new OSCMessage();
+
+            leftMasterGyro.setAddress("/Robot/Motors/leftMaster/GyroZ");
+            leftMasterGyro.addArgument((double)navX.getVelocityZ());
+
+            rightMasterGyro.setAddress("/Robot/Motors/rightMaster/GyroZ");
+            rightMasterGyro.addArgument((double)navX.getVelocityZ());
+
+            oscWiredSender.send(leftMasterGyro);
+            oscWirelessSender.send(leftMasterGyro);
+            oscWiredSender.send(rightMasterGyro);
+            oscWirelessSender.send(rightMasterGyro);
 
             // Send the lift encoder position.
             OSCMessage liftEncoderPosition = new OSCMessage();
