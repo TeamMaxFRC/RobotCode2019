@@ -5,7 +5,9 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
+import com.illposed.osc.OSCPacket;
 import com.illposed.osc.OSCPortOut;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANEncoder;
@@ -368,6 +370,64 @@ public class Robot extends TimedRobot {
         hatchSolenoid.set(DoubleSolenoid.Value.kForward);
     }
 
+    // Made to bundle packets.
+    public void SendLeftMasterData()
+    {
+        OSCBundle bundle = new OSCBundle();
+
+        OSCMessage bundleIdentifier = new OSCMessage();
+        bundleIdentifier.setAddress("/BundleIdentifier");
+        bundleIdentifier.addArgument("DriveTrain");
+
+        OSCMessage timestamp = new OSCMessage();
+        timestamp.setAddress("/timestamp");
+        timestamp.addArgument(Timer.getFPGATimestamp());
+
+        // Left encoder data.
+        CANEncoder leftenc = leftMaster.getEncoder();
+        OSCMessage leftVelocity = new OSCMessage();
+        leftVelocity.setAddress("/leftVelocity");
+        leftVelocity.addArgument(leftenc.getVelocity());
+
+        // Right encoder data.
+        CANEncoder rightenc = leftMaster.getEncoder();
+        OSCMessage rightVelocity = new OSCMessage();
+        rightVelocity.setAddress("/rightVelocity");
+        rightVelocity.addArgument(rightenc.getVelocity());
+
+        OSCMessage Voltage = new OSCMessage();
+        Voltage.setAddress("/Voltage");
+        Voltage.addArgument(leftMaster.getBusVoltage());
+
+        OSCMessage fusedheading = new OSCMessage();
+        fusedheading.setAddress("/FusedHeading");
+        fusedheading.addArgument((double)navX.getFusedHeading());
+
+        // Add these packets to the bundle.
+        bundle.addPacket(bundleIdentifier);
+        bundle.addPacket(timestamp);
+        bundle.addPacket(leftVelocity);
+        bundle.addPacket(Voltage);
+        bundle.addPacket(rightVelocity);
+        bundle.addPacket(fusedheading);
+
+
+        try
+        {
+            oscWiredSender.send(bundle);
+            oscWirelessSender.send(bundle);
+        }
+        catch(Exception ex)
+        {
+
+        }
+    }
+
+    public void SendOSCData()
+    {
+        SendLeftMasterData();
+    }
+
     /**
      * This function is called periodically during operator control.
      */
@@ -671,6 +731,8 @@ public class Robot extends TimedRobot {
         } catch (Exception Ex) {
 
         }
+
+        SendOSCData();
 
     }
 
