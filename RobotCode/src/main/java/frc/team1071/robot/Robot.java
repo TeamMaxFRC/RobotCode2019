@@ -374,7 +374,7 @@ public class Robot extends TimedRobot {
     }
 
     // Made to bundle packets.
-    public void SendLeftMasterData()
+    public void SendDriveData()
     {
         OSCBundle bundle = new OSCBundle();
 
@@ -393,7 +393,7 @@ public class Robot extends TimedRobot {
         leftVelocity.addArgument(leftenc.getVelocity());
 
         // Right encoder data.
-        CANEncoder rightenc = leftMaster.getEncoder();
+        CANEncoder rightenc = rightMaster.getEncoder();
         OSCMessage rightVelocity = new OSCMessage();
         rightVelocity.setAddress("/rightVelocity");
         rightVelocity.addArgument(rightenc.getVelocity());
@@ -428,7 +428,7 @@ public class Robot extends TimedRobot {
 
     public void SendOSCData()
     {
-        SendLeftMasterData();
+        SendDriveData();
     }
 
     /**
