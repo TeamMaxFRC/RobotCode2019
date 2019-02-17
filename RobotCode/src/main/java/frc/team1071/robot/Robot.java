@@ -9,7 +9,6 @@ import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
 import com.kauailabs.navx.frc.AHRS;
-import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -280,8 +279,6 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) == 1;
-
-        SendOSCData();
     }
 
     /**
@@ -348,7 +345,68 @@ public class Robot extends TimedRobot {
     /**
      * Calls the necessary helpers to send all the relevant OSC data.
      */
-    private void SendOSCData() {
+    private void SendOscData() {
+        SendOscCurrentData();
+    }
+
+    /**
+     * Pools together the current data for each subsystem and sends it to the dashboard.
+     */
+    private void SendOscCurrentData() {
+
+        // Create an OSC bundle.
+        OSCBundle bundle = new OSCBundle();
+
+        // Append an identifier for the bundle.
+        OSCMessage bundleIdentifier = new OSCMessage();
+        bundleIdentifier.setAddress("/BundleIdentifier");
+        bundleIdentifier.addArgument("CurrentBundle");
+
+        // Append the current total for the drive motors.
+        OSCMessage driveCurrent = new OSCMessage();
+        driveCurrent.setAddress("/DriveCurrent");
+
+        double totalDriveCurrent = 0;
+        totalDriveCurrent += leftMaster.getOutputCurrent() + leftSlavePrimary.getOutputCurrent() + leftSlaveSecondary.getOutputCurrent();
+        totalDriveCurrent += rightMaster.getOutputCurrent() + rightSlavePrimary.getOutputCurrent() + rightSlaveSecondary.getOutputCurrent();
+
+        driveCurrent.addArgument(totalDriveCurrent);
+
+        // Append the current total for the lift motors.
+        OSCMessage liftCurrent = new OSCMessage();
+        liftCurrent.setAddress("/LiftCurrent");
+
+        double totalLiftCurrent = 0;
+        totalLiftCurrent += liftMaster.getOutputCurrent() + liftSlavePrimary.getOutputCurrent();
+        totalLiftCurrent += liftSlaveSecondary.getOutputCurrent() + liftSlaveTertiary.getOutputCurrent();
+
+        liftCurrent.addArgument(totalLiftCurrent);
+
+        // Append the current for the four bar motor.
+        OSCMessage fourBarCurrent = new OSCMessage();
+        fourBarCurrent.setAddress("/FourBarCurrent");
+        fourBarCurrent.addArgument(fourBarMotor.getOutputCurrent());
+
+        // Append the current for the gatherer motor.
+        OSCMessage gathererCurrent = new OSCMessage();
+        gathererCurrent.setAddress("/GathererCurrent");
+        gathererCurrent.addArgument(gathererMotor.getOutputCurrent());
+
+        // Add these packets to the bundle.
+        bundle.addPacket(bundleIdentifier);
+        bundle.addPacket(driveCurrent);
+        bundle.addPacket(liftCurrent);
+        bundle.addPacket(fourBarCurrent);
+        bundle.addPacket(gathererCurrent);
+
+        // Send the drive log data.
+        try {
+            oscWiredSender.send(bundle);
+            oscWirelessSender.send(bundle);
+        } catch (Exception ex) {
+            System.out.println("Error sending the current data! " + ex.getMessage());
+        }
+
     }
 
     /**
@@ -499,7 +557,7 @@ public class Robot extends TimedRobot {
         //----------------------------------------------------------------------------------------------------------
 
         // Send OSC data to the dashboard.
-        SendOSCData();
+        SendOscData();
 
         try {
 
