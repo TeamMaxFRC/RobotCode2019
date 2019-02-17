@@ -56,6 +56,9 @@ public class Robot extends TimedRobot {
     private double limelightX, limelightY, limelightArea;
     private boolean limelightTarget;
 
+    // Variables for Limelight targeting function.
+    double m_LimelightDriveCommand, m_LimelightSteerCommand;
+
     // Create the auxiliary motors.
     private TalonSRX liftMaster;
     private TalonSRX liftSlavePrimary;
@@ -281,7 +284,7 @@ public class Robot extends TimedRobot {
         limelightX = tx.getDouble(0.0);
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
-        limelightTarget = tv.getDouble(0.0) == 1;
+        limelightTarget = tv.getDouble(0.0) >= 1.0;
     }
 
     /**
@@ -429,11 +432,30 @@ public class Robot extends TimedRobot {
         //--------------------------------------------------------------------------------------------------------------
 
         // Determine the proper motor values based on the joystick data.
-        double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
-        double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
-
-        DriveTrain.Run(driverVertical, driverTwist, false, false, driverJoystick.getRawAxis(3));
-
+        double driverVertical = 0;
+        double driverTwist = 0;
+        boolean driverQuickTurn = false;
+        Update_Limelight_Tracking();
+        if (driverJoystick.getRawButton(5)) {
+            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipeline").getDouble(0) != 1) {
+                NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipline").setNumber(1);
+            } else {
+                if (limelightTarget)
+                {
+                    driverVertical = m_LimelightDriveCommand;
+                    driverTwist = m_LimelightSteerCommand;
+                    driverQuickTurn = true;
+                }
+            }
+        } else {
+            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipe").getDouble(0) != 0){
+                NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipline").setNumber(0);
+            }
+            driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
+            driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
+            driverQuickTurn = driverJoystick.getRawButton(6);
+        }
+        DriveTrain.Run(driverVertical, driverTwist, driverQuickTurn, false, driverJoystick.getRawAxis(3));
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------
@@ -756,5 +778,40 @@ public class Robot extends TimedRobot {
     @Override
     public void testPeriodic() {
 
+    }
+
+    /**
+     * This function implements a simple method of generating driving and steering commands
+     * based on the tracking data from a limelight camera.
+     */
+    public void Update_Limelight_Tracking()
+    {
+        // These numbers must be tuned for your Robot!  Be careful!
+        // TODO: These values need to be adjusted for our robot.
+        final double STEER_K = 0.03;                    // how hard to turn toward the target
+        final double DRIVE_K = 0.26;                    // how hard to drive fwd toward the target
+        final double DESIRED_TARGET_AREA = 13.0;        // Area of the target when the robot reaches the wall
+        final double MAX_DRIVE = 0.7;                   // Simple speed limit so we don't drive too fast
+
+        if (!limelightTarget)
+        {
+            m_LimelightDriveCommand = 0.0;
+            m_LimelightSteerCommand = 0.0;
+            return;
+        }
+
+        // Start with proportional steering
+        double steer_cmd = limelightX * STEER_K;
+        m_LimelightSteerCommand = steer_cmd;
+
+        // try to drive forward until the target area reaches our desired area
+        double drive_cmd = (DESIRED_TARGET_AREA - limelightArea) * DRIVE_K;
+
+        // don't let the robot drive too fast into the goal
+        if (drive_cmd > MAX_DRIVE)
+        {
+            drive_cmd = MAX_DRIVE;
+        }
+        m_LimelightDriveCommand = drive_cmd;
     }
 }
