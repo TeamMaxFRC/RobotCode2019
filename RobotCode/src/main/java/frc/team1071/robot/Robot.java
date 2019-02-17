@@ -39,11 +39,14 @@ public class Robot extends TimedRobot {
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
+
     // Create the NavX.
     private AHRS navX;
+
     // Create the OSC sender on the robot.
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
+
     // Create the Limelight.
     private NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
     private NetworkTableEntry tx = table.getEntry("tx");
@@ -52,6 +55,7 @@ public class Robot extends TimedRobot {
     private NetworkTableEntry tv = table.getEntry("tv");
     private double limelightX, limelightY, limelightArea;
     private boolean limelightTarget;
+
     // Create the auxiliary motors.
     private TalonSRX liftMaster;
     private TalonSRX liftSlavePrimary;
@@ -59,24 +63,23 @@ public class Robot extends TimedRobot {
     private TalonSRX liftSlaveTertiary;
     private TalonSRX gathererMotor;
     private CKTalonSRX fourBarMotor;
-    // Helper class for calculating drive motor speeds.
-    private DriveHelper driveHelper = new DriveHelper();
+
     // Create the joysticks for the driver and the operator.
     private Joystick driverJoystick = new Joystick(0);
     private Joystick operatorJoystick = new Joystick(1);
-    // Create the drive motors.
-    private Compressor compressor = new Compressor(0);
 
-    // Drive Motors
+    // Create the drive motors.
     private CANSparkMax leftMaster;
     private CANSparkMax rightMaster;
-    CANSparkMax leftSlavePrimary;
-    CANSparkMax leftSlaveSecondary;
-    CANSparkMax rightSlavePrimary;
-    CANSparkMax rightSlaveSecondary;
-    //Create and initialize the compressor.
+    private CANSparkMax leftSlavePrimary;
+    private CANSparkMax leftSlaveSecondary;
+    private CANSparkMax rightSlavePrimary;
+    private CANSparkMax rightSlaveSecondary;
 
-    //Create the Solenoid and Solenoid state for hatch gathering.
+    // Create and initialize the compressor.
+    private Compressor compressor = new Compressor(0);
+
+    // Create the Solenoid and Solenoid state for hatch gathering.
     private DoubleSolenoid hatchSolenoid;
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
@@ -392,12 +395,18 @@ public class Robot extends TimedRobot {
         gathererCurrent.setAddress("/GathererCurrent");
         gathererCurrent.addArgument(gathererMotor.getOutputCurrent());
 
+        // Append the current for the compressor.
+        OSCMessage compressorCurrent = new OSCMessage();
+        compressorCurrent.setAddress("/CompressorCurrent");
+        compressorCurrent.addArgument(compressor.getCompressorCurrent());
+
         // Add these packets to the bundle.
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(driveCurrent);
         bundle.addPacket(liftCurrent);
         bundle.addPacket(fourBarCurrent);
         bundle.addPacket(gathererCurrent);
+        bundle.addPacket(compressorCurrent);
 
         // Send the drive log data.
         try {
