@@ -35,6 +35,8 @@ import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
  */
 public class Robot extends TimedRobot {
 
+    private CurvatureDrive DriveTrain;
+
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
@@ -65,8 +67,14 @@ public class Robot extends TimedRobot {
     private Joystick operatorJoystick = new Joystick(1);
     // Create the drive motors.
     private Compressor compressor = new Compressor(0);
+
+    // Drive Motors
     private CANSparkMax leftMaster;
     private CANSparkMax rightMaster;
+    CANSparkMax leftSlavePrimary;
+    CANSparkMax leftSlaveSecondary;
+    CANSparkMax rightSlavePrimary;
+    CANSparkMax rightSlaveSecondary;
     //Create and initialize the compressor.
 
     //Create the Solenoid and Solenoid state for hatch gathering.
@@ -109,49 +117,12 @@ public class Robot extends TimedRobot {
 
             // Initialize the drive motors.
             leftMaster = new CANSparkMax(0, kBrushless);
-
-            CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
-            CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
-
-            leftMaster.setSmartCurrentLimit(55);
-            leftSlavePrimary.setSmartCurrentLimit(55);
-            leftSlaveSecondary.setSmartCurrentLimit(55);
-
-            leftMaster.setOpenLoopRampRate(1);
-            leftSlavePrimary.setOpenLoopRampRate(1);
-            leftSlaveSecondary.setOpenLoopRampRate(1);
-
-            leftMaster.setIdleMode(CANSparkMax.IdleMode.kCoast);
-            leftSlavePrimary.setIdleMode(CANSparkMax.IdleMode.kCoast);
-            leftSlaveSecondary.setIdleMode(CANSparkMax.IdleMode.kCoast);
+            leftSlavePrimary = new CANSparkMax(1, kBrushless);
+            leftSlaveSecondary = new CANSparkMax(2, kBrushless);
 
             rightMaster = new CANSparkMax(13, kBrushless);
-            CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
-            CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
-
-            rightMaster.setSmartCurrentLimit(55);
-            rightSlavePrimary.setSmartCurrentLimit(55);
-            rightSlaveSecondary.setSmartCurrentLimit(55);
-
-            rightMaster.setOpenLoopRampRate(1);
-            rightSlavePrimary.setOpenLoopRampRate(1);
-            rightSlaveSecondary.setOpenLoopRampRate(1);
-
-            rightMaster.setIdleMode(CANSparkMax.IdleMode.kCoast);
-            rightSlavePrimary.setIdleMode(CANSparkMax.IdleMode.kCoast);
-            rightSlaveSecondary.setIdleMode(CANSparkMax.IdleMode.kCoast);
-
-            // Have the drive slaves follow their respective masters.
-            leftSlavePrimary.follow(leftMaster);
-            leftSlaveSecondary.follow(leftMaster);
-
-            rightSlavePrimary.follow(rightMaster);
-            rightSlaveSecondary.follow(rightMaster);
-
-            // Invert the right side of the drive train.
-            rightMaster.setInverted(true);
-            rightSlavePrimary.setInverted(true);
-            rightSlaveSecondary.setInverted(true);
+            rightSlavePrimary = new CANSparkMax(14, kBrushless);
+            rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
             //----------------------------------------------------------------------------------------------------------
             // Lift Motors
@@ -273,6 +244,8 @@ public class Robot extends TimedRobot {
             // Initialize the NavX.
             navX = new AHRS(SPI.Port.kMXP);
 
+            DriveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary, rightMaster, rightSlavePrimary, rightSlaveSecondary, navX);
+
             //Initialize the Solenoid.
             hatchSolenoid = new DoubleSolenoid(0, 1);
             hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
@@ -373,67 +346,9 @@ public class Robot extends TimedRobot {
     }
 
     /**
-     * Sends drive information to be logged by the dashboard.
-     */
-    private void SendDriveData() {
-
-        // Create an OSC bundle.
-        OSCBundle bundle = new OSCBundle();
-
-        // Append an identifier for the bundle.
-        OSCMessage bundleIdentifier = new OSCMessage();
-        bundleIdentifier.setAddress("/BundleIdentifier");
-        bundleIdentifier.addArgument("DriveTrain");
-
-        // Append the robot timestamp for the data.
-        OSCMessage timestamp = new OSCMessage();
-        timestamp.setAddress("/timestamp");
-        timestamp.addArgument(Timer.getFPGATimestamp());
-
-        // Append the left encoder data.
-        CANEncoder leftEncoder = leftMaster.getEncoder();
-        OSCMessage leftVelocity = new OSCMessage();
-        leftVelocity.setAddress("/LeftVelocity");
-        leftVelocity.addArgument(leftEncoder.getVelocity());
-
-        // Append the right encoder data.
-        CANEncoder rightEncoder = rightMaster.getEncoder();
-        OSCMessage rightVelocity = new OSCMessage();
-        rightVelocity.setAddress("/RightVelocity");
-        rightVelocity.addArgument(rightEncoder.getVelocity());
-
-        // Append the bus voltage.
-        OSCMessage Voltage = new OSCMessage();
-        Voltage.setAddress("/Voltage");
-        Voltage.addArgument(leftMaster.getBusVoltage());
-
-        // Append the fused heading from the Nav X.
-        OSCMessage fusedHeading = new OSCMessage();
-        fusedHeading.setAddress("/FusedHeading");
-        fusedHeading.addArgument((double) navX.getFusedHeading());
-
-        // Add these packets to the bundle.
-        bundle.addPacket(bundleIdentifier);
-        bundle.addPacket(timestamp);
-        bundle.addPacket(leftVelocity);
-        bundle.addPacket(Voltage);
-        bundle.addPacket(rightVelocity);
-        bundle.addPacket(fusedHeading);
-
-        // Send the drive log data.
-        try {
-            oscWiredSender.send(bundle);
-            oscWirelessSender.send(bundle);
-        } catch (Exception ex) {
-            System.out.println("Error sending the drive log data! " + ex.getMessage());
-        }
-    }
-
-    /**
      * Calls the necessary helpers to send all the relevant OSC data.
      */
     private void SendOSCData() {
-        SendDriveData();
     }
 
     /**
@@ -450,22 +365,7 @@ public class Robot extends TimedRobot {
         double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
         double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
 
-        if (driverJoystick.getRawButton(6)) {
-            driverTwist *= 0.7;
-        }
-
-        driverVertical = Math.copySign(driverVertical * driverVertical, driverVertical);
-        driverTwist = Math.copySign(driverTwist * driverTwist, driverTwist);
-
-        DriveMotorValues motorValues = driveHelper.calculateOutput(driverVertical, driverTwist, driverJoystick.getRawButton(6), false, 0.75);
-
-        try {
-            leftMaster.set(motorValues.leftDrive);
-            rightMaster.set(motorValues.rightDrive);
-            System.out.println("Left Duty: " + leftMaster.getAppliedOutput() + " Right Duty: " + rightMaster.getAppliedOutput());
-        } catch (Exception Ex) {
-            System.out.println("Drive Motor Exception: " + Ex.getMessage());
-        }
+        DriveTrain.Run(driverVertical, driverTwist, false, false, driverJoystick.getRawAxis(3));
 
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
@@ -619,12 +519,12 @@ public class Robot extends TimedRobot {
             // navXGyroMessage.setAddress("/Robot/NavX/Gyro");
             // navXGyroMessage.addArgument(navX.getFusedHeading());
 
-            // Send the current motor values
-            leftMotorValueMessage.setAddress("/Robot/Motors/Left/Value");
-            leftMotorValueMessage.addArgument(motorValues.leftDrive);
-
-            rightMotorValueMessage.setAddress("/Robot/Motors/Right/Value");
-            rightMotorValueMessage.addArgument(motorValues.rightDrive);
+//            // Send the current motor values
+//            leftMotorValueMessage.setAddress("/Robot/Motors/Left/Value");
+//            leftMotorValueMessage.addArgument(motorValues.leftDrive);
+//
+//            rightMotorValueMessage.setAddress("/Robot/Motors/Right/Value");
+//            rightMotorValueMessage.addArgument(motorValues.rightDrive);
 
             // Send the current values for the lift motors.
             OSCMessage liftMasterCurrent = new OSCMessage();
