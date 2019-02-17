@@ -260,9 +260,7 @@ public class Robot extends TimedRobot {
             fourBarMotor.configForwardSoftLimitEnable(true);
             fourBarMotor.configReverseSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(-0.1743164063));
             fourBarMotor.configReverseSoftLimitEnable(true);
-
             fourBarMotor.setControlMode(MCControlMode.MotionVoodooArbFF);
-            //TuneablePIDOSC t = new TuneablePIDOSC("FourBar", 5805, true, fourBarMotor);
 
             //----------------------------------------------------------------------------------------------------------
             // Other Initialization
@@ -309,6 +307,8 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) == 1;
+
+        SendOSCData();
     }
 
     /**
@@ -336,11 +336,11 @@ public class Robot extends TimedRobot {
     }
 
     /**
-     * This function writes the provided line to the console.
+     * This function writes the provided line to the dashboard console.
      *
      * @param Line The string being written to the dashboard console.
      */
-    public void writeConsole(String Line) {
+    private void writeConsole(String Line) {
 
         try {
             // Create the console message.
@@ -365,14 +365,17 @@ public class Robot extends TimedRobot {
         // Reset the lift's encoder position.
         liftMaster.setSelectedSensorPosition(0);
 
-        // Reset the solenoid position
+        // Reset the solenoid position.
         hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+
+        // Report that the console is functional.
+        writeConsole("Robot has enabled!");
     }
 
     /**
      * Sends drive information to be logged by the dashboard.
      */
-    public void SendDriveData() {
+    private void SendDriveData() {
 
         // Create an OSC bundle.
         OSCBundle bundle = new OSCBundle();
@@ -429,7 +432,7 @@ public class Robot extends TimedRobot {
     /**
      * Calls the necessary helpers to send all the relevant OSC data.
      */
-    public void SendOSCData() {
+    private void SendOSCData() {
         SendDriveData();
     }
 
