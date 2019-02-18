@@ -418,6 +418,212 @@ public class Robot extends TimedRobot {
 
     }
 
+    // Send controller data
+    private void SendOscControllerData() {
+
+        // Create an OSC bundle.
+        OSCBundle bundle = new OSCBundle();
+
+        // Append an identifier  for the bundle
+        OSCMessage bundleIdentifier = new OSCMessage();
+        bundleIdentifier.setAddress("/BundleIdentifier");
+        bundleIdentifier.addArgument("ControllerDataBundle");
+
+        int convertedBoolean;
+
+// Send driver controller data
+        OSCMessage aButton = new OSCMessage();
+        aButton.setAddress("/Controller/AButton");
+        convertedBoolean = driverJoystick.getRawButton(1) ? 1 : 0;
+        aButton.addArgument(convertedBoolean);
+
+        OSCMessage bButton = new OSCMessage();
+        bButton.setAddress("/Controller/BButton");
+        convertedBoolean = driverJoystick.getRawButton(2) ? 1 : 0;
+        bButton.addArgument(convertedBoolean);
+
+        OSCMessage xButton = new OSCMessage();
+        xButton.setAddress("/Controller/XButton");
+        convertedBoolean = driverJoystick.getRawButton(3) ? 1 : 0;
+        xButton.addArgument(convertedBoolean);
+
+        OSCMessage yButton = new OSCMessage();
+        yButton.setAddress("/Controller/YButton");
+        convertedBoolean = driverJoystick.getRawButton(4) ? 1 : 0;
+        yButton.addArgument(convertedBoolean);
+
+        OSCMessage leftBumper = new OSCMessage();
+        leftBumper.setAddress("/Controller/LeftBumper");
+        convertedBoolean = driverJoystick.getRawButton(5) ? 1 : 0;
+        leftBumper.addArgument(convertedBoolean);
+
+        OSCMessage rightBumper = new OSCMessage();
+        rightBumper.setAddress("/Controller/RightBumper");
+        convertedBoolean = driverJoystick.getRawButton(6) ? 1 : 0;
+        rightBumper.addArgument(convertedBoolean);
+
+        OSCMessage viewButton = new OSCMessage();
+        viewButton.setAddress("/Controller/viewButton");
+        convertedBoolean = driverJoystick.getRawButton(7) ? 1 : 0;
+        viewButton.addArgument(convertedBoolean);
+
+        OSCMessage menuButton = new OSCMessage();
+        menuButton.setAddress("/Controller/menuButton");
+        convertedBoolean = driverJoystick.getRawButton(8) ? 1 : 0;
+        menuButton.addArgument(convertedBoolean);
+
+        OSCMessage leftStickButton = new OSCMessage();
+        leftStickButton.setAddress("/Controller/leftStickButton");
+        convertedBoolean = driverJoystick.getRawButton(9) ? 1 : 0;
+        leftStickButton.addArgument(convertedBoolean);
+
+        OSCMessage rightStickButton = new OSCMessage();
+        rightStickButton.setAddress("/Controller/rightStickButton");
+        convertedBoolean = driverJoystick.getRawButton(10) ? 1 : 0;
+        rightStickButton.addArgument(convertedBoolean);
+
+        OSCMessage leftStickAxisX = new OSCMessage();
+        leftStickAxisX.setAddress("/Controller/LeftStickAxisX");
+        leftStickAxisX.addArgument(driverJoystick.getRawAxis(0));
+
+        OSCMessage leftStickAxisY = new OSCMessage();
+        leftStickAxisY.setAddress("/Controller/LeftStickAxisY");
+        leftStickAxisY.addArgument(driverJoystick.getRawAxis(1));
+
+        OSCMessage rightStickAxisX = new OSCMessage();
+        rightStickAxisX.setAddress("/Controller/RightStickAxisX");
+        rightStickAxisX.addArgument(driverJoystick.getRawAxis(4));
+
+        OSCMessage rightStickAxisY = new OSCMessage();
+        rightStickAxisY.setAddress("/Controller/RightStickAxisY");
+        rightStickAxisY.addArgument(driverJoystick.getRawAxis(5));
+
+        OSCMessage leftTrigger = new OSCMessage();
+        leftTrigger.setAddress("/Controller/LeftTrigger");
+        leftTrigger.addArgument(driverJoystick.getRawAxis(2));
+
+        OSCMessage rightTrigger = new OSCMessage();
+        rightTrigger.setAddress("/Controller/RightTrigger");
+        rightTrigger.addArgument(driverJoystick.getRawAxis(3));
+
+        // Send operator controller data
+        OSCMessage aButton2 = new OSCMessage();
+        aButton2.setAddress("/Controller/AButton2");
+        convertedBoolean = operatorJoystick.getRawButton(1) ? 1 : 0;
+        aButton2.addArgument(convertedBoolean);
+
+        OSCMessage bButton2 = new OSCMessage();
+        bButton2.setAddress("/Controller/BButton2");
+        convertedBoolean = operatorJoystick.getRawButton(2) ? 1 : 0;
+        bButton2.addArgument(convertedBoolean);
+
+        OSCMessage xButton2 = new OSCMessage();
+        xButton2.setAddress("/Controller/XButton2");
+        convertedBoolean = operatorJoystick.getRawButton(3) ? 1 : 0;
+        xButton2.addArgument(convertedBoolean);
+
+        OSCMessage yButton2 = new OSCMessage();
+        yButton2.setAddress("/Controller/YButton2");
+        convertedBoolean = operatorJoystick.getRawButton(4) ? 1 : 0;
+        yButton2.addArgument(convertedBoolean);
+
+        OSCMessage leftBumper2 = new OSCMessage();
+        leftBumper2.setAddress("/Controller/LeftBumper2");
+        convertedBoolean = operatorJoystick.getRawButton(5) ? 1 : 0;
+        leftBumper2.addArgument(convertedBoolean);
+
+        OSCMessage rightBumper2 = new OSCMessage();
+        rightBumper2.setAddress("/Controller/RightBumper2");
+        convertedBoolean = operatorJoystick.getRawButton(6) ? 1 : 0;
+        rightBumper2.addArgument(convertedBoolean);
+
+        OSCMessage viewButton2 = new OSCMessage();
+        viewButton2.setAddress("/Controller/viewButton2");
+        convertedBoolean = operatorJoystick.getRawButton(7) ? 1 : 0;
+        viewButton2.addArgument(convertedBoolean);
+
+        OSCMessage menuButton2 = new OSCMessage();
+        menuButton2.setAddress("/Controller/menuButton2");
+        convertedBoolean = operatorJoystick.getRawButton(8) ? 1 : 0;
+        menuButton2.addArgument(convertedBoolean);
+
+        OSCMessage leftStickButton2 = new OSCMessage();
+        leftStickButton2.setAddress("/Controller/leftStickButton2");
+        convertedBoolean = operatorJoystick.getRawButton(9) ? 1 : 0;
+        leftStickButton2.addArgument(convertedBoolean);
+
+        OSCMessage rightStickButton2 = new OSCMessage();
+        rightStickButton2.setAddress("/Controller/rightStickButton2");
+        convertedBoolean = operatorJoystick.getRawButton(10) ? 1 : 0;
+        rightStickButton2.addArgument(convertedBoolean);
+
+        OSCMessage leftStickAxisX2 = new OSCMessage();
+        leftStickAxisX2.setAddress("/Controller/LeftStickAxisX2");
+        leftStickAxisX2.addArgument(operatorJoystick.getRawAxis(0));
+
+        OSCMessage leftStickAxisY2 = new OSCMessage();
+        leftStickAxisY2.setAddress("/Controller/LeftStickAxisY2");
+        leftStickAxisY2.addArgument(operatorJoystick.getRawAxis(1));
+
+        OSCMessage rightStickAxisX2 = new OSCMessage();
+        rightStickAxisX2.setAddress("/Controller/RightStickAxisX2");
+        rightStickAxisX2.addArgument(operatorJoystick.getRawAxis(4));
+
+        OSCMessage rightStickAxisY2 = new OSCMessage();
+        rightStickAxisY2.setAddress("/Controller/RightStickAxisY2");
+        rightStickAxisY2.addArgument(driverJoystick.getRawAxis(5));
+
+        OSCMessage leftTrigger2 = new OSCMessage();
+        leftTrigger2.setAddress("/Controller/LeftTrigger2");
+        leftTrigger2.addArgument(operatorJoystick.getRawAxis(2));
+
+        OSCMessage rightTrigger2 = new OSCMessage();
+        rightTrigger2.setAddress("/Controller/RightTrigger2");
+        rightTrigger2.addArgument(operatorJoystick.getRawAxis(3));
+
+        // Add these packets to the bundle
+        bundle.addPacket(bundleIdentifier);
+        bundle.addPacket(aButton);
+        bundle.addPacket(bButton);
+        bundle.addPacket(xButton);
+        bundle.addPacket(yButton);
+        bundle.addPacket(viewButton);
+        bundle.addPacket(menuButton);
+        bundle.addPacket(leftBumper);
+        bundle.addPacket(rightBumper);
+        bundle.addPacket(leftStickButton);
+        bundle.addPacket(rightStickButton);
+        bundle.addPacket(leftStickAxisX);
+        bundle.addPacket(leftStickAxisY);
+        bundle.addPacket(rightStickAxisX);
+        bundle.addPacket(rightStickAxisY);
+        bundle.addPacket(rightTrigger);
+        bundle.addPacket(leftTrigger);
+        bundle.addPacket(aButton2);
+        bundle.addPacket(bButton2);
+        bundle.addPacket(xButton2);
+        bundle.addPacket(yButton2);
+        bundle.addPacket(viewButton2);
+        bundle.addPacket(menuButton2);
+        bundle.addPacket(leftBumper2);
+        bundle.addPacket(rightBumper2);
+        bundle.addPacket(leftStickButton2);
+        bundle.addPacket(rightStickButton2);
+        bundle.addPacket(leftStickAxisX2);
+        bundle.addPacket(leftStickAxisY2);
+        bundle.addPacket(rightStickAxisX2);
+        bundle.addPacket(rightStickAxisY2);
+        bundle.addPacket(rightTrigger2);
+        bundle.addPacket(leftTrigger2);
+
+        try {
+            oscWiredSender.send(bundle);
+            oscWirelessSender.send(bundle);
+        } catch (Exception ex) {
+            System.out.println("Error sending the controller data!" + ex.getMessage());
+        }
+    }
+
     /**
      * This function is called periodically during operator control.
      */
@@ -575,8 +781,6 @@ public class Robot extends TimedRobot {
             OSCMessage rightMotorValueMessage = new OSCMessage();
 
             // Set the current motor values in the OSC messages.
-            OSCMessage leftMasterCurrentMessage = new OSCMessage();
-            OSCMessage rightMasterCurrentMessage = new OSCMessage();
             OSCMessage ControllerButtonsMessage = new OSCMessage();
 
             // Create message for navX gyro values
@@ -751,6 +955,8 @@ public class Robot extends TimedRobot {
         }
 
     }
+
+
 
     // This function is called periodically during test mode.
     @Override
