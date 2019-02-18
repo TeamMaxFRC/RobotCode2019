@@ -286,6 +286,7 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) >= 1.0;
+        System.out.println(fourBarMotor.getPosition());
     }
 
     /**
@@ -588,16 +589,16 @@ public class Robot extends TimedRobot {
 
             //All set points must be in rotations. Measure using getPosition().
             // Four bar ball set positions.
-            double fourBarGatheringPositionBall = -0.123;
-            double fourBarLowScoreBall = 0.12;
-            double fourBarMiddleScoreBall = 0.12;
-            double fourBarHighScoreBall = 0.12;
+            double fourBarGatheringPositionBall = 0.36;
+            double fourBarLowScoreBall = fourBarGatheringPositionBall + 0.24;
+            double fourBarMiddleScoreBall = fourBarGatheringPositionBall + 0.24;
+            double fourBarHighScoreBall = fourBarGatheringPositionBall + 0.24;
 
             // Four bar hatch set positions.
-            double fourBarGatheringPositionHatch = -0.10;
-            double fourBarLowScoreHatch = -0.10;
-            double fourBarMiddleScoreHatch = -0.10;
-            double fourBarHighScoreHatch = -0.05;
+            double fourBarGatheringPositionHatch = fourBarGatheringPositionBall + 0.02;
+            double fourBarLowScoreHatch = fourBarGatheringPositionHatch + 0.02;
+            double fourBarMiddleScoreHatch = fourBarGatheringPositionHatch + 0.02;
+            double fourBarHighScoreHatch = fourBarGatheringPositionBall + 0.07;
 
             // Lift ball set positions.
             int liftGatheringPositionBall = 0;
