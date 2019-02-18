@@ -22,6 +22,7 @@ import frc.team195.motorcontrol.PDPBreaker;
 import frc.team254.InterpolatingDouble;
 
 import java.net.InetAddress;
+import java.util.BitSet;
 
 import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 
@@ -422,6 +423,128 @@ public class Robot extends TimedRobot {
     }
 
     /**
+     * Pools together the error data and sends it to the dashboard.
+     */
+    private void SendOscErrorData() {
+
+        // Variable for converting Spark MAX faults.
+        short faultShort;
+        byte[] faultBytes = new byte[2];
+        BitSet faultBits = new BitSet();
+
+        // Create an OSC bundle.
+        OSCBundle bundle = new OSCBundle();
+
+        // Append an identifier for the bundle.
+        OSCMessage bundleIdentifier = new OSCMessage();
+        bundleIdentifier.setAddress("/BundleIdentifier");
+        bundleIdentifier.addArgument("ErrorBundle");
+
+        // See which errors there are and send to error widget.
+        OSCMessage leftMasterFaults = new OSCMessage();
+        leftMasterFaults.setAddress("/LeftMasterFaults");
+
+        faultShort = leftMaster.getFaults();
+
+        faultBytes[0] = (byte) (faultShort & 0xFF);
+        faultBytes[1] = (byte) (faultShort >> 8 & 0xFF);
+
+        faultBits = BitSet.valueOf(faultBytes);
+
+        for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
+            leftMasterFaults.addArgument(i);
+        }
+
+        OSCMessage rightMasterFaults = new OSCMessage();
+        rightMasterFaults.setAddress("/RightMasterFaults");
+
+        faultShort = rightMaster.getFaults();
+
+        faultBytes[0] = (byte) (faultShort & 0xFF);
+        faultBytes[1] = (byte) (faultShort >> 8 & 0xFF);
+
+        faultBits = BitSet.valueOf(faultBytes);
+
+        for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
+            rightMasterFaults.addArgument(i);
+        }
+
+        OSCMessage leftSlavePrimaryFaults = new OSCMessage();
+        leftSlavePrimaryFaults.setAddress("/LeftSlavePrimaryFaults");
+
+        faultShort = leftSlavePrimary.getFaults();
+
+        faultBytes[0] = (byte) (faultShort & 0xFF);
+        faultBytes[1] = (byte) (faultShort >> 8 & 0xFF);
+
+        faultBits = BitSet.valueOf(faultBytes);
+
+        for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
+            leftSlavePrimaryFaults.addArgument(i);
+        }
+
+        OSCMessage rightSlavePrimaryFaults = new OSCMessage();
+        rightSlavePrimaryFaults.setAddress("/RightSlavePrimaryFaults");
+
+        faultShort = rightSlavePrimary.getFaults();
+
+        faultBytes[0] = (byte) (faultShort & 0xFF);
+        faultBytes[1] = (byte) (faultShort >> 8 & 0xFF);
+
+        faultBits = BitSet.valueOf(faultBytes);
+
+        for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
+            rightSlavePrimaryFaults.addArgument(i);
+        }
+
+        OSCMessage leftSlaveSecondaryFaults = new OSCMessage();
+        leftSlaveSecondaryFaults.setAddress("/LeftSlaveSecondaryFaults");
+
+        faultShort = leftSlaveSecondary.getFaults();
+
+        faultBytes[0] = (byte) (faultShort & 0xFF);
+        faultBytes[1] = (byte) (faultShort >> 8 & 0xFF);
+
+        faultBits = BitSet.valueOf(faultBytes);
+
+        for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
+            leftSlaveSecondaryFaults.addArgument(i);
+        }
+
+        OSCMessage rightSlaveSecondaryFaults = new OSCMessage();
+        rightSlaveSecondaryFaults.setAddress("/RightSlaveSecondaryFaults");
+
+        faultShort = rightSlaveSecondary.getFaults();
+
+        faultBytes[0] = (byte) (faultShort & 0xFF);
+        faultBytes[1] = (byte) (faultShort >> 8 & 0xFF);
+
+        faultBits = BitSet.valueOf(faultBytes);
+
+        for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
+            rightSlaveSecondaryFaults.addArgument(i);
+        }
+
+        // Add packets to the bundle.
+        bundle.addPacket(bundleIdentifier);
+        bundle.addPacket(leftMasterFaults);
+        bundle.addPacket(rightMasterFaults);
+        bundle.addPacket(leftSlavePrimaryFaults);
+        bundle.addPacket(rightSlavePrimaryFaults);
+        bundle.addPacket(leftSlaveSecondaryFaults);
+        bundle.addPacket(rightSlaveSecondaryFaults);
+
+        // Send the drive log data.
+        try {
+            oscWiredSender.send(bundle);
+            oscWirelessSender.send(bundle);
+        } catch (Exception ex) {
+            System.out.println("Error sending the error data! " + ex.getMessage());
+        }
+
+    }
+
+    /**
      * This function is called periodically during operator control.
      */
     @Override
@@ -440,15 +563,14 @@ public class Robot extends TimedRobot {
             if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipeline").getDouble(0) != 1) {
                 NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipline").setNumber(1);
             } else {
-                if (limelightTarget)
-                {
+                if (limelightTarget) {
                     driverVertical = m_LimelightDriveCommand;
                     driverTwist = m_LimelightSteerCommand;
                     driverQuickTurn = true;
                 }
             }
         } else {
-            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipe").getDouble(0) != 0){
+            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipe").getDouble(0) != 0) {
                 NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipline").setNumber(0);
             }
             driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
@@ -784,8 +906,7 @@ public class Robot extends TimedRobot {
      * This function implements a simple method of generating driving and steering commands
      * based on the tracking data from a limelight camera.
      */
-    public void Update_Limelight_Tracking()
-    {
+    public void Update_Limelight_Tracking() {
         // These numbers must be tuned for your Robot!  Be careful!
         // TODO: These values need to be adjusted for our robot.
         final double STEER_K = 0.03;                    // how hard to turn toward the target
@@ -793,8 +914,7 @@ public class Robot extends TimedRobot {
         final double DESIRED_TARGET_AREA = 13.0;        // Area of the target when the robot reaches the wall
         final double MAX_DRIVE = 0.7;                   // Simple speed limit so we don't drive too fast
 
-        if (!limelightTarget)
-        {
+        if (!limelightTarget) {
             m_LimelightDriveCommand = 0.0;
             m_LimelightSteerCommand = 0.0;
             return;
@@ -808,8 +928,7 @@ public class Robot extends TimedRobot {
         double drive_cmd = (DESIRED_TARGET_AREA - limelightArea) * DRIVE_K;
 
         // don't let the robot drive too fast into the goal
-        if (drive_cmd > MAX_DRIVE)
-        {
+        if (drive_cmd > MAX_DRIVE) {
             drive_cmd = MAX_DRIVE;
         }
         m_LimelightDriveCommand = drive_cmd;
