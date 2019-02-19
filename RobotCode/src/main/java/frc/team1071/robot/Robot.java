@@ -42,7 +42,8 @@ public class Robot extends TimedRobot {
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
     // Is the stream deck in use?
-    private final boolean isStreamDeck = true;
+    private static final boolean isStreamDeck = true;
+    private static final boolean isPracticeRobot = false;
 
     // Create the NavX.
     private AHRS navX;
@@ -91,11 +92,9 @@ public class Robot extends TimedRobot {
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
 
-    // Encoder constants for the four bar.
-    final static double fourBarEncoderOffset = -0.30078125;
-    final static double fourBarGatheringPositionBall = 0.363525390625;
-    final static double fourbarEncoderMin = 0;
-    final static double fourbarEncoderMax = 0;
+    // Encoder constants for the four bar, based off the practice robot specifics.
+    static double fourBarEncoderOffset = isPracticeRobot ? -0.30078125 : 0;
+    static double fourBarGatheringPositionBall = isPracticeRobot ? 0.363525390625 : 0;
 
     /**
      * Function that configures a lift motor's power.
@@ -144,10 +143,17 @@ public class Robot extends TimedRobot {
             //----------------------------------------------------------------------------------------------------------
 
             // Initialize the lift motors.
-            liftMaster = new TalonSRX(4);
-            liftSlavePrimary = new TalonSRX(7);
-            liftSlaveSecondary = new TalonSRX(9);
-            liftSlaveTertiary = new TalonSRX(8);
+            if (isPracticeRobot) {
+                liftMaster = new TalonSRX(4);
+                liftSlavePrimary = new TalonSRX(7);
+                liftSlaveSecondary = new TalonSRX(9);
+                liftSlaveTertiary = new TalonSRX(8);
+            } else {
+                liftMaster = new TalonSRX(7);
+                liftSlavePrimary = new TalonSRX(4);
+                liftSlaveSecondary = new TalonSRX(5);
+                liftSlaveTertiary = new TalonSRX(6);
+            }
 
             liftMaster.enableVoltageCompensation(true);
             liftSlavePrimary.enableVoltageCompensation(true);
@@ -188,7 +194,11 @@ public class Robot extends TimedRobot {
             //----------------------------------------------------------------------------------------------------------
 
             // Initialize the four bar motor.
-            fourBarMotor = new CKTalonSRX(5, false, PDPBreaker.B30A);
+            if (isPracticeRobot) {
+                fourBarMotor = new CKTalonSRX(5, false, PDPBreaker.B30A);
+            } else {
+                fourBarMotor = new CKTalonSRX(9, false, PDPBreaker.B30A);
+            }
 
             // Set the encoder mode to absolute position.
             fourBarMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
@@ -253,7 +263,12 @@ public class Robot extends TimedRobot {
             //----------------------------------------------------------------------------------------------------------
 
             // Initialize the gatherer.
-            gathererMotor = new TalonSRX(6);
+            if (isPracticeRobot) {
+                gathererMotor = new TalonSRX(6);
+            } else {
+                gathererMotor = new TalonSRX(8);
+            }
+
             gathererMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
 
             // Initialize the NavX.
@@ -295,8 +310,8 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) >= 1.0;
-        //System.out.println(fourBarMotor.getPosition());
-        //System.out.println(fourBarMotor.getSelectedSensorPosition());
+        System.out.println(fourBarMotor.getPosition());
+        // System.out.println(fourBarMotor.getSelectedSensorPosition());
 
         // Always send out error data.
         SendOscErrorData();
