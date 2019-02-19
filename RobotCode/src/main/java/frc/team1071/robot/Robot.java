@@ -41,6 +41,9 @@ public class Robot extends TimedRobot {
     private static final String kCustomAuto = "My Auto";
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+    // Is the stream deck in use?
+    private final boolean isStreamDeck = true;
+
     // Create the NavX.
     private AHRS navX;
 
@@ -88,7 +91,7 @@ public class Robot extends TimedRobot {
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
 
-    // Encoder constants for the fourbar.
+    // Encoder constants for the four bar.
     final static double fourBarEncoderOffset = -0.30078125;
     final static double fourBarGatheringPositionBall = 0.363525390625;
     final static double fourbarEncoderMin = 0;
@@ -672,7 +675,7 @@ public class Robot extends TimedRobot {
             leftMasterFaults.addArgument(i);
         }
 
-        if (leftMasterFaults.getArguments().isEmpty()){
+        if (leftMasterFaults.getArguments().isEmpty()) {
             leftMasterFaults.addArgument(-1);
         }
 
@@ -690,7 +693,7 @@ public class Robot extends TimedRobot {
             rightMasterFaults.addArgument(i);
         }
 
-        if (rightMasterFaults.getArguments().isEmpty()){
+        if (rightMasterFaults.getArguments().isEmpty()) {
             rightMasterFaults.addArgument(-1);
         }
 
@@ -708,7 +711,7 @@ public class Robot extends TimedRobot {
             leftSlavePrimaryFaults.addArgument(i);
         }
 
-        if (leftSlavePrimaryFaults.getArguments().isEmpty()){
+        if (leftSlavePrimaryFaults.getArguments().isEmpty()) {
             leftSlavePrimaryFaults.addArgument(-1);
         }
 
@@ -726,7 +729,7 @@ public class Robot extends TimedRobot {
             rightSlavePrimaryFaults.addArgument(i);
         }
 
-        if (rightSlavePrimaryFaults.getArguments().isEmpty()){
+        if (rightSlavePrimaryFaults.getArguments().isEmpty()) {
             rightSlavePrimaryFaults.addArgument(-1);
         }
 
@@ -744,7 +747,7 @@ public class Robot extends TimedRobot {
             leftSlaveSecondaryFaults.addArgument(i);
         }
 
-        if (leftSlaveSecondaryFaults.getArguments().isEmpty()){
+        if (leftSlaveSecondaryFaults.getArguments().isEmpty()) {
             leftSlaveSecondaryFaults.addArgument(-1);
         }
 
@@ -762,7 +765,7 @@ public class Robot extends TimedRobot {
             rightSlaveSecondaryFaults.addArgument(i);
         }
 
-        if (rightSlaveSecondaryFaults.getArguments().isEmpty()){
+        if (rightSlaveSecondaryFaults.getArguments().isEmpty()) {
             rightSlaveSecondaryFaults.addArgument(-1);
         }
 
@@ -852,96 +855,180 @@ public class Robot extends TimedRobot {
             int liftHighScoreHatch = 25200;
             int liftInstantGatherHatch = 2000;
 
-            //Disable when tuning PIDs
-            //when the right bumper is pressed, set the lift to ball positions.
-            if (operatorJoystick.getRawButton(6)) {
+            // Lift set to gathering position.
+            int liftGatheringPosition = 0;
 
-                // If the 'A' button is pressed, then set the ball gathering height.
-                if (operatorJoystick.getRawButtonPressed(1)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
-                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
-                }
+            //When buttons are pressed on the stream deck, set lift to hatch positions.
+            if (isStreamDeck) {
 
-                // If the 'B' button is pressed, then set the low ball position.
-                if (operatorJoystick.getRawButtonPressed(2)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
-                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
-                }
-
-                // If the 'X' button is pressed, then set the middle ball position.
-                if (operatorJoystick.getRawButtonPressed(3)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
-                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
-                }
-
-                // If the 'Y' button is pressed, then set the high ball position.
-                if (operatorJoystick.getRawButtonPressed(4)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
-                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
-                }
-
-            }
-
-            // When the right bumper isn't pressed, set the lift to hatch positions.
-            else {
-
-                // If the 'A' button is pressed, then set the hatch gathering position.
-                if (operatorJoystick.getRawButtonPressed(1)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionHatch);
-                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionHatch, 0, 0);
-                }
-
-                // If the 'B' button is pressed, set the low hatch position.
-                if (operatorJoystick.getRawButtonPressed(2)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
-                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreHatch, 0, 0);
-                }
-
-                // If the 'X' button is pressed, set the middle hatch position.
-                if (operatorJoystick.getRawButtonPressed(3)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
-                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreHatch, 0, 0);
-                }
-
-                // If the 'Y' button is pressed, set the high hatch position.
+                // If the '4' button is pressed, then lift sets to top hatch position.
                 if (operatorJoystick.getRawButtonPressed(4)) {
                     liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
                     fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreHatch, 0, 0);
                 }
-            }
 
-            // Detect the current state of the magnetic limit switch.
-            boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
-
-            // Actuate the solenoid depending on the user button press and the magnetic switch.
-            if (operatorJoystick.getRawButtonPressed(5)) {
-
-                if (hatchSolenoid.get() == DoubleSolenoid.Value.kForward) {
-                    hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
-                } else {
-                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                // If the '9' button is pressed, then lift sets to middle hatch position.
+                if (operatorJoystick.getRawButtonPressed(9)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreHatch, 0, 0);
                 }
 
-                hatchSwitchDebounceCounter = 40;
+                // If the '14' button is pressed, then lift sets to low hatch position.
+                if (operatorJoystick.getRawButtonPressed(14)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreHatch, 0, 0);
+                }
+                //When buttons are pressed on the stream deck, set lift to ball positions.
 
-            } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse) {
-                hatchSolenoid.set(DoubleSolenoid.Value.kForward);
-                liftMaster.set(ControlMode.MotionMagic, liftInstantGatherHatch);
-            }
+                //If the '5' button is pressed, then the lift sets to top ball position.
+                if (operatorJoystick.getRawButtonPressed(5)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
+                }
 
-            // Store the last magnetic switch value.
-            previousHatchSwitchValue = currentSwitchState;
+                //If the '10' button is pressed, then the lift sets to the middle ball position.
+                if (operatorJoystick.getRawButtonPressed(10)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
+                }
 
-            // Run the cargo gatherer based how hard the triggers are being pressed.
-            if (operatorJoystick.getRawAxis(2) > 0.1) {
-                gathererMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(2));
-            } else if (operatorJoystick.getRawAxis(3) > 0.1) {
-                gathererMotor.set(ControlMode.PercentOutput, -operatorJoystick.getRawAxis(3));
+                //If the '15' button is pressed, then the lift sets to the low ball position.
+                if (operatorJoystick.getRawButtonPressed(15)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
+                }
+
+                //When the '13' button is pressed, the lift sets to gathering position.
+                if (operatorJoystick.getRawButtonPressed(13)) {
+                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPosition);
+                    fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
+                }
+
+                // When buttons are pressed, the gatherer will gather in '1' or launch out '2'.
+                if (operatorJoystick.getRawButton(1)) {
+                    gathererMotor.set(ControlMode.PercentOutput, 0.75);
+                } else if (operatorJoystick.getRawButton(2)) {
+                    gathererMotor.set(ControlMode.PercentOutput, -0.75);
+                } else {
+                    gathererMotor.set(ControlMode.PercentOutput, 0);
+                }
+
+                // Detect the current state of the magnetic limit switch.
+                boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
+
+                // Actuate the solenoid depending on the user button press and the magnetic switch.
+                if (operatorJoystick.getRawButtonPressed(6)) {
+                    hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
+                    hatchSwitchDebounceCounter = 40;
+
+                } else if (operatorJoystick.getRawButtonPressed(7)) {
+                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                    hatchSwitchDebounceCounter = 40;
+
+                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse) {
+                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                    liftMaster.set(ControlMode.MotionMagic, liftInstantGatherHatch);
+
+                }
+
+                // Store the last magnetic switch value.
+                previousHatchSwitchValue = currentSwitchState;
+
             } else {
-                gathererMotor.set(ControlMode.PercentOutput, 0);
+
+                //Disable when tuning PIDs
+                //when the right bumper is pressed, set the lift to ball positions.
+                if (operatorJoystick.getRawButton(6)) {
+
+                    // If the 'A' button is pressed, then set the ball gathering height.
+                    if (operatorJoystick.getRawButtonPressed(1)) {
+                        liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
+                        fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
+                    }
+
+                    // If the 'B' button is pressed, then set the low ball position.
+                    if (operatorJoystick.getRawButtonPressed(2)) {
+                        liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
+                        fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
+                    }
+
+                    // If the 'X' button is pressed, then set the middle ball position.
+                    if (operatorJoystick.getRawButtonPressed(3)) {
+                        liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
+                        fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
+                    }
+
+                    // If the 'Y' button is pressed, then set the high ball position.
+                    if (operatorJoystick.getRawButtonPressed(4)) {
+                        liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
+                        fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
+                    }
+
+                }
+
+                // When the right bumper isn't pressed, set the lift to hatch positions.
+                else {
+
+                    // If the 'A' button is pressed, then set the hatch gathering position.
+                    if (operatorJoystick.getRawButtonPressed(1)) {
+                        liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionHatch);
+                        fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionHatch, 0, 0);
+                    }
+
+                    // If the 'B' button is pressed, set the low hatch position.
+                    if (operatorJoystick.getRawButtonPressed(2)) {
+                        liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
+                        fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreHatch, 0, 0);
+                    }
+
+                    // If the 'X' button is pressed, set the middle hatch position.
+                    if (operatorJoystick.getRawButtonPressed(3)) {
+                        liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
+                        fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreHatch, 0, 0);
+                    }
+
+                    // If the 'Y' button is pressed, set the high hatch position.
+                    if (operatorJoystick.getRawButtonPressed(4)) {
+                        liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
+                        fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreHatch, 0, 0);
+                    }
+                }
+
+                // Detect the current state of the magnetic limit switch.
+                boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
+
+                // Actuate the solenoid depending on the user button press and the magnetic switch.
+                if (operatorJoystick.getRawButtonPressed(5)) {
+
+                    if (hatchSolenoid.get() == DoubleSolenoid.Value.kForward) {
+                        hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
+                    } else {
+                        hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                    }
+
+                    hatchSwitchDebounceCounter = 40;
+
+                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse) {
+                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                    liftMaster.set(ControlMode.MotionMagic, liftInstantGatherHatch);
+                }
+
+                // Store the last magnetic switch value.
+                previousHatchSwitchValue = currentSwitchState;
+
+                // Run the cargo gatherer based how hard the triggers are being pressed.
+                if (operatorJoystick.getRawAxis(2) > 0.1) {
+                    gathererMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(2));
+                } else if (operatorJoystick.getRawAxis(3) > 0.1) {
+                    gathererMotor.set(ControlMode.PercentOutput, -operatorJoystick.getRawAxis(3));
+                } else {
+                    gathererMotor.set(ControlMode.PercentOutput, 0);
+                }
+
             }
 
-        } catch (Exception Ex) {
+        } catch (
+                Exception Ex) {
             System.out.println("Exception in operator controls! " + Ex.getMessage());
         }
 
@@ -1128,7 +1215,8 @@ public class Robot extends TimedRobot {
             oscWirelessSender.send(limelightMessageA);
             oscWirelessSender.send(limelightMessageV);
 
-        } catch (Exception Ex) {
+        } catch (
+                Exception Ex) {
             System.out.println("Exception in OSC sending! " + Ex.getMessage());
         }
 
