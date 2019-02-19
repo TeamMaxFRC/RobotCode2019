@@ -113,15 +113,13 @@
         <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.kauailabs.navx.frc/navx-java/3.1.344/d4d52e9506c6d7a139b3a473ce62d4b2d2ed6019/navx-java-3.1.344-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Gradle: com.revrobotics.frc:SparkMax-java:1.1.5">
+    <library name="Gradle: com.revrobotics.frc:SparkMax-java:1.1.8">
       <CLASSES>
-        <root url="jar://$USER_HOME$/frc2019/maven/com/revrobotics/frc/SparkMax-java/1.1.5/SparkMax-java-1.1.5.jar!/" />
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.revrobotics.frc/SparkMax-java/1.1.5/7a0ed8abcb82b1205e011161c41abce270d7d649/SparkMax-java-1.1.5.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.revrobotics.frc/SparkMax-java/1.1.8/45a49448bed601609aa14b14d286a611b9598862/SparkMax-java-1.1.8.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$USER_HOME$/frc2019/maven/com/revrobotics/frc/SparkMax-java/1.1.5/SparkMax-java-1.1.5-sources.jar!/" />
-        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.revrobotics.frc/SparkMax-java/1.1.5/6e870a380c97795b1aed203e6b180ce79cf87712/SparkMax-java-1.1.5-sources.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.revrobotics.frc/SparkMax-java/1.1.8/b4d2b9c25a2552f92acb4551852527a571b4c248/SparkMax-java-1.1.8-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Gradle: edu.wpi.first.cameraserver:cameraserver-java:2019.2.1">
