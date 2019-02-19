@@ -88,6 +88,12 @@ public class Robot extends TimedRobot {
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
 
+    // Encoder constants for the fourbar.
+    final static double fourBarEncoderOffset = -0.30078125;
+    final static double fourBarGatheringPositionBall = 0.363525390625 ;
+    final static double fourbarEncoderMin = 0;
+    final static double fourbarEncoderMax = 0;
+
     /**
      * Function that configures a lift motor's power.
      *
@@ -183,8 +189,8 @@ public class Robot extends TimedRobot {
 
             // Set the encoder mode to absolute position.
             fourBarMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
-            fourBarMotor.setInverted(true);
-            fourBarMotor.setSensorPhase(true);
+            fourBarMotor.setInverted(false);
+            fourBarMotor.setSensorPhase(false);
 
             fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.00), new InterpolatingDouble(0.00));
             fourBarMotor.motionVoodooArbFFLookup.put(new InterpolatingDouble(0.01), new InterpolatingDouble(0.00));
@@ -231,11 +237,11 @@ public class Robot extends TimedRobot {
             fourBarMotor.getSensorCollection().syncQuadratureWithPulseWidth(3386, 4830, true);
 
             //Absolute val of Min encoder position
-            fourBarMotor.setAbsoluteEncoderOffset(0.1743164063);
+            fourBarMotor.setAbsoluteEncoderOffset(fourBarEncoderOffset);
 
             fourBarMotor.configForwardSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(0.1767578125));
-            fourBarMotor.configForwardSoftLimitEnable(true);
-            fourBarMotor.configReverseSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(-0.1743164063));
+            fourBarMotor.configForwardSoftLimitEnable(false);
+            fourBarMotor.configReverseSoftLimitThreshold(fourBarMotor.convertRotationsToNativeUnits(fourBarGatheringPositionBall));
             fourBarMotor.configReverseSoftLimitEnable(true);
             fourBarMotor.setControlMode(MCControlMode.MotionVoodooArbFF);
 
@@ -287,6 +293,7 @@ public class Robot extends TimedRobot {
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) >= 1.0;
         System.out.println(fourBarMotor.getPosition());
+        System.out.println(fourBarMotor.getSelectedSensorPosition());
     }
 
     /**
@@ -795,7 +802,6 @@ public class Robot extends TimedRobot {
 
             //All set points must be in rotations. Measure using getPosition().
             // Four bar ball set positions.
-            double fourBarGatheringPositionBall = 0.36;
             double fourBarLowScoreBall = fourBarGatheringPositionBall + 0.24;
             double fourBarMiddleScoreBall = fourBarGatheringPositionBall + 0.24;
             double fourBarHighScoreBall = fourBarGatheringPositionBall + 0.24;
