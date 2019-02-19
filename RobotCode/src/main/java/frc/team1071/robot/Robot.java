@@ -128,7 +128,7 @@ public class Robot extends TimedRobot {
             //----------------------------------------------------------------------------------------------------------
 
             // Initialize the drive motors.
-            leftMaster = new CANSparkMax(0, kBrushless);
+            leftMaster = new CANSparkMax(17, kBrushless);
             leftSlavePrimary = new CANSparkMax(1, kBrushless);
             leftSlaveSecondary = new CANSparkMax(2, kBrushless);
 
@@ -292,8 +292,8 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) >= 1.0;
-        System.out.println(fourBarMotor.getPosition());
-        System.out.println(fourBarMotor.getSelectedSensorPosition());
+        //System.out.println(fourBarMotor.getPosition());
+        //System.out.println(fourBarMotor.getSelectedSensorPosition());
 
         // Always send out error data.
         SendOscErrorData();
@@ -792,9 +792,11 @@ public class Robot extends TimedRobot {
             }
             driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
             driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
+            //System.out.println(driverTwist);
             driverQuickTurn = driverJoystick.getRawButton(6);
         }
-        DriveTrain.Run(driverVertical, driverTwist, driverQuickTurn, false, driverJoystick.getRawAxis(3));
+        //System.out.println("test:" + driverTwist);
+        DriveTrain.Run(driverVertical, driverTwist, false, false, driverJoystick.getRawAxis(3));
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------

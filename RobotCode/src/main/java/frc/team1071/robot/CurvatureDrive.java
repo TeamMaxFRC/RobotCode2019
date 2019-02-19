@@ -8,8 +8,6 @@ import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.Timer;
 
-import java.io.ObjectInputFilter;
-import java.lang.annotation.Target;
 import java.net.InetAddress;
 
 public class CurvatureDrive
@@ -110,7 +108,7 @@ public class CurvatureDrive
         double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ? CappedSpeedFeetPerSecond : BoostThresholdFeetPerSecond );
         double TargetCurvature = Turn * CappedDegreesPerFeet;
 
-        System.out.println("BoostIncrease: " + BoostIncrease);
+        //System.out.println("BoostIncrease: " + BoostIncrease);
 
         double TargetDegreesPerSecond = TargetSpeed * TargetCurvature;
 
@@ -124,6 +122,8 @@ public class CurvatureDrive
 
         double LeftSpeedFeedForward = LeftSpeedVoltage / 11.0;
         double RightSpeedFeedForward = RightSpeedVoltage / 11.0;
+
+        System.out.println("Throttle: " + Throttle + " Turn: " + Turn + " Left: " + LeftSpeedFeedForward + " Right: " + RightSpeedFeedForward);
 
         LeftMaster.set(LeftSpeedFeedForward);
         RightMaster.set(RightSpeedFeedForward);

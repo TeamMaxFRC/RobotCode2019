@@ -224,7 +224,7 @@ public class CKTalonSRX extends TalonSRX implements TuneableMotorController {
 				prevMotionVelocitySetpoint = demandStep;
 				demandStep = Math.abs(demandStep) < minSetpointOutput ? 0 : demandStep;
 				double arbFF = motionVoodooArbFFLookup.getInterpolated(new InterpolatingDouble(getPosition() + absoluteEncoderOffset)).value;
-				System.out.println("Used for ARBFF: " + (getPosition() + absoluteEncoderOffset) + " Value: " + arbFF);
+				//System.out.println("Used for ARBFF: " + (getPosition() + absoluteEncoderOffset) + " Value: " + arbFF);
 				set(ControlMode.Velocity, convertDemandToNativeUnits(MCControlMode.MotionVoodooArbFF, demandStep), DemandType.ArbitraryFeedForward, arbFF);
 //				System.out.println("ArbFF: " + arbFF + ", OutputDC: " + getMCOutputPercent() + ", Set: " + motionVoodooArbFFDemand + ", Pos: " + (getPosition()) + ", Spd: " + demandStep);
 				trc.doRateControl(10);
