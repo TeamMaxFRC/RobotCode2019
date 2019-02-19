@@ -672,6 +672,10 @@ public class Robot extends TimedRobot {
             leftMasterFaults.addArgument(i);
         }
 
+        if (leftMasterFaults.getArguments().isEmpty()){
+            leftMasterFaults.addArgument(-1);
+        }
+
         OSCMessage rightMasterFaults = new OSCMessage();
         rightMasterFaults.setAddress("/RightMasterFaults");
 
@@ -684,6 +688,10 @@ public class Robot extends TimedRobot {
 
         for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
             rightMasterFaults.addArgument(i);
+        }
+
+        if (rightMasterFaults.getArguments().isEmpty()){
+            rightMasterFaults.addArgument(-1);
         }
 
         OSCMessage leftSlavePrimaryFaults = new OSCMessage();
@@ -700,6 +708,10 @@ public class Robot extends TimedRobot {
             leftSlavePrimaryFaults.addArgument(i);
         }
 
+        if (leftSlavePrimaryFaults.getArguments().isEmpty()){
+            leftSlavePrimaryFaults.addArgument(-1);
+        }
+
         OSCMessage rightSlavePrimaryFaults = new OSCMessage();
         rightSlavePrimaryFaults.setAddress("/RightSlavePrimaryFaults");
 
@@ -712,6 +724,10 @@ public class Robot extends TimedRobot {
 
         for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
             rightSlavePrimaryFaults.addArgument(i);
+        }
+
+        if (rightSlavePrimaryFaults.getArguments().isEmpty()){
+            rightSlavePrimaryFaults.addArgument(-1);
         }
 
         OSCMessage leftSlaveSecondaryFaults = new OSCMessage();
@@ -728,6 +744,10 @@ public class Robot extends TimedRobot {
             leftSlaveSecondaryFaults.addArgument(i);
         }
 
+        if (leftSlaveSecondaryFaults.getArguments().isEmpty()){
+            leftSlaveSecondaryFaults.addArgument(-1);
+        }
+
         OSCMessage rightSlaveSecondaryFaults = new OSCMessage();
         rightSlaveSecondaryFaults.setAddress("/RightSlaveSecondaryFaults");
 
@@ -740,6 +760,10 @@ public class Robot extends TimedRobot {
 
         for (int i = faultBits.nextSetBit(0); i >= 0; i = faultBits.nextSetBit(i + 1)) {
             rightSlaveSecondaryFaults.addArgument(i);
+        }
+
+        if (rightSlaveSecondaryFaults.getArguments().isEmpty()){
+            rightSlaveSecondaryFaults.addArgument(-1);
         }
 
         // Add packets to the bundle.
