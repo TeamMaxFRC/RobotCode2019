@@ -90,7 +90,7 @@ public class Robot extends TimedRobot {
 
     // Encoder constants for the fourbar.
     final static double fourBarEncoderOffset = -0.30078125;
-    final static double fourBarGatheringPositionBall = 0.363525390625 ;
+    final static double fourBarGatheringPositionBall = 0.363525390625;
     final static double fourbarEncoderMin = 0;
     final static double fourbarEncoderMax = 0;
 
@@ -294,6 +294,9 @@ public class Robot extends TimedRobot {
         limelightTarget = tv.getDouble(0.0) >= 1.0;
         System.out.println(fourBarMotor.getPosition());
         System.out.println(fourBarMotor.getSelectedSensorPosition());
+
+        // Always send out error data.
+        SendOscErrorData();
     }
 
     /**
@@ -1106,7 +1109,6 @@ public class Robot extends TimedRobot {
         }
 
     }
-
 
 
     // This function is called periodically during test mode.
