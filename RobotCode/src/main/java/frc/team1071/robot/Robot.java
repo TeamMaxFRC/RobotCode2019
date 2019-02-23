@@ -646,12 +646,19 @@ public class Robot extends TimedRobot {
         convertedBoolean = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed() ? 1 : 0;
         magneticGatherPosition.addArgument(convertedBoolean);
 
+        // Four bar encoder position.
+        OSCMessage fourBarEncoderPosition = new OSCMessage();
+        fourBarEncoderPosition.setAddress("/FourBarEncoderPosition");
+        fourBarEncoderPosition.addArgument(fourBarMotor.getSelectedSensorPosition());
+
+
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(liftEncoderPosition);
         bundle.addPacket(rightEncoderVelocity);
         bundle.addPacket(leftEncoderVelocity);
         bundle.addPacket(liftEncoderVelocity);
         bundle.addPacket(magneticGatherPosition);
+        bundle.addPacket(fourBarEncoderPosition);
 
         // Send the sensor data.
         try {
