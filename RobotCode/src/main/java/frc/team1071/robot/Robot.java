@@ -669,9 +669,8 @@ public class Robot extends TimedRobot {
 
         // Four bar encoder position.
         OSCMessage fourBarEncoderPosition = new OSCMessage();
-        fourBarEncoderPosition.setAddress("/FourBarEncoderPosition");
-        fourBarEncoderPosition.addArgument(fourBarMotor.getSelectedSensorPosition());
-
+        fourBarEncoderPosition.setAddress("/FourBarRelativeEncoderPosition");
+        fourBarEncoderPosition.addArgument((double) fourBarMotor.getSensorCollection().getQuadraturePosition());
 
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(liftEncoderPosition);
