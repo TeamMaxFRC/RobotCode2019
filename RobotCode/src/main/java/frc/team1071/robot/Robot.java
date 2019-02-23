@@ -90,8 +90,8 @@ public class Robot extends TimedRobot {
     private int hatchSwitchDebounceCounter = 0;
 
     // Encoder constants for the four bar, based off the practice robot specifics.
-    static double fourBarEncoderOffset = isPracticeRobot ? -0.30078125 : 0;
-    static double fourBarGatheringPositionBall = isPracticeRobot ? 0.363525390625 : 0;
+    static double fourBarEncoderOffset = isPracticeRobot ? -0.30078125 : 0.06298828125;
+    static double fourBarGatheringPositionBall = isPracticeRobot ? 0.363525390625 : 0.121826171875;
 
     /**
      * Function that configures a lift motor's power.
@@ -177,14 +177,25 @@ public class Robot extends TimedRobot {
             // Invert the lift encoder.
             liftMaster.setSensorPhase(true);
 
-            // Set the PID values for the lift.
-            liftMaster.config_kF(0, 0.32058916);
-            liftMaster.config_kP(0, 1.4);
-            liftMaster.config_kD(0, 2.8);
+            if (isPracticeRobot) {
+                // Set the PID values for the lift.
+                liftMaster.config_kF(0, 0.32058916);
+                liftMaster.config_kP(0, 1.4);
+                liftMaster.config_kD(0, 2.8);
 
-            // Establish the cruise velocity and max acceleration for motion magic.
-            liftMaster.configMotionCruiseVelocity(2900);
-            liftMaster.configMotionAcceleration(5200);
+                // Establish the cruise velocity and max acceleration for motion magic.
+                liftMaster.configMotionCruiseVelocity(2900);
+                liftMaster.configMotionAcceleration(5200);
+            } else {
+                // Set the PID values for the lift.
+                liftMaster.config_kF(0, 0.32058916);
+                liftMaster.config_kP(0, 0.30);
+                liftMaster.config_kD(0, 0.60);
+
+                // Establish the cruise velocity and max acceleration for motion magic.
+                liftMaster.configMotionCruiseVelocity(2900);
+                liftMaster.configMotionAcceleration(5200);
+            }
 
             //----------------------------------------------------------------------------------------------------------
             // Four Bar Motor
@@ -208,6 +219,16 @@ public class Robot extends TimedRobot {
                 gathererMotor = new TalonSRX(6);
             } else {
                 gathererMotor = new TalonSRX(8);
+            }
+
+            // Config Gatherer
+            gathererMotor.enableCurrentLimit(true);
+            gathererMotor.configContinuousCurrentLimit(4);
+            gathererMotor.configPeakCurrentDuration(0);
+            gathererMotor.configPeakCurrentLimit(0);
+            if (!isPracticeRobot)
+            {
+                gathererMotor.setInverted(true);
             }
 
             gathererMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
@@ -253,6 +274,7 @@ public class Robot extends TimedRobot {
         limelightTarget = tv.getDouble(0.0) >= 1.0;
         // System.out.println(fourBarMotor.getPosition());
         // System.out.println(fourBarMotor.getSelectedSensorPosition());
+        //System.out.println(liftMaster.getSelectedSensorPosition());
 
         FourBarLift.RobotPeriodic();
 
@@ -315,7 +337,8 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
 
         // Reset the lift's encoder position.
-        liftMaster.setSelectedSensorPosition(0);
+        liftMaster.setSelectedSensorPosition(0,0,10);
+        liftMaster.set(ControlMode.MotionMagic, 0);
 
         // Reset the solenoid position.
         hatchSolenoid.set(DoubleSolenoid.Value.kForward);
@@ -330,8 +353,6 @@ public class Robot extends TimedRobot {
      * Calls the necessary helpers to send all the relevant OSC data.
      */
     private void SendOscData() {
-
-        SendOscCurrentData();
 
     }
 
@@ -864,9 +885,9 @@ public class Robot extends TimedRobot {
 
             //All set points must be in rotations. Measure using getPosition().
             // Four bar ball set positions.
-            double fourBarLowScoreBall = fourBarGatheringPositionBall + 0.24;
-            double fourBarMiddleScoreBall = fourBarGatheringPositionBall + 0.24;
-            double fourBarHighScoreBall = fourBarGatheringPositionBall + 0.24;
+            double fourBarLowScoreBall = fourBarGatheringPositionBall + 0.34;
+            double fourBarMiddleScoreBall = fourBarGatheringPositionBall + 0.36;
+            double fourBarHighScoreBall = fourBarGatheringPositionBall + 0.32;
 
             // Four bar hatch set positions.
             double fourBarGatheringPositionHatch = fourBarGatheringPositionBall + 0.02;
@@ -878,7 +899,7 @@ public class Robot extends TimedRobot {
             int liftGatheringPositionBall = 0;
             int liftLowScoreBall = 0;
             int liftMiddleScoreBall = 15000;
-            int liftHighScoreBall = 25200;
+            int liftHighScoreBall = 25300;
 
             // Lift hatch set positions.
             int liftGatheringPositionHatch = 0;
@@ -940,9 +961,9 @@ public class Robot extends TimedRobot {
                 if (operatorJoystick.getRawButton(1)) {
                     gathererMotor.set(ControlMode.PercentOutput, 0.75);
                 } else if (operatorJoystick.getRawButton(2)) {
-                    gathererMotor.set(ControlMode.PercentOutput, -0.75);
+                    gathererMotor.set(ControlMode.PercentOutput, -1.0);
                 } else {
-                    gathererMotor.set(ControlMode.PercentOutput, 0);
+                    gathererMotor.set(ControlMode.PercentOutput, .1);
                 }
 
                 // Detect the current state of the magnetic limit switch.
@@ -1054,7 +1075,7 @@ public class Robot extends TimedRobot {
                 } else if (operatorJoystick.getRawAxis(3) > 0.1) {
                     gathererMotor.set(ControlMode.PercentOutput, -operatorJoystick.getRawAxis(3));
                 } else {
-                    gathererMotor.set(ControlMode.PercentOutput, 0);
+                    gathererMotor.set(ControlMode.PercentOutput, 0.1);
                 }
 
             }
