@@ -1,7 +1,6 @@
 package frc.team1071.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -32,7 +31,7 @@ import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 public class Robot extends TimedRobot {
 
     private CurvatureDrive DriveTrain;
-    private FourBar FourBarLift;
+    private FourBar fourBarLift;
 
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
@@ -208,7 +207,7 @@ public class Robot extends TimedRobot {
                 fourBarMotor = new TalonSRX(9);
             }
 
-            FourBarLift = new FourBar(fourBarMotor, 1272);
+            fourBarLift = new FourBar(fourBarMotor, 1151);
 
             //----------------------------------------------------------------------------------------------------------
             // Other Initialization
@@ -226,8 +225,8 @@ public class Robot extends TimedRobot {
             gathererMotor.configContinuousCurrentLimit(4);
             gathererMotor.configPeakCurrentDuration(0);
             gathererMotor.configPeakCurrentLimit(0);
-            if (!isPracticeRobot)
-            {
+
+            if (!isPracticeRobot) {
                 gathererMotor.setInverted(true);
             }
 
@@ -276,13 +275,16 @@ public class Robot extends TimedRobot {
         // System.out.println(fourBarMotor.getSelectedSensorPosition());
         //System.out.println(liftMaster.getSelectedSensorPosition());
 
-        FourBarLift.RobotPeriodic();
+        fourBarLift.RobotPeriodic();
 
         // Always send out error data.
         SendOscErrorData();
 
         // Always send out sensor data.
         SendOscSensorData();
+
+        // Always send out the current data.
+        SendOscCurrentData();
     }
 
     /**
@@ -337,13 +339,13 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
 
         // Reset the lift's encoder position.
-        liftMaster.setSelectedSensorPosition(0,0,10);
+        liftMaster.setSelectedSensorPosition(0, 0, 10);
         liftMaster.set(ControlMode.MotionMagic, 0);
 
         // Reset the solenoid position.
         hatchSolenoid.set(DoubleSolenoid.Value.kForward);
 
-        FourBarLift.TeleopInit();
+        fourBarLift.TeleopInit();
 
         // Report that the console is functional.
         writeConsole("Robot has enabled!");
@@ -631,7 +633,7 @@ public class Robot extends TimedRobot {
     /**
      * TODO: Comment.
      */
-    private void SendOscSensorData(){
+    private void SendOscSensorData() {
 
         // Create an OSC bundle for encoder velocities.
         OSCBundle bundle = new OSCBundle();
@@ -647,7 +649,8 @@ public class Robot extends TimedRobot {
         // Send the lift encoder velocity and position.
         OSCMessage liftEncoderVelocity = new OSCMessage();
         liftEncoderVelocity.setAddress("/LiftEncoderVelocity");
-        liftEncoderVelocity.addArgument((double) liftMaster.getSelectedSensorVelocity());;
+        liftEncoderVelocity.addArgument((double) liftMaster.getSelectedSensorVelocity());
+        ;
 
         OSCMessage liftEncoderPosition = new OSCMessage();
         liftEncoderPosition.setAddress("/LiftEncoderPosition");
@@ -667,14 +670,15 @@ public class Robot extends TimedRobot {
         convertedBoolean = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed() ? 1 : 0;
         magneticGatherPosition.addArgument(convertedBoolean);
 
-        // Four bar encoder position.
+        // Four bar relative encoder position.
         OSCMessage fourBarEncoderRelativePosition = new OSCMessage();
         fourBarEncoderRelativePosition.setAddress("/FourBarEncoderRelativePosition");
         fourBarEncoderRelativePosition.addArgument((double) fourBarMotor.getSensorCollection().getQuadraturePosition());
 
+        // Four bar absolute encoder position.
         OSCMessage fourBarEncoderAbsolutePosition = new OSCMessage();
         fourBarEncoderAbsolutePosition.setAddress("/FourBarEncoderAbsolutePosition");
-        fourBarEncoderAbsolutePosition.addArgument((double)fourBarMotor.getSensorCollection().getPulseWidthPosition());
+        fourBarEncoderAbsolutePosition.addArgument((double) fourBarMotor.getSensorCollection().getPulseWidthPosition());
 
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(liftEncoderPosition);
@@ -851,25 +855,21 @@ public class Robot extends TimedRobot {
         // Drive Controls
         //--------------------------------------------------------------------------------------------------------------
 
-        FourBarLift.RunFourBar();
-
         // Determine the proper motor values based on the joystick data.
         double driverVertical = 0;
         double driverTwist = 0;
         boolean driverQuickTurn = false;
         Update_Limelight_Tracking();
         if (driverJoystick.getRawButton(5)) {
-            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipeline").getDouble(0) != 1) {
                 NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipline").setNumber(1);
-            } else {
                 if (limelightTarget) {
                     driverVertical = m_LimelightDriveCommand;
                     driverTwist = m_LimelightSteerCommand;
                     driverQuickTurn = true;
                 }
-            }
+
         } else {
-            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipe").getDouble(0) != 0) {
+            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipe").getDouble(0.0) != 0.0) {
                 NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipline").setNumber(0);
             }
             driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
@@ -887,17 +887,16 @@ public class Robot extends TimedRobot {
             // TODO: Properly comment, or clean up this code.
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(operatorJoystick.getRawButton(8) ? 1 : 0);
 
-            //All set points must be in rotations. Measure using getPosition().
-            // Four bar ball set positions.
-            double fourBarLowScoreBall = fourBarGatheringPositionBall + 0.34;
-            double fourBarMiddleScoreBall = fourBarGatheringPositionBall + 0.36;
-            double fourBarHighScoreBall = fourBarGatheringPositionBall + 0.32;
+            // Four bar positions in degrees.
+            double fourBarGatheringPositionDegrees = 30;
 
-            // Four bar hatch set positions.
-            double fourBarGatheringPositionHatch = fourBarGatheringPositionBall + 0.02;
-            double fourBarLowScoreHatch = fourBarGatheringPositionHatch + 0.02;
-            double fourBarMiddleScoreHatch = fourBarGatheringPositionHatch + 0.02;
-            double fourBarHighScoreHatch = fourBarGatheringPositionBall + 0.07;
+            double fourBarLowBallDegrees = 110;
+            double fourBarMiddleBallDegrees = 110;
+            double fourBarHighBallDegrees = 110;
+
+            double fourBarLowHatchDegrees = 50;
+            double fourBarMiddleHatchDegrees = 50;
+            double fourBarHighHatchDegrees = 50;
 
             // Lift ball set positions.
             int liftGatheringPositionBall = 0;
@@ -921,43 +920,49 @@ public class Robot extends TimedRobot {
                 // If the '4' button is pressed, then lift sets to top hatch position.
                 if (operatorJoystick.getRawButtonPressed(4)) {
                     liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
+                    fourBarLift.SetPositionDegrees(fourBarHighHatchDegrees);
                     // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreHatch, 0, 0);
                 }
 
                 // If the '9' button is pressed, then lift sets to middle hatch position.
                 if (operatorJoystick.getRawButtonPressed(9)) {
                     liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
+                    fourBarLift.SetPositionDegrees(fourBarMiddleHatchDegrees);
                     // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreHatch, 0, 0);
                 }
 
                 // If the '14' button is pressed, then lift sets to low hatch position.
                 if (operatorJoystick.getRawButtonPressed(14)) {
                     liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
+                    fourBarLift.SetPositionDegrees(fourBarLowHatchDegrees);
                     // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreHatch, 0, 0);
                 }
-                //When buttons are pressed on the stream deck, set lift to ball positions.
 
                 //If the '5' button is pressed, then the lift sets to top ball position.
                 if (operatorJoystick.getRawButtonPressed(5)) {
                     liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
+                    fourBarLift.SetPositionDegrees(fourBarHighBallDegrees);
                     // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
                 }
 
                 //If the '10' button is pressed, then the lift sets to the middle ball position.
                 if (operatorJoystick.getRawButtonPressed(10)) {
                     liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
+                    fourBarLift.SetPositionDegrees(fourBarMiddleBallDegrees);
                     // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
                 }
 
                 //If the '15' button is pressed, then the lift sets to the low ball position.
                 if (operatorJoystick.getRawButtonPressed(15)) {
                     liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
+                    fourBarLift.SetPositionDegrees(fourBarLowBallDegrees);
                     // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
                 }
 
                 //When the '13' button is pressed, the lift sets to gathering position.
                 if (operatorJoystick.getRawButtonPressed(13)) {
                     liftMaster.set(ControlMode.MotionMagic, liftGatheringPosition);
+                    fourBarLift.SetPositionDegrees(fourBarGatheringPositionDegrees);
                     // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
                 }
 
@@ -1000,6 +1005,7 @@ public class Robot extends TimedRobot {
                     // If the 'A' button is pressed, then set the ball gathering height.
                     if (operatorJoystick.getRawButtonPressed(1)) {
                         liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
+
                         // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
                     }
 
@@ -1083,6 +1089,8 @@ public class Robot extends TimedRobot {
                 }
 
             }
+
+            fourBarLift.RunFourBar();
 
         } catch (
                 Exception Ex) {

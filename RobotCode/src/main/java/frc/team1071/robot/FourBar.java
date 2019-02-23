@@ -62,6 +62,7 @@ public class FourBar {
     }
 
     public FourBar(TalonSRX FourBarTalon, double FourBarOffset) {
+
         this.FourBarTalon = FourBarTalon;
         this.FourBarOffset = FourBarOffset;
         this.TargetEncoderPosition = FourBarOffset + FourBarSpread;
@@ -123,7 +124,7 @@ public class FourBar {
         FourBarTalon.config_kP(0, 1, 10);
         FourBarTalon.config_kI(0, 0, 10);
         FourBarTalon.config_kD(0, 1.5, 10);
-        FourBarTalon.config_kF(0, .8, 10);
+        FourBarTalon.config_kF(0, 0.8, 10);
 
         FourBarTalon.configVoltageCompSaturation(11);
         FourBarTalon.enableVoltageCompensation(true);
@@ -223,7 +224,7 @@ public class FourBar {
     }
 
     public void TeleopInit() {
-        initialized = false;
+        initialized = true;
     }
 
     public void RobotPeriodic() {
@@ -235,12 +236,13 @@ public class FourBar {
     }
 
     public void RunFourBar() {
+
         SendFourBarData();
+
         if (initialized && !isFaulted()) {
             FourBarTalon.set(ControlMode.MotionMagic, TargetEncoderPosition, DemandType.ArbitraryFeedForward, GetFeedForwardAmount());
         } else {
             FourBarTalon.set(ControlMode.PercentOutput, 0);
         }
     }
-
 }
