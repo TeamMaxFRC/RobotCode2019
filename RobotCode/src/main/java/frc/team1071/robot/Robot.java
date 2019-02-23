@@ -942,7 +942,7 @@ public class Robot extends TimedRobot {
             int liftGatheringPosition = 0;
 
             //When buttons are pressed on the stream deck, set lift to hatch positions.
-            if (isStreamDeck) {
+            if (isStreamDeck && !driverJoystick.getRawButton(5)) {
 
                 // If the '4' button is pressed, then lift sets to top hatch position.
                 if (operatorJoystick.getRawButtonPressed(4)) {
