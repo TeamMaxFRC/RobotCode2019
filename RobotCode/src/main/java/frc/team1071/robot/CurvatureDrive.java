@@ -204,6 +204,17 @@ public class CurvatureDrive
         } catch (Exception ex) {
             System.out.println("Error sending the drive log data! " + ex.getMessage());
         }
+
+    }
+
+    public double GetLeftEncoderVelocity()
+    {
+        return LeftEncoder.getVelocity();
+    }
+
+    public double GetRightEncoderVelocity()
+    {
+        return RightEncoder.getVelocity();
     }
 
 

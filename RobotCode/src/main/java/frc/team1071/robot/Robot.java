@@ -315,6 +315,9 @@ public class Robot extends TimedRobot {
 
         // Always send out error data.
         SendOscErrorData();
+
+        // Always send out sensor data.
+        SendOscSensorData();
     }
 
     /**
@@ -382,7 +385,9 @@ public class Robot extends TimedRobot {
      * Calls the necessary helpers to send all the relevant OSC data.
      */
     private void SendOscData() {
+
         SendOscCurrentData();
+
     }
 
     /**
@@ -464,7 +469,7 @@ public class Robot extends TimedRobot {
 
         int convertedBoolean;
 
-// Send driver controller data
+// Send driver controller data.
         OSCMessage aButton = new OSCMessage();
         aButton.setAddress("/Controller/AButton");
         convertedBoolean = driverJoystick.getRawButton(1) ? 1 : 0;
@@ -655,6 +660,62 @@ public class Robot extends TimedRobot {
         } catch (Exception ex) {
             System.out.println("Error sending the controller data!" + ex.getMessage());
         }
+    }
+
+    /**
+     * TODO: Comment.
+     */
+    private void SendOscSensorData(){
+
+        // Create an OSC bundle for encoder velocities.
+        OSCBundle bundle = new OSCBundle();
+
+        // Create integer to convert hatchGrabber bool to an int
+        int convertedBoolean;
+
+        // Append an identifier for the bundle.
+        OSCMessage bundleIdentifier = new OSCMessage();
+        bundleIdentifier.setAddress("/BundleIdentifier");
+        bundleIdentifier.addArgument("SensorInputBundle");
+
+        // Send the lift encoder velocity and position.
+        OSCMessage liftEncoderVelocity = new OSCMessage();
+        liftEncoderVelocity.setAddress("/LiftEncoderVelocity");
+        liftEncoderVelocity.addArgument((double) liftMaster.getSelectedSensorVelocity());;
+
+        OSCMessage liftEncoderPosition = new OSCMessage();
+        liftEncoderPosition.setAddress("/LiftEncoderPosition");
+        liftEncoderPosition.addArgument((double) liftMaster.getSelectedSensorPosition());
+
+        // Send the drive encoder velocity.
+        OSCMessage leftEncoderVelocity = new OSCMessage();
+        leftEncoderVelocity.setAddress("/LeftEncoderVelocity");
+        leftEncoderVelocity.addArgument(DriveTrain.GetLeftEncoderVelocity());
+
+        OSCMessage rightEncoderVelocity = new OSCMessage();
+        rightEncoderVelocity.setAddress("/RightEncoderVelocity");
+        rightEncoderVelocity.addArgument(DriveTrain.GetRightEncoderVelocity());
+
+        OSCMessage magneticGatherPosition = new OSCMessage();
+        magneticGatherPosition.setAddress("/MagneticGatherEncoder");
+        convertedBoolean = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed() ? 1 : 0;
+        magneticGatherPosition.addArgument(convertedBoolean);
+
+        bundle.addPacket(bundleIdentifier);
+        bundle.addPacket(liftEncoderPosition);
+        bundle.addPacket(rightEncoderVelocity);
+        bundle.addPacket(leftEncoderVelocity);
+        bundle.addPacket(liftEncoderVelocity);
+        bundle.addPacket(magneticGatherPosition);
+
+        // Send the sensor data.
+        try {
+            oscWiredSender.send(bundle);
+            oscWirelessSender.send(bundle);
+        } catch (Exception ex) {
+            System.out.println("Error sending the error data! " + ex.getMessage());
+        }
+
     }
 
     /**
@@ -1147,30 +1208,6 @@ public class Robot extends TimedRobot {
             oscWirelessSender.send(leftMasterVoltage);
             oscWiredSender.send(rightMasterVoltage);
             oscWirelessSender.send(rightMasterVoltage);
-
-            // Send the lift encoder velocity.
-            OSCMessage liftEncoderVelocity = new OSCMessage();
-
-            liftEncoderVelocity.setAddress("/Robot/Motors/liftMaster/EncoderVelocity");
-            liftEncoderVelocity.addArgument((double) liftMaster.getSelectedSensorVelocity());
-
-//            oscWiredSender.send(liftEncoderVelocity);
-//            oscWirelessSender.send(liftEncoderVelocity);
-
-            // Send the drive encoder velocity.
-            OSCMessage leftMasterVelocity = new OSCMessage();
-            OSCMessage rightMasterVelocity = new OSCMessage();
-
-            leftMasterVelocity.setAddress("/Robot/Motors/leftMaster/EncoderVelocity");
-            leftMasterVelocity.addArgument(leftMaster.getEncoder().getVelocity());
-
-            rightMasterVelocity.setAddress("/Robot/Motors/rightMaster/EncoderVelocity");
-            rightMasterVelocity.addArgument(rightMaster.getEncoder().getVelocity());
-
-            oscWiredSender.send(leftMasterVelocity);
-            oscWirelessSender.send(leftMasterVelocity);
-            oscWiredSender.send(rightMasterVelocity);
-            oscWirelessSender.send(rightMasterVelocity);
 
             // Send the gyro data, packed with the master drive motors.
             OSCMessage leftMasterGyro = new OSCMessage();
