@@ -108,8 +108,6 @@ public class CurvatureDrive
         double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ? CappedSpeedFeetPerSecond : BoostThresholdFeetPerSecond );
         double TargetCurvature = Turn * CappedDegreesPerFeet;
 
-        //System.out.println("BoostIncrease: " + BoostIncrease);
-
         double TargetDegreesPerSecond = TargetSpeed * TargetCurvature;
 
         double SpeedDifferential = TargetDegreesPerSecond * FeetPerSecondDifferentialPerDegreesPerSecond;
@@ -123,15 +121,32 @@ public class CurvatureDrive
         double LeftSpeedFeedForward = LeftSpeedVoltage / 11.0;
         double RightSpeedFeedForward = RightSpeedVoltage / 11.0;
 
-        System.out.println("Throttle: " + Throttle + " Turn: " + Turn + " Left: " + LeftSpeedFeedForward + " Right: " + RightSpeedFeedForward);
-
         LeftMaster.set(LeftSpeedFeedForward);
         RightMaster.set(RightSpeedFeedForward);
     }
 
     private void RunQuickTurnMode(double Throttle, double Turn, boolean Brake, double Boost)
     {
+        double multiplier = Math.copySign(1,Throttle);
+        double BoostIncrease = Boost * (CappedSpeedFeetPerSecond - BoostThresholdFeetPerSecond);
+        double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ? CappedSpeedFeetPerSecond : BoostThresholdFeetPerSecond );
+        double TargetCurvature = Turn * CappedDegreesPerFeet;
 
+        double TargetDegreesPerSecond = (BoostThresholdFeetPerSecond + BoostIncrease) * TargetCurvature;
+
+        double SpeedDifferential = TargetDegreesPerSecond * FeetPerSecondDifferentialPerDegreesPerSecond;
+
+        double LeftSpeedTarget = TargetSpeed + ((SpeedDifferential / 2) * multiplier);
+        double RightSpeedTarget = TargetSpeed - ((SpeedDifferential/ 2) * multiplier);
+
+        double LeftSpeedVoltage = LeftSpeedTarget / FeetPerSecondPerVolt;
+        double RightSpeedVoltage = RightSpeedTarget / FeetPerSecondPerVolt;
+
+        double LeftSpeedFeedForward = LeftSpeedVoltage / 11.0;
+        double RightSpeedFeedForward = RightSpeedVoltage / 11.0;
+
+        LeftMaster.set(LeftSpeedFeedForward);
+        RightMaster.set(RightSpeedFeedForward);
     }
 
     public void Run(double Throttle, double Turn, boolean QuickTurn, boolean Brake, double Boost)
