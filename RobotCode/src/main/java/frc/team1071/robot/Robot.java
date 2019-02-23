@@ -668,9 +668,13 @@ public class Robot extends TimedRobot {
         magneticGatherPosition.addArgument(convertedBoolean);
 
         // Four bar encoder position.
-        OSCMessage fourBarEncoderPosition = new OSCMessage();
-        fourBarEncoderPosition.setAddress("/FourBarRelativeEncoderPosition");
-        fourBarEncoderPosition.addArgument((double) fourBarMotor.getSensorCollection().getQuadraturePosition());
+        OSCMessage fourBarEncoderRelativePosition = new OSCMessage();
+        fourBarEncoderRelativePosition.setAddress("/FourBarEncoderRelativePosition");
+        fourBarEncoderRelativePosition.addArgument((double) fourBarMotor.getSensorCollection().getQuadraturePosition());
+
+        OSCMessage fourBarEncoderAbsolutePosition = new OSCMessage();
+        fourBarEncoderAbsolutePosition.setAddress("/FourBarEncoderAbsolutePosition");
+        fourBarEncoderAbsolutePosition.addArgument((double)fourBarMotor.getSensorCollection().getPulseWidthPosition());
 
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(liftEncoderPosition);
@@ -678,7 +682,8 @@ public class Robot extends TimedRobot {
         bundle.addPacket(leftEncoderVelocity);
         bundle.addPacket(liftEncoderVelocity);
         bundle.addPacket(magneticGatherPosition);
-        bundle.addPacket(fourBarEncoderPosition);
+        bundle.addPacket(fourBarEncoderRelativePosition);
+        bundle.addPacket(fourBarEncoderAbsolutePosition);
 
         // Send the sensor data.
         try {
