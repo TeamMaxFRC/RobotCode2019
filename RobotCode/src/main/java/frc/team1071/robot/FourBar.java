@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.team254.InterpolatingDouble;
 import frc.team254.InterpolatingTreeMap;
 
-public class FourBar
-{
+public class FourBar {
+
     private static final double FourBarSpread = 1506;
     private static final double SafetyLimitThresholdDegrees = 5.0;
 
@@ -29,33 +29,27 @@ public class FourBar
     private double TargetEncoderPosition;
     private boolean initialized;
 
-    public double GetOffsetAbsolute()
-    {
+    public double GetOffsetAbsolute() {
         return FourBarTalon.getSensorCollection().getPulseWidthPosition() - FourBarOffset;
     }
 
-    public double GetOffsetRelative()
-    {
+    public double GetOffsetRelative() {
         return FourBarTalon.getSensorCollection().getQuadraturePosition() - FourBarOffset;
     }
-    
-    public double GetOffsetRelativeRotations()
-    {
+
+    public double GetOffsetRelativeRotations() {
         return GetOffsetRelative() / 4096.0;
     }
 
-    public double GetDegrees()
-    {
+    public double GetDegrees() {
         return GetOffsetRelativeRotations() * 360.0;
     }
 
-    public double GetTargetDegrees()
-    {
+    public double GetTargetDegrees() {
         return (this.TargetEncoderPosition - FourBarOffset) / 4096.0 * 360.0;
     }
 
-    public void SetPositionDegrees(double Degrees)
-    {
+    public void SetPositionDegrees(double Degrees) {
         double Rotations = Degrees / 360;
         double EncoderTicks = Rotations * 4096;
         this.TargetEncoderPosition = EncoderTicks + FourBarOffset;
@@ -63,14 +57,11 @@ public class FourBar
 
     }
 
-    public double GetFeedForwardAmount()
-    {
+    public double GetFeedForwardAmount() {
         return ArbFFLookup.getInterpolated(new InterpolatingDouble(GetOffsetRelativeRotations())).value;
     }
 
-    public FourBar(TalonSRX FourBarTalon
-    , double FourBarOffset)
-    {
+    public FourBar(TalonSRX FourBarTalon, double FourBarOffset) {
         this.FourBarTalon = FourBarTalon;
         this.FourBarOffset = FourBarOffset;
         this.TargetEncoderPosition = FourBarOffset + FourBarSpread;
@@ -129,10 +120,10 @@ public class FourBar
 
         FourBarTalon.configMotionAcceleration(2000, 10);
         FourBarTalon.configMotionCruiseVelocity(1000, 10);
-        FourBarTalon.config_kP(0,1,10);
-        FourBarTalon.config_kI(0,0,10);
-        FourBarTalon.config_kD(0,1.5,10);
-        FourBarTalon.config_kF(0,.8,10);
+        FourBarTalon.config_kP(0, 1, 10);
+        FourBarTalon.config_kI(0, 0, 10);
+        FourBarTalon.config_kD(0, 1.5, 10);
+        FourBarTalon.config_kF(0, .8, 10);
 
         FourBarTalon.configVoltageCompSaturation(11);
         FourBarTalon.enableVoltageCompensation(true);
@@ -142,13 +133,12 @@ public class FourBar
         FourBarTalon.configPeakCurrentLimit(0);
         FourBarTalon.enableCurrentLimit(true);
 
-        FourBarTalon.configForwardSoftLimitThreshold((int)(this.FourBarOffset + FourBarSpread - (SafetyLimitThresholdDegrees / 360 * 4096)));
+        FourBarTalon.configForwardSoftLimitThreshold((int) (this.FourBarOffset + FourBarSpread - (SafetyLimitThresholdDegrees / 360 * 4096)));
         FourBarTalon.configForwardSoftLimitEnable(true);
-        FourBarTalon.configReverseSoftLimitThreshold((int)(this.FourBarOffset + (SafetyLimitThresholdDegrees / 360 * 4096)));
+        FourBarTalon.configReverseSoftLimitThreshold((int) (this.FourBarOffset + (SafetyLimitThresholdDegrees / 360 * 4096)));
         FourBarTalon.configReverseSoftLimitEnable(true);
-        
-    }
 
+    }
 
 
     /**
@@ -171,11 +161,11 @@ public class FourBar
 
         OSCMessage AbsolutePosition = new OSCMessage();
         AbsolutePosition.setAddress("/AbsolutePosition");
-        AbsolutePosition.addArgument(FourBarTalon.getSensorCollection().getPulseWidthPosition());
+        AbsolutePosition.addArgument((double) FourBarTalon.getSensorCollection().getPulseWidthPosition());
 
         OSCMessage QuadraturePosition = new OSCMessage();
         QuadraturePosition.setAddress("/QuadraturePosition");
-        QuadraturePosition.addArgument(FourBarTalon.getSensorCollection().getQuadraturePosition());
+        QuadraturePosition.addArgument((double) FourBarTalon.getSensorCollection().getQuadraturePosition());
 
         OSCMessage ActualDegrees = new OSCMessage();
         ActualDegrees.setAddress("/ActualDegrees");
@@ -195,11 +185,11 @@ public class FourBar
 
         OSCMessage ActiveTrajectoryPosition = new OSCMessage();
         ActiveTrajectoryPosition.setAddress("/ActiveTrajectoryPosition");
-        ActiveTrajectoryPosition.addArgument(FourBarTalon.getActiveTrajectoryPosition());
+        ActiveTrajectoryPosition.addArgument((double) FourBarTalon.getActiveTrajectoryPosition());
 
         OSCMessage ClosedLoopError = new OSCMessage();
         ClosedLoopError.setAddress("/ClosedLoopError");
-        ClosedLoopError.addArgument(FourBarTalon.getClosedLoopError());
+        ClosedLoopError.addArgument((double) FourBarTalon.getClosedLoopError());
 
         OSCMessage ArbFF = new OSCMessage();
         ArbFF.setAddress("/ArbFF");
@@ -232,30 +222,23 @@ public class FourBar
         }
     }
 
-    public void TeleopInit()
-    {
+    public void TeleopInit() {
         initialized = false;
     }
 
-    public void RobotPeriodic()
-    {
-        
+    public void RobotPeriodic() {
+
     }
 
-    public boolean isFaulted()
-    {
+    public boolean isFaulted() {
         return FourBarTalon.getSensorCollection().getPulseWidthPosition() == 0;
     }
 
-    public void RunFourBar()
-    {
+    public void RunFourBar() {
         SendFourBarData();
-        if (initialized && !isFaulted())
-        {
+        if (initialized && !isFaulted()) {
             FourBarTalon.set(ControlMode.MotionMagic, TargetEncoderPosition, DemandType.ArbitraryFeedForward, GetFeedForwardAmount());
-        }
-        else
-        {
+        } else {
             FourBarTalon.set(ControlMode.PercentOutput, 0);
         }
     }

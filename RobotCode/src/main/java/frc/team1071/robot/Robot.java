@@ -637,7 +637,7 @@ public class Robot extends TimedRobot {
         OSCBundle bundle = new OSCBundle();
 
         // Create integer to convert hatchGrabber bool to an int
-        int convertedBoolean;
+        double convertedBoolean;
 
         // Append an identifier for the bundle.
         OSCMessage bundleIdentifier = new OSCMessage();
