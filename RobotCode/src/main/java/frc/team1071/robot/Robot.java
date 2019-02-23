@@ -271,6 +271,7 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) >= 1.0;
+        sendOscLimelightData();
         // System.out.println(fourBarMotor.getPosition());
         // System.out.println(fourBarMotor.getSelectedSensorPosition());
         //System.out.println(liftMaster.getSelectedSensorPosition());
@@ -845,6 +846,37 @@ public class Robot extends TimedRobot {
 
     }
 
+    private void sendOscLimelightData()
+    {
+        // Send the values for the Limelight
+        OSCMessage limelightMessageX = new OSCMessage();
+        OSCMessage limelightMessageY = new OSCMessage();
+        OSCMessage limelightMessageA = new OSCMessage();
+        OSCMessage limelightMessageV = new OSCMessage();
+        limelightMessageX.setAddress("/Robot/Limelight/X");
+        limelightMessageY.setAddress("/Robot/Limelight/Y");
+        limelightMessageA.setAddress("/Robot/Limelight/A");
+        limelightMessageV.setAddress("/Robot/Limelight/V");
+        limelightMessageX.addArgument(limelightX);
+        limelightMessageY.addArgument(limelightY);
+        limelightMessageA.addArgument(limelightArea);
+        limelightMessageV.addArgument(limelightTarget ? 0 : 1);
+        try {
+            oscWirelessSender.send(limelightMessageX);
+            oscWiredSender.send(limelightMessageX);
+            oscWirelessSender.send(limelightMessageY);
+            oscWiredSender.send(limelightMessageY);
+            oscWirelessSender.send(limelightMessageA);
+            oscWiredSender.send(limelightMessageA);
+            oscWirelessSender.send(limelightMessageV);
+            oscWiredSender.send(limelightMessageV);
+        }
+        catch (Exception ex)
+        {
+            System.out.println("Exception send Limelight OSC data: " + ex.toString());
+        }
+    }
+
     /**
      * This function is called periodically during operator control.
      */
@@ -861,32 +893,27 @@ public class Robot extends TimedRobot {
         boolean driverQuickTurn = false;
         Update_Limelight_Tracking();
         if (driverJoystick.getRawButton(5)) {
-                NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipline").setNumber(1);
-                if (limelightTarget) {
-                    driverVertical = m_LimelightDriveCommand;
-                    driverTwist = m_LimelightSteerCommand;
-                    driverQuickTurn = true;
-                }
-
-        } else {
-            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("getpipe").getDouble(0.0) != 0.0) {
-                NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipline").setNumber(0);
+            if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").getDouble(0) != 1) {
+                NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(1);
             }
+            if (limelightTarget) {
+                driverVertical = m_LimelightDriveCommand;
+                driverTwist = m_LimelightSteerCommand;
+                driverQuickTurn = true;
+            }
+        } else {
+            NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(0);
             driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
             driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
             //System.out.println(driverTwist);
             driverQuickTurn = driverJoystick.getRawButton(6);
         }
         //System.out.println("test:" + driverTwist);
-        DriveTrain.Run(driverVertical, driverTwist, false, false, driverJoystick.getRawAxis(3));
+        DriveTrain.Run(driverVertical, driverTwist, driverQuickTurn, false, driverJoystick.getRawAxis(3));
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------
         try {
-
-            // TODO: Properly comment, or clean up this code.
-            NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(operatorJoystick.getRawButton(8) ? 1 : 0);
-
             // Four bar positions in degrees.
             double fourBarGatheringPositionDegrees = 30;
 
@@ -1238,23 +1265,6 @@ public class Robot extends TimedRobot {
             // System.out.println("Currents: " + liftMaster.getOutputCurrent() + " " + liftSlaveSecondary.getOutputCurrent() + " " + liftSlaveTertiary.getOutputCurrent() + " " + liftSlavePrimary.getOutputCurrent());
             // System.out.println("Position: " + liftMaster.getSelectedSensorPosition() + " Velocity: " + liftMaster.getSelectedSensorVelocity());
 
-            // Send the values for the Limelight
-            OSCMessage limelightMessageX = new OSCMessage();
-            OSCMessage limelightMessageY = new OSCMessage();
-            OSCMessage limelightMessageA = new OSCMessage();
-            OSCMessage limelightMessageV = new OSCMessage();
-            limelightMessageX.setAddress("/Robot/Limelight/X");
-            limelightMessageY.setAddress("/Robot/Limelight/Y");
-            limelightMessageA.setAddress("/Robot/Limelight/A");
-            limelightMessageV.setAddress("/Robot/Limelight/V");
-            limelightMessageX.addArgument(limelightX);
-            limelightMessageY.addArgument(limelightY);
-            limelightMessageA.addArgument(limelightArea);
-            limelightMessageV.addArgument(limelightTarget ? 0 : 1);
-            oscWirelessSender.send(limelightMessageX);
-            oscWirelessSender.send(limelightMessageY);
-            oscWirelessSender.send(limelightMessageA);
-            oscWirelessSender.send(limelightMessageV);
 
         } catch (
                 Exception Ex) {
@@ -1277,10 +1287,10 @@ public class Robot extends TimedRobot {
     public void Update_Limelight_Tracking() {
         // These numbers must be tuned for your Robot!  Be careful!
         // TODO: These values need to be adjusted for our robot.
-        final double STEER_K = 0.03;                    // how hard to turn toward the target
-        final double DRIVE_K = 0.26;                    // how hard to drive fwd toward the target
-        final double DESIRED_TARGET_AREA = 13.0;        // Area of the target when the robot reaches the wall
-        final double MAX_DRIVE = 0.7;                   // Simple speed limit so we don't drive too fast
+        final double STEER_K = 0.03;                   // how hard to turn toward the target
+        final double DRIVE_K = 0.1;                    // how hard to drive fwd toward the target
+        final double DESIRED_TARGET_AREA = 7.5;        // Area of the target when the robot reaches the wall
+        final double MAX_DRIVE = 0.7;                  // Simple speed limit so we don't drive too fast
 
         if (!limelightTarget) {
             m_LimelightDriveCommand = 0.0;
