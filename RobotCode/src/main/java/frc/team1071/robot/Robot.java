@@ -281,18 +281,11 @@ public class Robot extends TimedRobot {
         // Always send out error data.
         SendOscErrorData();
 
-        // Always send out the current data
-        SendOscCurrentData();
-
-        // Always send out the Sensor data
+        // Always send out sensor data.
         SendOscSensorData();
 
-        double driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
-        double driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
-        
-        DriveTrain.Set(driverVertical, driverTwist, false, driverJoystick.getRawAxis(3), false, false);
-        DriveTrain.Run();
-
+        // Always send out the current data.
+        SendOscCurrentData();
     }
 
     /**
@@ -916,8 +909,7 @@ public class Robot extends TimedRobot {
             driverQuickTurn = driverJoystick.getRawButton(6);
         }
         //System.out.println("test:" + driverTwist);
-        DriveTrain.Set(driverVertical, driverTwist, false, driverJoystick.getRawAxis(3), false, false);
-        DriveTrain.Run();
+        DriveTrain.Run(driverVertical, driverTwist, driverQuickTurn, false, driverJoystick.getRawAxis(3));
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------
