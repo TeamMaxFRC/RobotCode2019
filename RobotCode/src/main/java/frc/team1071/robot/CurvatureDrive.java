@@ -21,7 +21,7 @@ public class CurvatureDrive
     private static final double BoostThresholdFeetPerSecond = 6.0;
     private static final double SlowDownFeetPerSecond = 4.0;
     private static final double BrakingThreshold = 2.0;
-    private static final double AccelerationFeetPerSecondPerSecond = 8.0;
+    private static final double AccelerationFeetPerSecondPerSecond = 4.0;
 
     // Motor Characteristics
     private static final double FreeRPM = 5676;
@@ -45,7 +45,7 @@ public class CurvatureDrive
 
     // Derived Values
     private static final double FreeWheelRPM = FreeRPM / GearRatio;
-    private static final double WheelDiameterMeters = WheelDiameterInches / InchesToMeters;
+    private static final double WheelDiameterMeters = WheelDiameterInches * InchesToMeters;
     private static final double DriveTrainBaseWidthMeters = DriveTrainBaseWidthInches * InchesToMeters;
     private static final double WheelCircumferenceMeters = WheelDiameterMeters * Math.PI;
     private static final double WheelRadiusMeters = WheelDiameterMeters / 2;
@@ -54,9 +54,9 @@ public class CurvatureDrive
     private static final double BoostThresholdMetersPerSecond = BoostThresholdFeetPerSecond * FeetToMeters;
     private static final double RobotWeightKgs = RobotWeightLbs * LbToKg;
     private static final double MetersPerSecondPerVolt = FreeWheelMetersPerSecond / MotorMeasurementVoltage;
-    private static final double NewtonsPerVolt = StallTorqueNm / MotorMeasurementVoltage / WheelRadiusMeters; 
+    private static final double NewtonsPerVolt = (StallTorqueNm / MotorMeasurementVoltage) / WheelRadiusMeters; 
     private static final double MetersPerSecondPerSecondPerVolt = NewtonsPerVolt * MotorsPerSide * 2 / RobotWeightKgs;
-    private static final double CappedDegreesPerMeter = CappedDegreesPerFeet * FeetToMeters;
+    private static final double CappedDegreesPerMeter = CappedDegreesPerFeet / FeetToMeters;
     private static final double AccelerationMetersPerSecondPerSecond = AccelerationFeetPerSecondPerSecond * FeetToMeters;
 
     private CANSparkMax LeftMaster;
@@ -88,7 +88,7 @@ public class CurvatureDrive
     {
         Motor.enableVoltageCompensation(11);
         Motor.setSmartCurrentLimit(55);
-        Motor.setOpenLoopRampRate(.2);
+        Motor.setOpenLoopRampRate(1.5);
         Motor.setIdleMode(CANSparkMax.IdleMode.kCoast);
     }
 
@@ -134,17 +134,19 @@ public class CurvatureDrive
         this.LeftController = this.LeftMaster.getPIDController();
         this.RightController = this.RightMaster.getPIDController();
 
-        this.LeftController.setP(0.00016);
+        this.LeftController.setP(0);
         this.LeftController.setI(0);
-        this.LeftController.setD(0.0004);
+        this.LeftController.setD(0);
         this.LeftController.setFF(0);
         this.LeftController.setDFilter(0.25);
+        this.LeftController.setOutputRange(-1, 1);
 
-        this.RightController.setP(0.00016);
+        this.RightController.setP(0);
         this.RightController.setI(0);
-        this.RightController.setD(0.0004);
+        this.RightController.setD(0);
         this.RightController.setFF(0);
         this.RightController.setDFilter(0.25);
+        this.LeftController.setOutputRange(-1, 1);
 
         ConfigureDriveMotors();
 
@@ -169,6 +171,11 @@ public class CurvatureDrive
 
     public void Run()
     {
+        double NewLeftMetersPerSecond = 0;
+        double NewRightMetersPerSecond = 0;
+        double TotalLeftFeedForward = 0;
+        double TotalRightFeedForward = 0;
+
         double Circumference = 360.0 / Math.abs(this.TargetDegreesPerMeter);
 
         double Radius = Circumference / Math.PI / 2;
@@ -178,6 +185,12 @@ public class CurvatureDrive
         // Can cheat here and use the ratio of the radiuses to determine wheel speed
         double ShortWheelMetersPerSecond = (ShortRadius / Radius) * TargetSpeedMetersPerSecond;
         double WideWheelMetersPerSecond = (WideRadius / Radius) * TargetSpeedMetersPerSecond;
+
+        if(TargetDegreesPerMeter == 0)
+        {
+            ShortWheelMetersPerSecond = TargetSpeedMetersPerSecond;
+            WideWheelMetersPerSecond = TargetSpeedMetersPerSecond;
+        }
         
         double TargetLeftMetersPerSecond = TargetDegreesPerMeter >= 0 ? WideWheelMetersPerSecond : ShortWheelMetersPerSecond;
         double TargetRightMetersPerSecond = TargetDegreesPerMeter >= 0 ? ShortWheelMetersPerSecond : WideWheelMetersPerSecond;
@@ -185,12 +198,14 @@ public class CurvatureDrive
         double CurrentLeftMetersPerSecond = LeftEncoder.getVelocity() / GearRatio * WheelCircumferenceMeters * MinutesToSeconds;
         double CurrentRightMetersPerSecond = RightEncoder.getVelocity() / GearRatio * WheelCircumferenceMeters * MinutesToSeconds;
 
+        // System.out.print(" TargetLeftFeetPerSecond: " + TargetLeftMetersPerSecond / FeetToMeters);
+
         double TimeNow = Timer.getFPGATimestamp();
         double TimeDelta = TimeNow - LastRunTime;
         LastRunTime = TimeNow;
 
-        double NewLeftMetersPerSecond = CurrentLeftMetersPerSecond;
-        double NewRightMetersPerSecond = CurrentRightMetersPerSecond;
+        NewLeftMetersPerSecond = CurrentLeftMetersPerSecond;
+        NewRightMetersPerSecond = CurrentRightMetersPerSecond;
 
         double LeftAccelerationMetersPerSecondPerSecond = 0;
         double RightAccelerationMetersPerSecondPerSecond = 0;
@@ -210,18 +225,25 @@ public class CurvatureDrive
             LeftAccelerationMetersPerSecondPerSecond = AccelerationMetersPerSecondPerSecond * (TargetDegreesPerMeter >= 0 ? WideRadius/Radius : ShortRadius / Radius); 
             RightAccelerationMetersPerSecondPerSecond = AccelerationMetersPerSecondPerSecond * (TargetDegreesPerMeter >= 0 ? ShortRadius/Radius : WideRadius / Radius);
 
-            if(Math.abs(TargetLeftMetersPerSecond - CurrentLeftMetersPerSecond) < LeftDeltaVelocityMetersPerSecond)
+            if(TargetDegreesPerMeter == 0)
+            {
+                LeftAccelerationMetersPerSecondPerSecond = AccelerationMetersPerSecondPerSecond;
+                RightAccelerationMetersPerSecondPerSecond = AccelerationMetersPerSecondPerSecond;
+                LeftDeltaVelocityMetersPerSecond = DeltaVelocityMetersPerSecond;
+                RightDeltaVelocityMetersPerSecond = DeltaVelocityMetersPerSecond;
+            }
+
+            if(Math.abs(TargetLeftMetersPerSecond - CurrentLeftMetersPerSecond) < Math.abs(LeftDeltaVelocityMetersPerSecond * 5) || TargetLeftMetersPerSecond == 0)
             {
                 NewLeftMetersPerSecond = TargetLeftMetersPerSecond;
                 LeftAccelerationMetersPerSecondPerSecond = 0;
-
             }
             else
             {
                 NewLeftMetersPerSecond = CurrentLeftMetersPerSecond + Math.copySign(LeftDeltaVelocityMetersPerSecond, TargetLeftMetersPerSecond - CurrentLeftMetersPerSecond);
             }
 
-            if(Math.abs(TargetRightMetersPerSecond - CurrentRightMetersPerSecond) < RightDeltaVelocityMetersPerSecond)
+            if(Math.abs(TargetRightMetersPerSecond - CurrentRightMetersPerSecond) < RightDeltaVelocityMetersPerSecond * 5 || TargetRightMetersPerSecond == 0)
             {
                 NewRightMetersPerSecond = TargetRightMetersPerSecond;
                 RightAccelerationMetersPerSecondPerSecond = 0;
@@ -230,6 +252,9 @@ public class CurvatureDrive
             {
                 NewRightMetersPerSecond = CurrentRightMetersPerSecond + Math.copySign(RightDeltaVelocityMetersPerSecond, TargetRightMetersPerSecond - CurrentRightMetersPerSecond);
             }
+
+            LeftAccelerationMetersPerSecondPerSecond = Math.copySign(LeftAccelerationMetersPerSecondPerSecond, TargetLeftMetersPerSecond - CurrentLeftMetersPerSecond);
+            RightAccelerationMetersPerSecondPerSecond = Math.copySign(RightAccelerationMetersPerSecondPerSecond, TargetRightMetersPerSecond - CurrentRightMetersPerSecond);
         }
 
         double LeftSpeedVoltage = NewLeftMetersPerSecond / MetersPerSecondPerVolt;
@@ -241,24 +266,35 @@ public class CurvatureDrive
         double LeftAccelerationVoltage = LeftAccelerationMetersPerSecondPerSecond / MetersPerSecondPerSecondPerVolt;
         double RightAccelerationVoltage = RightAccelerationMetersPerSecondPerSecond / MetersPerSecondPerSecondPerVolt;
 
+        // System.out.print(" Meters/s/s/V: " + NewtonsPerVolt);
+
         double LeftAccelerationFeedForward = LeftAccelerationVoltage / 11.0;
         double RightAccelerationFeedForward = RightAccelerationVoltage / 11.0;
 
-        double TotalLeftFeedForward = LeftSpeedFeedForward + LeftAccelerationFeedForward;
-        double TotalRightFeedForward = RightSpeedFeedForward + RightAccelerationFeedForward;
+        TotalLeftFeedForward = LeftSpeedFeedForward + LeftAccelerationFeedForward;
+        TotalRightFeedForward = RightSpeedFeedForward + RightAccelerationFeedForward;
 
+        SendDriveData();
+        
         double LeftSpeedRotationsPerMinute = NewLeftMetersPerSecond / WheelCircumferenceMeters / MinutesToSeconds * GearRatio;
         double RightSpeedRotationsPerMinute = NewRightMetersPerSecond / WheelCircumferenceMeters / MinutesToSeconds * GearRatio;
 
-        System.out.print("LeftSpeedFt/s: " + (NewLeftMetersPerSecond / FeetToMeters));
-        System.out.print(" RightSpeedFt/s: " + (NewRightMetersPerSecond / FeetToMeters));
-        System.out.print(" LeftFF: " + TotalLeftFeedForward);
-        System.out.println(" RightFF: " + TotalRightFeedForward);
+        // System.out.print(" TargetRightm/s: " + TargetRightMetersPerSecond);
+        // System.out.print(" ActualRight : " + CurrentLeftMetersPerSecond);
+        // System.out.print(" TargetLeftm/s: " + TargetLeftMetersPerSecond);
+        // System.out.print(" LeftAccelerationFeedForward: " + LeftAccelerationFeedForward);
+        // System.out.print(" LeftSpeedFeedForward: " + LeftSpeedFeedForward);
+        // System.out.print(" RightSpeedFt/s: " + (TargetRightMetersPerSecond / FeetToMeters));
+        // System.out.print(" Target Deg/ft: " + (TargetDegreesPerMeter * FeetToMeters));
+        // System.out.println(" NewLeftMetersPerSecond: " + NewLeftMetersPerSecond + " RightSpeedFeedForward: " + RightSpeedFeedForward);
+        System.out.print(" RightFF: " + TotalRightFeedForward);
+        System.out.println(" LeftFF: " + TotalLeftFeedForward);
 
-        LeftController.setReference(LeftSpeedRotationsPerMinute, ControlType.kVelocity, 0, TotalLeftFeedForward);
-        RightController.setReference(RightSpeedRotationsPerMinute, ControlType.kVelocity, 0, TotalRightFeedForward);
+        LeftMaster.set(TotalLeftFeedForward);
+        RightMaster.set(TotalRightFeedForward);
 
-        SendDriveData();
+        // LeftController.setReference(LeftSpeedRotationsPerMinute, ControlType.kVelocity, 0, TotalLeftFeedForward * 12);
+        // RightController.setReference(RightSpeedRotationsPerMinute, ControlType.kVelocity, 0, TotalRightFeedForward * 12);
     }
 
     /**
