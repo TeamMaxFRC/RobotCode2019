@@ -271,7 +271,9 @@ public class Robot extends TimedRobot {
         limelightY = ty.getDouble(0.0);
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) >= 1.0;
+
         sendOscLimelightData();
+
         // System.out.println(fourBarMotor.getPosition());
         // System.out.println(fourBarMotor.getSelectedSensorPosition());
         //System.out.println(liftMaster.getSelectedSensorPosition());
@@ -674,7 +676,7 @@ public class Robot extends TimedRobot {
         // Four bar relative encoder position.
         OSCMessage fourBarEncoderRelativePosition = new OSCMessage();
         fourBarEncoderRelativePosition.setAddress("/FourBarEncoderRelativePosition");
-        fourBarEncoderRelativePosition.addArgument((double) fourBarMotor.getSensorCollection().getQuadraturePosition());
+        fourBarEncoderRelativePosition.addArgument((double) fourBarLift.GetDegrees());//   fourBarMotor.getSensorCollection().getQuadraturePosition());
 
         // Four bar absolute encoder position.
         OSCMessage fourBarEncoderAbsolutePosition = new OSCMessage();
@@ -853,14 +855,17 @@ public class Robot extends TimedRobot {
         OSCMessage limelightMessageY = new OSCMessage();
         OSCMessage limelightMessageA = new OSCMessage();
         OSCMessage limelightMessageV = new OSCMessage();
+
         limelightMessageX.setAddress("/Robot/Limelight/X");
         limelightMessageY.setAddress("/Robot/Limelight/Y");
         limelightMessageA.setAddress("/Robot/Limelight/A");
         limelightMessageV.setAddress("/Robot/Limelight/V");
+
         limelightMessageX.addArgument(limelightX);
         limelightMessageY.addArgument(limelightY);
         limelightMessageA.addArgument(limelightArea);
         limelightMessageV.addArgument(limelightTarget ? 0 : 1);
+        
         try {
             oscWirelessSender.send(limelightMessageX);
             oscWiredSender.send(limelightMessageX);
@@ -890,7 +895,7 @@ public class Robot extends TimedRobot {
         // Determine the proper motor values based on the joystick data.
         double driverVertical = 0;
         double driverTwist = 0;
-        boolean driverQuickTurn = false;
+        // boolean driverQuickTurn = false;
         Update_Limelight_Tracking();
         if (driverJoystick.getRawButton(5)) {
             if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").getDouble(0) != 1) {
@@ -899,17 +904,15 @@ public class Robot extends TimedRobot {
             if (limelightTarget) {
                 driverVertical = m_LimelightDriveCommand;
                 driverTwist = m_LimelightSteerCommand;
-                driverQuickTurn = true;
             }
         } else {
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(0);
             driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
             driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
             //System.out.println(driverTwist);
-            driverQuickTurn = driverJoystick.getRawButton(6);
         }
         //System.out.println("test:" + driverTwist);
-        DriveTrain.Run(driverVertical, driverTwist, driverQuickTurn, false, driverJoystick.getRawAxis(3));
+        DriveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false, driverJoystick.getRawAxis(3));
         //--------------------------------------------------------------------------------------------------------------
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------
@@ -1300,7 +1303,8 @@ public class Robot extends TimedRobot {
 
         // Start with proportional steering
         double steer_cmd = limelightX * STEER_K;
-        m_LimelightSteerCommand = steer_cmd;
+        double steerMaxInput = 0.4;
+        m_LimelightSteerCommand = Math.max(Math.min(steer_cmd, steerMaxInput), -steerMaxInput);
 
         // try to drive forward until the target area reaches our desired area
         double drive_cmd = (DESIRED_TARGET_AREA - limelightArea) * DRIVE_K;

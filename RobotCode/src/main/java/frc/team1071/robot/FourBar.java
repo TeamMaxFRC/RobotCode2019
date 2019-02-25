@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
@@ -17,7 +18,8 @@ import frc.team254.InterpolatingTreeMap;
 public class FourBar {
 
     private static final double FourBarSpread = 1506;
-    private static final double SafetyLimitThresholdDegrees = 5.0;
+    private static final double UpperSafetyLimitThresholdDegrees = 5.0;
+    private static final double LowerSafetyLimitThresholdDegrees = 5.0;
 
     private TalonSRX FourBarTalon;
     private InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> ArbFFLookup = new InterpolatingTreeMap<>();
@@ -71,7 +73,7 @@ public class FourBar {
         FourBarTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
         FourBarTalon.setInverted(false);
         FourBarTalon.setSensorPhase(false);
-        FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition());
+        FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
 
         ArbFFLookup.put(new InterpolatingDouble(0.00), new InterpolatingDouble(0.00));
         ArbFFLookup.put(new InterpolatingDouble(0.01), new InterpolatingDouble(0.00));
@@ -119,12 +121,14 @@ public class FourBar {
             System.out.println("OSC Initialization Exception: " + Ex.getMessage());
         }
 
-        FourBarTalon.configMotionAcceleration(2000, 10);
-        FourBarTalon.configMotionCruiseVelocity(1000, 10);
-        FourBarTalon.config_kP(0, 1, 10);
+        FourBarTalon.configMotionAcceleration(100, 10);
+        FourBarTalon.configMotionCruiseVelocity(100, 10);
+        FourBarTalon.config_kP(0, 2.5, 10);
         FourBarTalon.config_kI(0, 0, 10);
-        FourBarTalon.config_kD(0, 1.5, 10);
+        FourBarTalon.config_kD(0, 6, 10);
         FourBarTalon.config_kF(0, 0.8, 10);
+        
+        FourBarTalon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5);
 
         FourBarTalon.configVoltageCompSaturation(11);
         FourBarTalon.enableVoltageCompensation(true);
@@ -134,9 +138,9 @@ public class FourBar {
         FourBarTalon.configPeakCurrentLimit(0);
         FourBarTalon.enableCurrentLimit(true);
 
-        FourBarTalon.configForwardSoftLimitThreshold((int) (this.FourBarOffset + FourBarSpread - (SafetyLimitThresholdDegrees / 360 * 4096)));
+        FourBarTalon.configForwardSoftLimitThreshold((int) (this.FourBarOffset + FourBarSpread - (UpperSafetyLimitThresholdDegrees / 360 * 4096)));
         FourBarTalon.configForwardSoftLimitEnable(true);
-        FourBarTalon.configReverseSoftLimitThreshold((int) (this.FourBarOffset + (SafetyLimitThresholdDegrees / 360 * 4096)));
+        FourBarTalon.configReverseSoftLimitThreshold((int) (this.FourBarOffset + (LowerSafetyLimitThresholdDegrees / 360 * 4096)));
         FourBarTalon.configReverseSoftLimitEnable(true);
 
     }
@@ -224,7 +228,7 @@ public class FourBar {
     }
 
     public void TeleopInit() {
-        initialized = true;
+        FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
     }
 
     public void RobotPeriodic() {

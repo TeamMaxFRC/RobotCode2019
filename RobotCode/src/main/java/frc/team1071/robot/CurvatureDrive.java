@@ -13,7 +13,7 @@ import java.net.InetAddress;
 public class CurvatureDrive
 {
     private static final double CappedSpeedFeetPerSecond = 12.0;
-    private static final double CappedDegreesPerFeet = 55;
+    private static final double CappedDegreesPerFeet = 45;
     private static final double BoostThresholdFeetPerSecond = 6.0;
 
     private static final double WheelDiameterFeet = 0.5;
@@ -47,7 +47,7 @@ public class CurvatureDrive
     {
         Motor.enableVoltageCompensation(11);
         Motor.setSmartCurrentLimit(55);
-        Motor.setOpenLoopRampRate(1.5);
+        Motor.setOpenLoopRampRate(1);
         Motor.setIdleMode(CANSparkMax.IdleMode.kCoast);
     }
 
