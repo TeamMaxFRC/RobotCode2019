@@ -249,4 +249,8 @@ public class FourBar {
             FourBarTalon.set(ControlMode.PercentOutput, 0);
         }
     }
+
+    public double getTicks() {
+        return FourBarTalon.getSensorCollection().getPulseWidthPosition();
+    }
 }
