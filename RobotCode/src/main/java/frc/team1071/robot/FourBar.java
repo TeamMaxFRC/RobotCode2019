@@ -133,9 +133,9 @@ public class FourBar {
         FourBarTalon.configVoltageCompSaturation(11);
         FourBarTalon.enableVoltageCompensation(true);
 
-        FourBarTalon.configContinuousCurrentLimit(25);
-        FourBarTalon.configPeakCurrentDuration(0);
-        FourBarTalon.configPeakCurrentLimit(0);
+        FourBarTalon.configContinuousCurrentLimit(10);
+        FourBarTalon.configPeakCurrentDuration(1000);
+        FourBarTalon.configPeakCurrentLimit(20);
         FourBarTalon.enableCurrentLimit(true);
 
         FourBarTalon.configForwardSoftLimitThreshold((int) (this.FourBarOffset + FourBarSpread - (UpperSafetyLimitThresholdDegrees / 360 * 4096)));
