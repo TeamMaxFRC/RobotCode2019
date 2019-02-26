@@ -4,8 +4,6 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.illposed.osc.OSCBundle;
-import com.illposed.osc.OSCMessage;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.networktables.NetworkTable;
@@ -26,8 +24,10 @@ import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
  */
 public class Robot extends TimedRobot {
 
+    // Helper classes.
     private CurvatureDrive driveTrain;
-    private FourBar fourBarLift;
+    private Lift lift;
+    private OscSender oscSender = new OscSender();
 
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
@@ -53,10 +53,10 @@ public class Robot extends TimedRobot {
     double m_LimelightDriveCommand, m_LimelightSteerCommand;
 
     // Create the auxiliary motors.
-    private TalonSRX liftMaster;
-    private TalonSRX liftSlavePrimary;
-    private TalonSRX liftSlaveSecondary;
-    private TalonSRX liftSlaveTertiary;
+    private TalonSRX elevatorMaster;
+    private TalonSRX elevatorSlaveOne;
+    private TalonSRX elevatorSlaveTwo;
+    private TalonSRX elevatorSlaveThree;
     private TalonSRX gathererMotor;
     private TalonSRX fourBarMotor;
 
@@ -80,23 +80,6 @@ public class Robot extends TimedRobot {
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
 
-    // Create an OSC helper that will send all the data.
-    OscHelper oscHelper = new OscHelper();
-
-    /**
-     * Function that configures a lift motor's power.
-     *
-     * @param liftTalon The talon being power limited.
-     */
-    private static void configLiftMotorPower(TalonSRX liftTalon) {
-        liftTalon.configPeakCurrentLimit(0);
-        liftTalon.configPeakCurrentDuration(0);
-        liftTalon.configContinuousCurrentLimit(15);
-        liftTalon.enableCurrentLimit(true);
-        liftTalon.configVoltageCompSaturation(12);
-        liftTalon.enableVoltageCompensation(true);
-    }
-
     /**
      * This function is run when the robot is first started up.
      */
@@ -112,9 +95,10 @@ public class Robot extends TimedRobot {
 
         // Initialize all the motor controllers.
         try {
-            //----------------------------------------------------------------------------------------------------------
+
+            //--------------------------------------------------------------------------------------------------------------------------------------------------
             // Drive Motors
-            //----------------------------------------------------------------------------------------------------------
+            //--------------------------------------------------------------------------------------------------------------------------------------------------
 
             // Initialize the drive motors.
             leftMaster = new CANSparkMax(17, kBrushless);
@@ -125,84 +109,55 @@ public class Robot extends TimedRobot {
             rightSlavePrimary = new CANSparkMax(14, kBrushless);
             rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
-            //----------------------------------------------------------------------------------------------------------
+            //--------------------------------------------------------------------------------------------------------------------------------------------------
             // Lift Motors
-            //----------------------------------------------------------------------------------------------------------
+            //--------------------------------------------------------------------------------------------------------------------------------------------------
 
             // Initialize the lift motors.
             if (isPracticeRobot) {
-                liftMaster = new TalonSRX(4);
-                liftSlavePrimary = new TalonSRX(7);
-                liftSlaveSecondary = new TalonSRX(9);
-                liftSlaveTertiary = new TalonSRX(8);
-            } else {
-                liftMaster = new TalonSRX(7);
-                liftSlavePrimary = new TalonSRX(4);
-                liftSlaveSecondary = new TalonSRX(5);
-                liftSlaveTertiary = new TalonSRX(6);
-            }
-
-            liftMaster.enableVoltageCompensation(true);
-            liftSlavePrimary.enableVoltageCompensation(true);
-            liftSlaveSecondary.enableVoltageCompensation(true);
-            liftSlaveTertiary.enableVoltageCompensation(true);
-
-            // Configure lift motor power.
-            configLiftMotorPower(liftMaster);
-            configLiftMotorPower(liftSlavePrimary);
-            configLiftMotorPower(liftSlaveSecondary);
-            configLiftMotorPower(liftSlaveTertiary);
-
-            // Have lift slaves follow the master.
-            liftSlavePrimary.follow(liftMaster);
-            liftSlaveSecondary.follow(liftMaster);
-            liftSlaveTertiary.follow(liftMaster);
-
-            // Invert the lift motors.
-            liftMaster.setInverted(true);
-            liftSlavePrimary.setInverted(true);
-            liftSlaveSecondary.setInverted(true);
-            liftSlaveTertiary.setInverted(true);
-
-            // Invert the lift encoder.
-            liftMaster.setSensorPhase(true);
-
-            if (isPracticeRobot) {
-                // Set the PID values for the lift.
-                liftMaster.config_kF(0, 0.32058916);
-                liftMaster.config_kP(0, 1.4);
-                liftMaster.config_kD(0, 2.8);
-
-                // Establish the cruise velocity and max acceleration for motion magic.
-                liftMaster.configMotionCruiseVelocity(2900);
-                liftMaster.configMotionAcceleration(5200);
-            } else {
-                // Set the PID values for the lift.
-                liftMaster.config_kF(0, 0.32058916);
-                liftMaster.config_kP(0, 0.30);
-                liftMaster.config_kD(0, 0.60);
-
-                // Establish the cruise velocity and max acceleration for motion magic.
-                liftMaster.configMotionCruiseVelocity(2900);
-                liftMaster.configMotionAcceleration(5200);
-            }
-
-            //----------------------------------------------------------------------------------------------------------
-            // Four Bar Motor
-            //----------------------------------------------------------------------------------------------------------
-
-            // Initialize the four bar motor.
-            if (isPracticeRobot) {
+                elevatorMaster = new TalonSRX(4);
+                elevatorSlaveOne = new TalonSRX(7);
+                elevatorSlaveTwo = new TalonSRX(9);
+                elevatorSlaveThree = new TalonSRX(8);
                 fourBarMotor = new TalonSRX(5);
             } else {
+                elevatorMaster = new TalonSRX(7);
+                elevatorSlaveOne = new TalonSRX(4);
+                elevatorSlaveTwo = new TalonSRX(5);
+                elevatorSlaveThree = new TalonSRX(6);
                 fourBarMotor = new TalonSRX(9);
             }
 
-            fourBarLift = new FourBar(fourBarMotor, 1151);
+            // Create the lift helper class.
+            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotor, 1151);
 
-            //----------------------------------------------------------------------------------------------------------
+            if (isPracticeRobot) {
+
+                // Set the PID values for the lift.
+                elevatorMaster.config_kF(0, 0.32058916);
+                elevatorMaster.config_kP(0, 1.4);
+                elevatorMaster.config_kD(0, 2.8);
+
+                // Establish the cruise velocity and max acceleration for motion magic.
+                elevatorMaster.configMotionCruiseVelocity(2900);
+                elevatorMaster.configMotionAcceleration(5200);
+
+            } else {
+
+                // Set the PID values for the lift.
+                elevatorMaster.config_kF(0, 0.32058916);
+                elevatorMaster.config_kP(0, 0.30);
+                elevatorMaster.config_kD(0, 0.60);
+
+                // Establish the cruise velocity and max acceleration for motion magic.
+                elevatorMaster.configMotionCruiseVelocity(2900);
+                elevatorMaster.configMotionAcceleration(5200);
+
+            }
+
+            //--------------------------------------------------------------------------------------------------------------------------------------------------
             // Other Initialization
-            //----------------------------------------------------------------------------------------------------------
+            //--------------------------------------------------------------------------------------------------------------------------------------------------
 
             // Initialize the gatherer.
             if (isPracticeRobot) {
@@ -255,23 +210,18 @@ public class Robot extends TimedRobot {
         limelightArea = ta.getDouble(0.0);
         limelightTarget = tv.getDouble(0.0) >= 1.0;
 
-        // System.out.println(fourBarMotor.getPosition());
-        // System.out.println(fourBarMotor.getSelectedSensorPosition());
-        //System.out.println(liftMaster.getSelectedSensorPosition());
-
-        fourBarLift.RobotPeriodic();
-
         // Always send out error data.
-        oscHelper.sendOscErrorData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary, rightSlaveSecondary);
+        oscSender.sendOscErrorData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary, rightSlaveSecondary);
 
         // Always send out sensor data.
-        oscHelper.sendOscSensorData(liftMaster, fourBarLift, gathererMotor, driveTrain);
+        oscSender.sendOscSensorData(driveTrain, lift, gathererMotor);
 
         // Always send out the current data.
-        oscHelper.sendOscCurrentData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary, rightSlaveSecondary, liftMaster, liftSlavePrimary, liftSlaveSecondary, liftSlaveTertiary, fourBarMotor, gathererMotor, compressor);
+        oscSender.sendOscCurrentData(driveTrain, lift, gathererMotor, compressor);
 
         // Always send out the Limelight data.
-        oscHelper.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
+        oscSender.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
+
     }
 
     /**
@@ -302,16 +252,14 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
 
         // Reset the lift's encoder position.
-        liftMaster.setSelectedSensorPosition(0, 0, 10);
-        liftMaster.set(ControlMode.MotionMagic, 0);
+        elevatorMaster.setSelectedSensorPosition(0, 0, 10);
+        elevatorMaster.set(ControlMode.MotionMagic, 0);
 
         // Reset the solenoid position.
         hatchSolenoid.set(DoubleSolenoid.Value.kForward);
 
-        fourBarLift.TeleopInit();
-
         // Report that the console is functional.
-        oscHelper.writeConsole("Robot has enabled!");
+        oscSender.writeConsole("Robot has enabled!");
     }
 
     /**
@@ -356,79 +304,30 @@ public class Robot extends TimedRobot {
         // Operator Controls
         //--------------------------------------------------------------------------------------------------------------
         try {
-            // Four bar positions in degrees.
-            double fourBarGatheringPositionDegrees = 30;
-
-            double fourBarLowBallDegrees = 110;
-            double fourBarMiddleBallDegrees = 110;
-            double fourBarHighBallDegrees = 110;
-
-            double fourBarLowHatchDegrees = 50;
-            double fourBarMiddleHatchDegrees = 50;
-            double fourBarHighHatchDegrees = 50;
-
-            // Lift ball set positions.
-            int liftGatheringPositionBall = 0;
-            int liftLowScoreBall = 0;
-            int liftMiddleScoreBall = 15000;
-            int liftHighScoreBall = 25300;
-
-            // Lift hatch set positions.
-            int liftGatheringPositionHatch = 0;
-            int liftLowScoreHatch = 0;
-            int liftMiddleScoreHatch = 15000;
-            int liftHighScoreHatch = 25200;
-            int liftInstantGatherHatch = 2000;
-
-            // Lift set to gathering position.
-            int liftGatheringPosition = 0;
 
             //When buttons are pressed on the stream deck, set lift to hatch positions.
             if (isStreamDeck && !driverJoystick.getRawButton(5)) {
 
-                // If the '4' button is pressed, then lift sets to top hatch position.
-                if (operatorJoystick.getRawButtonPressed(4)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
-                    fourBarLift.SetPositionDegrees(fourBarHighHatchDegrees);
+                // Set lift position based on the button pressed on the stream deck.
+                if (operatorJoystick.getRawButton(4)) {
+                    lift.setLiftPosition(Lift.LiftPosition.HighHatch);
+                } else if (operatorJoystick.getRawButton(9)) {
+                    lift.setLiftPosition(Lift.LiftPosition.MiddleHatch);
+                } else if (operatorJoystick.getRawButton(14)) {
+                    lift.setLiftPosition(Lift.LiftPosition.LowHatch);
+                } else if (operatorJoystick.getRawButton(5)) {
+                    lift.setLiftPosition(Lift.LiftPosition.HighBall);
+                } else if (operatorJoystick.getRawButton(10)) {
+                    lift.setLiftPosition(Lift.LiftPosition.MiddleBall);
+                } else if (operatorJoystick.getRawButton(15)) {
+                    lift.setLiftPosition(Lift.LiftPosition.LowBall);
+                } else if (operatorJoystick.getRawButton(13)) {
+                    lift.setLiftPosition(Lift.LiftPosition.GatheringHatch);
+                } else if (operatorJoystick.getRawButton(8)) {
+                    lift.setLiftPosition(Lift.LiftPosition.GatheringBall);
                 }
 
-                // If the '9' button is pressed, then lift sets to middle hatch position.
-                if (operatorJoystick.getRawButtonPressed(9)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
-                    fourBarLift.SetPositionDegrees(fourBarMiddleHatchDegrees);
-                }
-
-                // If the '14' button is pressed, then lift sets to low hatch position.
-                if (operatorJoystick.getRawButtonPressed(14)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
-                    fourBarLift.SetPositionDegrees(fourBarLowHatchDegrees);
-                }
-
-                //If the '5' button is pressed, then the lift sets to top ball position.
-                if (operatorJoystick.getRawButtonPressed(5)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
-                    fourBarLift.SetPositionDegrees(fourBarHighBallDegrees);
-                }
-
-                //If the '10' button is pressed, then the lift sets to the middle ball position.
-                if (operatorJoystick.getRawButtonPressed(10)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
-                    fourBarLift.SetPositionDegrees(fourBarMiddleBallDegrees);
-                }
-
-                //If the '15' button is pressed, then the lift sets to the low ball position.
-                if (operatorJoystick.getRawButtonPressed(15)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
-                    fourBarLift.SetPositionDegrees(fourBarLowBallDegrees);
-                }
-
-                //When the '13' button is pressed, the lift sets to gathering position.
-                if (operatorJoystick.getRawButtonPressed(13)) {
-                    liftMaster.set(ControlMode.MotionMagic, liftGatheringPosition);
-                    fourBarLift.SetPositionDegrees(fourBarGatheringPositionDegrees);
-                }
-
-                // When buttons are pressed, the gatherer will gather in '1' or launch out '2'.
+                // Run the ball gatherer.
                 if (operatorJoystick.getRawButton(1)) {
                     gathererMotor.set(ControlMode.PercentOutput, 0.75);
                 } else if (operatorJoystick.getRawButton(2)) {
@@ -451,7 +350,7 @@ public class Robot extends TimedRobot {
 
                 } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse) {
                     hatchSolenoid.set(DoubleSolenoid.Value.kForward);
-                    liftMaster.set(ControlMode.MotionMagic, liftInstantGatherHatch);
+                    lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
 
                 }
 
@@ -465,27 +364,27 @@ public class Robot extends TimedRobot {
                 if (operatorJoystick.getRawButton(6)) {
 
                     // If the 'A' button is pressed, then set the ball gathering height.
-                    if (operatorJoystick.getRawButtonPressed(1)) {
-                        liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionBall);
+                    if (operatorJoystick.getRawButton(1)) {
+                        lift.setLiftPosition(Lift.LiftPosition.GatheringHatch);
 
                         // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
                     }
 
                     // If the 'B' button is pressed, then set the low ball position.
-                    if (operatorJoystick.getRawButtonPressed(2)) {
-                        liftMaster.set(ControlMode.MotionMagic, liftLowScoreBall);
+                    else if (operatorJoystick.getRawButton(2)) {
+                        lift.setLiftPosition(Lift.LiftPosition.LowBall);
                         // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
                     }
 
                     // If the 'X' button is pressed, then set the middle ball position.
-                    if (operatorJoystick.getRawButtonPressed(3)) {
-                        liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreBall);
+                    else if (operatorJoystick.getRawButton(3)) {
+                        lift.setLiftPosition(Lift.LiftPosition.MiddleBall);
                         // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
                     }
 
                     // If the 'Y' button is pressed, then set the high ball position.
-                    if (operatorJoystick.getRawButtonPressed(4)) {
-                        liftMaster.set(ControlMode.MotionMagic, liftHighScoreBall);
+                    else if (operatorJoystick.getRawButtonPressed(4)) {
+                        lift.setLiftPosition(Lift.LiftPosition.HighBall);
                         // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
                     }
 
@@ -496,26 +395,22 @@ public class Robot extends TimedRobot {
 
                     // If the 'A' button is pressed, then set the hatch gathering position.
                     if (operatorJoystick.getRawButtonPressed(1)) {
-                        liftMaster.set(ControlMode.MotionMagic, liftGatheringPositionHatch);
-                        // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionHatch, 0, 0);
+                        lift.setLiftPosition(Lift.LiftPosition.GatheringHatch);
                     }
 
                     // If the 'B' button is pressed, set the low hatch position.
-                    if (operatorJoystick.getRawButtonPressed(2)) {
-                        liftMaster.set(ControlMode.MotionMagic, liftLowScoreHatch);
-                        // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreHatch, 0, 0);
+                    else if (operatorJoystick.getRawButtonPressed(2)) {
+                        lift.setLiftPosition(Lift.LiftPosition.LowHatch);
                     }
 
                     // If the 'X' button is pressed, set the middle hatch position.
-                    if (operatorJoystick.getRawButtonPressed(3)) {
-                        liftMaster.set(ControlMode.MotionMagic, liftMiddleScoreHatch);
-                        // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreHatch, 0, 0);
+                    else if (operatorJoystick.getRawButtonPressed(3)) {
+                        lift.setLiftPosition(Lift.LiftPosition.MiddleHatch);
                     }
 
                     // If the 'Y' button is pressed, set the high hatch position.
-                    if (operatorJoystick.getRawButtonPressed(4)) {
-                        liftMaster.set(ControlMode.MotionMagic, liftHighScoreHatch);
-                        // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreHatch, 0, 0);
+                    else if (operatorJoystick.getRawButtonPressed(4)) {
+                        lift.setLiftPosition(Lift.LiftPosition.HighHatch);
                     }
                 }
 
@@ -535,7 +430,7 @@ public class Robot extends TimedRobot {
 
                 } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse) {
                     hatchSolenoid.set(DoubleSolenoid.Value.kForward);
-                    liftMaster.set(ControlMode.MotionMagic, liftInstantGatherHatch);
+                    lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 }
 
                 // Store the last magnetic switch value.
@@ -552,10 +447,13 @@ public class Robot extends TimedRobot {
 
             }
 
-            fourBarLift.RunFourBar();
+            // Run the lift.
+            lift.runLift();
 
-        } catch (
-                Exception Ex) {
+            // Send the four bar logging data.
+            oscSender.sendFourBarData(lift);
+
+        } catch (Exception Ex) {
             System.out.println("Exception in operator controls! " + Ex.getMessage());
         }
 

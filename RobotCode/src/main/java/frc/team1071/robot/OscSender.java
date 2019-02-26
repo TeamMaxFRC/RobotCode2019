@@ -7,20 +7,21 @@ import com.illposed.osc.OSCPortOut;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Timer;
 
 import java.net.InetAddress;
 import java.util.BitSet;
 
-class OscHelper {
+class OscSender {
 
     // Create the OSC sender on the robot.
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
 
     /**
-     * OscHelper constructor.
+     * OscSender constructor.
      */
-    OscHelper(){
+    OscSender() {
 
         // Try to open the OSC sockets.
         try {
@@ -36,11 +37,11 @@ class OscHelper {
      * Pools together the error data and sends it to the dashboard.
      */
     void sendOscErrorData(CANSparkMax leftMaster,
-                                 CANSparkMax rightMaster,
-                                 CANSparkMax leftSlavePrimary,
-                                 CANSparkMax rightSlavePrimary,
-                                 CANSparkMax leftSlaveSecondary,
-                                 CANSparkMax rightSlaveSecondary) {
+                          CANSparkMax rightMaster,
+                          CANSparkMax leftSlavePrimary,
+                          CANSparkMax rightSlavePrimary,
+                          CANSparkMax leftSlaveSecondary,
+                          CANSparkMax rightSlaveSecondary) {
 
         // Variable for converting Spark MAX faults.
         short faultShort;
@@ -185,20 +186,12 @@ class OscHelper {
 
     /**
      * Pools together the current data for each subsystem and sends it to the dashboard.
+     * @param driveTrain Drive train class, which contains all the drive motors.
+     * @param lift Lift class, which contains the elevator and four bar motors.
+     * @param gathererMotor Gatherer motor instance.
+     * @param compressor Compressor instance.
      */
-    void sendOscCurrentData(CANSparkMax leftMaster,
-                                    CANSparkMax rightMaster,
-                                    CANSparkMax leftSlavePrimary,
-                                    CANSparkMax rightSlavePrimary,
-                                    CANSparkMax leftSlaveSecondary,
-                                    CANSparkMax rightSlaveSecondary,
-                                    TalonSRX liftMaster,
-                                    TalonSRX liftSlavePrimary,
-                                    TalonSRX liftSlaveSecondary,
-                                    TalonSRX liftSlaveTertiary,
-                                    TalonSRX fourBarMotor,
-                                    TalonSRX gathererMotor,
-                                    Compressor compressor) {
+    void sendOscCurrentData(CurvatureDrive driveTrain, Lift lift, TalonSRX gathererMotor, Compressor compressor) {
 
         // Create an OSC bundle.
         OSCBundle bundle = new OSCBundle();
@@ -211,27 +204,18 @@ class OscHelper {
         // Append the current total for the drive motors.
         OSCMessage driveCurrent = new OSCMessage();
         driveCurrent.setAddress("/DriveCurrent");
+        driveCurrent.addArgument(driveTrain.getCurrent());
 
-        double totalDriveCurrent = 0;
-        totalDriveCurrent += leftMaster.getOutputCurrent() + leftSlavePrimary.getOutputCurrent() + leftSlaveSecondary.getOutputCurrent();
-        totalDriveCurrent += rightMaster.getOutputCurrent() + rightSlavePrimary.getOutputCurrent() + rightSlaveSecondary.getOutputCurrent();
-
-        driveCurrent.addArgument(totalDriveCurrent);
-
+        // TODO: Rename elevator current.
         // Append the current total for the lift motors.
         OSCMessage liftCurrent = new OSCMessage();
         liftCurrent.setAddress("/LiftCurrent");
-
-        double totalLiftCurrent = 0;
-        totalLiftCurrent += liftMaster.getOutputCurrent() + liftSlavePrimary.getOutputCurrent();
-        totalLiftCurrent += liftSlaveSecondary.getOutputCurrent() + liftSlaveTertiary.getOutputCurrent();
-
-        liftCurrent.addArgument(totalLiftCurrent);
+        liftCurrent.addArgument(lift.getElevatorCurrent());
 
         // Append the current for the four bar motor.
         OSCMessage fourBarCurrent = new OSCMessage();
         fourBarCurrent.setAddress("/FourBarCurrent");
-        fourBarCurrent.addArgument(fourBarMotor.getOutputCurrent());
+        fourBarCurrent.addArgument(lift.getFourBarCurrent());
 
         // Append the current for the gatherer motor.
         OSCMessage gathererCurrent = new OSCMessage();
@@ -260,10 +244,7 @@ class OscHelper {
         }
     }
 
-    void sendOscSensorData(TalonSRX liftMaster,
-                                  FourBar fourBarLift,
-                                  TalonSRX gathererMotor,
-                                  CurvatureDrive driveTrain) {
+    void sendOscSensorData(CurvatureDrive driveTrain, Lift lift, TalonSRX gathererMotor) {
 
         // Create an OSC bundle for encoder velocities.
         OSCBundle bundle = new OSCBundle();
@@ -279,21 +260,21 @@ class OscHelper {
         // Send the lift encoder velocity and position.
         OSCMessage liftEncoderVelocity = new OSCMessage();
         liftEncoderVelocity.setAddress("/LiftEncoderVelocity");
-        liftEncoderVelocity.addArgument((double) liftMaster.getSelectedSensorVelocity());
+        liftEncoderVelocity.addArgument((double) lift.getElevatorVelocity());
         ;
 
         OSCMessage liftEncoderPosition = new OSCMessage();
         liftEncoderPosition.setAddress("/LiftEncoderPosition");
-        liftEncoderPosition.addArgument((double) liftMaster.getSelectedSensorPosition());
+        liftEncoderPosition.addArgument((double) lift.getElevatorPosition());
 
         // Send the drive encoder velocity.
         OSCMessage leftEncoderVelocity = new OSCMessage();
         leftEncoderVelocity.setAddress("/LeftEncoderVelocity");
-        leftEncoderVelocity.addArgument(driveTrain.GetLeftEncoderVelocity());
+        leftEncoderVelocity.addArgument(driveTrain.getLeftEncoderVelocity());
 
         OSCMessage rightEncoderVelocity = new OSCMessage();
         rightEncoderVelocity.setAddress("/RightEncoderVelocity");
-        rightEncoderVelocity.addArgument(driveTrain.GetRightEncoderVelocity());
+        rightEncoderVelocity.addArgument(driveTrain.getRightEncoderVelocity());
 
         OSCMessage magneticGatherPosition = new OSCMessage();
         magneticGatherPosition.setAddress("/MagneticGatherEncoder");
@@ -303,12 +284,12 @@ class OscHelper {
         // Four bar relative encoder position.
         OSCMessage fourBarEncoderRelativePosition = new OSCMessage();
         fourBarEncoderRelativePosition.setAddress("/FourBarEncoderRelativePosition");
-        fourBarEncoderRelativePosition.addArgument(fourBarLift.GetDegrees());//   fourBarMotor.getSensorCollection().getQuadraturePosition());
+        fourBarEncoderRelativePosition.addArgument(lift.getFourBarDegrees());
 
         // Four bar absolute encoder position.
         OSCMessage fourBarEncoderAbsolutePosition = new OSCMessage();
         fourBarEncoderAbsolutePosition.setAddress("/FourBarEncoderAbsolutePosition");
-        fourBarEncoderAbsolutePosition.addArgument(fourBarLift.getTicks());
+        fourBarEncoderAbsolutePosition.addArgument(lift.getAbsoluteFourBarTicks());
 
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(liftEncoderPosition);
@@ -559,8 +540,8 @@ class OscHelper {
         }
     }
 
-    void sendOscLimelightData(double limelightX, double limelightY, double limelightArea, boolean limelightTarget)
-    {
+    // TODO: Bundle these packets.
+    void sendOscLimelightData(double limelightX, double limelightY, double limelightArea, boolean limelightTarget) {
         // Send the values for the Limelight
         OSCMessage limelightMessageX = new OSCMessage();
         OSCMessage limelightMessageY = new OSCMessage();
@@ -586,10 +567,90 @@ class OscHelper {
             oscWiredSender.send(limelightMessageA);
             oscWirelessSender.send(limelightMessageV);
             oscWiredSender.send(limelightMessageV);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             System.out.println("Exception send Limelight OSC data: " + ex.toString());
+        }
+    }
+
+    /**
+     * Sends log data on the four bar to the dashboard over OSC.
+     * @param lift Lift class, which contains the four bar data.
+     */
+    void sendFourBarData(Lift lift) {
+
+        // Create an OSC bundle.
+        OSCBundle bundle = new OSCBundle();
+
+        // Append an identifier for the bundle.
+        OSCMessage bundleIdentifier = new OSCMessage();
+        bundleIdentifier.setAddress("/BundleIdentifier");
+        bundleIdentifier.addArgument("FourBarLog");
+
+        // Append the robot timestamp for the data.
+        OSCMessage timestamp = new OSCMessage();
+        timestamp.setAddress("/timestamp");
+        timestamp.addArgument(Timer.getFPGATimestamp());
+
+        OSCMessage AbsolutePosition = new OSCMessage();
+        AbsolutePosition.setAddress("/AbsolutePosition");
+        AbsolutePosition.addArgument(lift.getAbsoluteFourBarTicks());
+
+        OSCMessage QuadraturePosition = new OSCMessage();
+        QuadraturePosition.setAddress("/QuadraturePosition");
+        QuadraturePosition.addArgument(lift.getRelativeFourBarTicks());
+
+        OSCMessage ActualDegrees = new OSCMessage();
+        ActualDegrees.setAddress("/ActualDegrees");
+        ActualDegrees.addArgument(lift.getFourBarDegrees());
+
+        OSCMessage ActualRotations = new OSCMessage();
+        ActualRotations.setAddress("/ActualRotations");
+        ActualRotations.addArgument(lift.getOffsetRelativeRotations());
+
+        OSCMessage TargetDegrees = new OSCMessage();
+        TargetDegrees.setAddress("/TargetDegrees");
+        TargetDegrees.addArgument(lift.getTargetFourBarDegrees());
+
+        OSCMessage TargetNative = new OSCMessage();
+        TargetNative.setAddress("/TargetNative");
+        TargetNative.addArgument(lift.getTargetFourBarTicks());
+
+        OSCMessage ActiveTrajectoryPosition = new OSCMessage();
+        ActiveTrajectoryPosition.setAddress("/ActiveTrajectoryPosition");
+        ActiveTrajectoryPosition.addArgument(lift.getFourBarActiveTrajectoryPosition());
+
+        OSCMessage ClosedLoopError = new OSCMessage();
+        ClosedLoopError.setAddress("/ClosedLoopError");
+        ClosedLoopError.addArgument(lift.getFourBarClosedLoopError());
+
+        OSCMessage ArbFF = new OSCMessage();
+        ArbFF.setAddress("/ArbFF");
+        ArbFF.addArgument(lift.getFeedForwardAmount());
+
+        OSCMessage MotorOut = new OSCMessage();
+        MotorOut.setAddress("/MotorOut");
+        MotorOut.addArgument(lift.getFourBarMotorOutputPercent());
+
+        // Add these packets to the bundle.
+        bundle.addPacket(bundleIdentifier);
+        bundle.addPacket(timestamp);
+        bundle.addPacket(AbsolutePosition);
+        bundle.addPacket(QuadraturePosition);
+        bundle.addPacket(ActualDegrees);
+        bundle.addPacket(ActualRotations);
+        bundle.addPacket(TargetDegrees);
+        bundle.addPacket(TargetNative);
+        bundle.addPacket(ActiveTrajectoryPosition);
+        bundle.addPacket(ClosedLoopError);
+        bundle.addPacket(ArbFF);
+        bundle.addPacket(MotorOut);
+
+        // Send the drive log data.
+        try {
+            oscWiredSender.send(bundle);
+            oscWirelessSender.send(bundle);
+        } catch (Exception ex) {
+            System.out.println("Error sending the drive log data! " + ex.getMessage());
         }
     }
 }

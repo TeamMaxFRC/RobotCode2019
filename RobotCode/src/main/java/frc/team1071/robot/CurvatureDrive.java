@@ -10,8 +10,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 import java.net.InetAddress;
 
-public class CurvatureDrive
-{
+public class CurvatureDrive {
     private static final double CappedSpeedFeetPerSecond = 12.0;
     private static final double CappedDegreesPerFeet = 45;
     private static final double BoostThresholdFeetPerSecond = 6.0;
@@ -43,8 +42,7 @@ public class CurvatureDrive
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
 
-    private void ConfigureGeneral(CANSparkMax Motor)
-    {
+    private void ConfigureGeneral(CANSparkMax Motor) {
         Motor.enableVoltageCompensation(11);
         Motor.setSmartCurrentLimit(55);
         Motor.setOpenLoopRampRate(1);
@@ -52,19 +50,16 @@ public class CurvatureDrive
     }
 
 
-    private void ConfigureMaster(CANSparkMax Master)
-    {
+    private void ConfigureMaster(CANSparkMax Master) {
         ConfigureGeneral(Master);
     }
 
-    private void ConfigureSlave(CANSparkMax Slave, CANSparkMax Master)
-    {
+    private void ConfigureSlave(CANSparkMax Slave, CANSparkMax Master) {
         ConfigureGeneral(Slave);
         Slave.follow(Master);
     }
 
-    private void ConfigureDriveMotors()
-    {
+    private void ConfigureDriveMotors() {
         ConfigureMaster(this.RightMaster);
         ConfigureSlave(this.RightSlaveOne, this.RightMaster);
         ConfigureSlave(this.RightSlaveTwo, this.RightMaster);
@@ -79,8 +74,7 @@ public class CurvatureDrive
         this.RightSlaveTwo.setInverted(true);
     }
 
-    public CurvatureDrive(CANSparkMax LeftMaster, CANSparkMax LeftSlaveOne, CANSparkMax LeftSlaveTwo, CANSparkMax RightMaster, CANSparkMax RightSlaveOne, CANSparkMax RightSlaveTwo, AHRS NavX)
-    {
+    public CurvatureDrive(CANSparkMax LeftMaster, CANSparkMax LeftSlaveOne, CANSparkMax LeftSlaveTwo, CANSparkMax RightMaster, CANSparkMax RightSlaveOne, CANSparkMax RightSlaveTwo, AHRS NavX) {
         this.LeftMaster = LeftMaster;
         this.LeftSlaveOne = LeftSlaveOne;
         this.LeftSlaveTwo = LeftSlaveTwo;
@@ -101,9 +95,8 @@ public class CurvatureDrive
         }
     }
 
-    private void RunCurvatureMode(double Throttle, double Turn, boolean Brake, double Boost)
-    {
-        double multiplier = Math.copySign(1,Throttle);
+    private void RunCurvatureMode(double Throttle, double Turn, boolean Brake, double Boost) {
+        double multiplier = Math.copySign(1, Throttle);
         double BoostIncrease = Boost * (CappedSpeedFeetPerSecond - BoostThresholdFeetPerSecond);
         double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ? CappedSpeedFeetPerSecond : BoostThresholdFeetPerSecond );
         double TargetCurvature = Turn * CappedDegreesPerFeet;
@@ -113,7 +106,7 @@ public class CurvatureDrive
         double SpeedDifferential = TargetDegreesPerSecond * FeetPerSecondDifferentialPerDegreesPerSecond;
 
         double LeftSpeedTarget = TargetSpeed + ((SpeedDifferential / 2) * multiplier);
-        double RightSpeedTarget = TargetSpeed - ((SpeedDifferential/ 2) * multiplier);
+        double RightSpeedTarget = TargetSpeed - ((SpeedDifferential / 2) * multiplier);
 
         double LeftSpeedVoltage = LeftSpeedTarget / FeetPerSecondPerVolt;
         double RightSpeedVoltage = RightSpeedTarget / FeetPerSecondPerVolt;
@@ -125,9 +118,8 @@ public class CurvatureDrive
         RightMaster.set(RightSpeedFeedForward);
     }
 
-    private void RunQuickTurnMode(double Throttle, double Turn, boolean Brake, double Boost)
-    {
-        double multiplier = Math.copySign(1,Throttle);
+    private void RunQuickTurnMode(double Throttle, double Turn, boolean Brake, double Boost) {
+        double multiplier = Math.copySign(1, Throttle);
         double BoostIncrease = Boost * (CappedSpeedFeetPerSecond - BoostThresholdFeetPerSecond);
         double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ? CappedSpeedFeetPerSecond : BoostThresholdFeetPerSecond );
         double TargetCurvature = Turn * CappedDegreesPerFeet;
@@ -137,7 +129,7 @@ public class CurvatureDrive
         double SpeedDifferential = TargetDegreesPerSecond * FeetPerSecondDifferentialPerDegreesPerSecond;
 
         double LeftSpeedTarget = TargetSpeed + ((SpeedDifferential / 2) * multiplier);
-        double RightSpeedTarget = TargetSpeed - ((SpeedDifferential/ 2) * multiplier);
+        double RightSpeedTarget = TargetSpeed - ((SpeedDifferential / 2) * multiplier);
 
         double LeftSpeedVoltage = LeftSpeedTarget / FeetPerSecondPerVolt;
         double RightSpeedVoltage = RightSpeedTarget / FeetPerSecondPerVolt;
@@ -149,19 +141,14 @@ public class CurvatureDrive
         RightMaster.set(RightSpeedFeedForward);
     }
 
-    public void Run(double Throttle, double Turn, boolean QuickTurn, boolean Brake, double Boost)
-    {
-        if(QuickTurn)
-        {
+    public void Run(double Throttle, double Turn, boolean QuickTurn, boolean Brake, double Boost) {
+        if (QuickTurn) {
             RunQuickTurnMode(Throttle, Turn, Brake, Boost);
-        }
-        else
-        {
+        } else {
             RunCurvatureMode(Throttle, Turn, Brake, Boost);
         }
         SendDriveData();
     }
-
 
 
     /**
@@ -222,15 +209,30 @@ public class CurvatureDrive
 
     }
 
-    public double GetLeftEncoderVelocity()
-    {
+    double getLeftEncoderVelocity() {
         return LeftEncoder.getVelocity();
     }
 
-    public double GetRightEncoderVelocity()
-    {
+    double getRightEncoderVelocity() {
         return RightEncoder.getVelocity();
     }
 
+    /**
+     * Sums the current pulled by all the drive motors.
+     * @return The total current drawn by the drive train.
+     */
+    double getCurrent() {
+
+        double totalCurrent = 0;
+
+        totalCurrent += LeftMaster.getOutputCurrent();
+        totalCurrent += RightMaster.getOutputCurrent();
+        totalCurrent += LeftSlaveOne.getOutputCurrent();
+        totalCurrent += RightSlaveOne.getOutputCurrent();
+        totalCurrent += LeftSlaveTwo.getOutputCurrent();
+        totalCurrent += RightSlaveTwo.getOutputCurrent();
+
+        return totalCurrent;
+    }
 
 }
