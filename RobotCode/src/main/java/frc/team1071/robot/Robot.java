@@ -328,9 +328,9 @@ public class Robot extends TimedRobot {
                 }
 
                 // Run the ball gatherer.
-                if (operatorJoystick.getRawButton(1)) {
+                if (operatorJoystick.getRawButton(6)) {
                     gathererMotor.set(ControlMode.PercentOutput, 0.75);
-                } else if (operatorJoystick.getRawButton(2)) {
+                } else if (operatorJoystick.getRawButton(7)) {
                     gathererMotor.set(ControlMode.PercentOutput, -1.0);
                 } else {
                     gathererMotor.set(ControlMode.PercentOutput, .1);
@@ -340,11 +340,11 @@ public class Robot extends TimedRobot {
                 boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
 
                 // Actuate the solenoid depending on the user button press and the magnetic switch.
-                if (operatorJoystick.getRawButtonPressed(6)) {
+                if (operatorJoystick.getRawButtonPressed(11)) {
                     hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
                     hatchSwitchDebounceCounter = 40;
 
-                } else if (operatorJoystick.getRawButtonPressed(7)) {
+                } else if (operatorJoystick.getRawButtonPressed(12)) {
                     hatchSolenoid.set(DoubleSolenoid.Value.kForward);
                     hatchSwitchDebounceCounter = 40;
 
