@@ -62,8 +62,8 @@ class Lift {
 
         // Configure the four bar talon.
         FourBarTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
-        FourBarTalon.setInverted(false);
-        FourBarTalon.setSensorPhase(false);
+        FourBarTalon.setInverted(true);
+        FourBarTalon.setSensorPhase(true);
         FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
 
         // The arbitrary feed forward look up table.
@@ -182,33 +182,35 @@ class Lift {
     void setLiftPosition(LiftPosition position) {
 
         // Four bar positions in degrees.
-        double fourBarGatheringPositionDegrees = 30;
+        double fourBarBallGatheringPositionDegrees = 110;
+        double fourBarHatchGatheringPositionDegrees = 30;
+
 
         double fourBarLowBallDegrees = 110;
         double fourBarMiddleBallDegrees = 110;
         double fourBarHighBallDegrees = 110;
 
-        double fourBarLowHatchDegrees = 50;
-        double fourBarMiddleHatchDegrees = 50;
-        double fourBarHighHatchDegrees = 50;
+        double fourBarLowHatchDegrees = 80;
+        double fourBarMiddleHatchDegrees = 40;
+        double fourBarHighHatchDegrees = 80;
 
         // Elevator set positions.
-        int liftGatheringPositionBall = 0;
+        int liftGatheringPositionBall = 9000;
         int liftLowScoreBall = 0;
         int liftMiddleScoreBall = 15000;
-        int liftHighScoreBall = 25300;
+        int liftHighScoreBall = 25500;
 
         int liftGatheringPositionHatch = 0;
         int liftLowScoreHatch = 0;
         int liftMiddleScoreHatch = 15000;
-        int liftHighScoreHatch = 25200;
+        int liftHighScoreHatch = 25500;
         int liftActiveGatherHatch = 2000;
 
         switch (position) {
 
             case ActiveGatherHatch:
                 setElevatorPosition(liftActiveGatherHatch);
-                setFourBarPositionDegrees(fourBarGatheringPositionDegrees);
+                setFourBarPositionDegrees(fourBarHatchGatheringPositionDegrees);
                 break;
 
             case HighBall:
@@ -243,13 +245,13 @@ class Lift {
 
             case GatheringBall:
                 setElevatorPosition(liftGatheringPositionBall);
-                setFourBarPositionDegrees(fourBarGatheringPositionDegrees);
+                setFourBarPositionDegrees(fourBarBallGatheringPositionDegrees);
                 break;
 
             case GatheringHatch:
             default:
                 setElevatorPosition(liftGatheringPositionHatch);
-                setFourBarPositionDegrees(fourBarGatheringPositionDegrees);
+                setFourBarPositionDegrees(fourBarHatchGatheringPositionDegrees);
                 break;
 
         }
