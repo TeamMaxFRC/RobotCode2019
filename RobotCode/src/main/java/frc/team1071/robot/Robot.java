@@ -357,7 +357,7 @@ public class Robot extends TimedRobot {
                 // Store the last magnetic switch value.
                 previousHatchSwitchValue = currentSwitchState;
 
-            } else {
+            } else if (!isStreamDeck &&  !driverJoystick.getRawButton(5)) {
 
                 //Disable when tuning PIDs
                 //when the right bumper is pressed, set the lift to ball positions.

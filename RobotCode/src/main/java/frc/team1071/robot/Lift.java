@@ -61,10 +61,9 @@ class Lift {
         this.initialized = false;
 
         // Configure the four bar talon.
-        FourBarTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
+        FourBarTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
         FourBarTalon.setInverted(true);
         FourBarTalon.setSensorPhase(true);
-        FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
 
         // The arbitrary feed forward look up table.
         ArbFFLookup.put(new InterpolatingDouble(0.00), new InterpolatingDouble(0.00));
@@ -109,9 +108,9 @@ class Lift {
         // The four bar PID.
         FourBarTalon.configMotionAcceleration(100, 10);
         FourBarTalon.configMotionCruiseVelocity(100, 10);
-        FourBarTalon.config_kP(0, 1.4, 10);
+        FourBarTalon.config_kP(0, 2.0, 10);
         FourBarTalon.config_kI(0, 0, 10);
-        FourBarTalon.config_kD(0, 4.6, 10);
+        FourBarTalon.config_kD(0, 6.0, 10);
         FourBarTalon.config_kF(0, 0.8, 10);
 
         FourBarTalon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5);
@@ -190,14 +189,14 @@ class Lift {
         double fourBarMiddleBallDegrees = 110;
         double fourBarHighBallDegrees = 110;
 
-        double fourBarLowHatchDegrees = 80;
+        double fourBarLowHatchDegrees = 50;
         double fourBarMiddleHatchDegrees = 40;
-        double fourBarHighHatchDegrees = 80;
+        double fourBarHighHatchDegrees = 50;
 
         // Elevator set positions.
-        int liftGatheringPositionBall = 9000;
+5        int liftGatheringPositionBall = 7500;
         int liftLowScoreBall = 0;
-        int liftMiddleScoreBall = 15000;
+        int liftMiddleScoreBall = 10000;
         int liftHighScoreBall = 25500;
 
         int liftGatheringPositionHatch = 0;
@@ -293,6 +292,12 @@ class Lift {
 
         // Set the lift to the proper position.
         elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
+        if (fourBar.getSelectedSensorPosition() % 4096 != fourBar.getSelectedSensorPosition())
+        {
+            fourBar.setSelectedSensorPosition(fourBar.getSelectedSensorPosition() % 4096);
+        }
+        //FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
+
     }
 
     /**
