@@ -42,6 +42,15 @@ public class CurvatureDrive {
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
 
+    double InputThrottle = 0;
+    double InputTurn = 0;
+    boolean InputBrake = false;
+    double InputBoost = 0;
+    boolean InputQuickTurn = false;
+
+    double LeftSpeedFeedForward = 0;
+    double RightSpeedFeedForward = 0;
+
     private void ConfigureGeneral(CANSparkMax Motor) {
         Motor.enableVoltageCompensation(11);
         Motor.setSmartCurrentLimit(55);
@@ -111,8 +120,8 @@ public class CurvatureDrive {
         double LeftSpeedVoltage = LeftSpeedTarget / FeetPerSecondPerVolt;
         double RightSpeedVoltage = RightSpeedTarget / FeetPerSecondPerVolt;
 
-        double LeftSpeedFeedForward = LeftSpeedVoltage / 11.0;
-        double RightSpeedFeedForward = RightSpeedVoltage / 11.0;
+        LeftSpeedFeedForward = LeftSpeedVoltage / 11.0;
+        RightSpeedFeedForward = RightSpeedVoltage / 11.0;
 
         LeftMaster.set(LeftSpeedFeedForward);
         RightMaster.set(RightSpeedFeedForward);
@@ -134,8 +143,8 @@ public class CurvatureDrive {
         double LeftSpeedVoltage = LeftSpeedTarget / FeetPerSecondPerVolt;
         double RightSpeedVoltage = RightSpeedTarget / FeetPerSecondPerVolt;
 
-        double LeftSpeedFeedForward = LeftSpeedVoltage / 11.0;
-        double RightSpeedFeedForward = RightSpeedVoltage / 11.0;
+        LeftSpeedFeedForward = LeftSpeedVoltage / 11.0;
+        RightSpeedFeedForward = RightSpeedVoltage / 11.0;
 
         LeftMaster.set(LeftSpeedFeedForward);
         RightMaster.set(RightSpeedFeedForward);
@@ -147,6 +156,12 @@ public class CurvatureDrive {
         } else {
             RunCurvatureMode(Throttle, Turn, Brake, Boost);
         }
+
+        InputThrottle = Throttle;
+        InputTurn = Turn;
+        InputBrake = Brake;
+        InputBoost = Boost;
+        InputQuickTurn = QuickTurn;
         SendDriveData();
     }
 
@@ -191,6 +206,41 @@ public class CurvatureDrive {
         fusedHeading.setAddress("/FusedHeading");
         fusedHeading.addArgument((double) NavX.getFusedHeading());
 
+        // Append the input throttle
+        OSCMessage InputThrottleMsg = new OSCMessage();
+        InputThrottleMsg.setAddress("/InputThrottle");
+        InputThrottleMsg.addArgument((double) InputThrottle);
+
+        // Append the input turn
+        OSCMessage InputTurnMsg = new OSCMessage();
+        InputTurnMsg.setAddress("/InputTurn");
+        InputTurnMsg.addArgument((double) InputTurn);
+
+        // Append the input brake
+        OSCMessage InputBrakeMsg = new OSCMessage();
+        InputBrakeMsg.setAddress("/InputBrake");
+        InputBrakeMsg.addArgument((double)(InputBrake ? 0 : 1));
+
+        // Append the input boost
+        OSCMessage InputBoostMsg = new OSCMessage();
+        InputBoostMsg.setAddress("/InputBoost");
+        InputBoostMsg.addArgument((double) InputBoost);
+
+        // Append the input quickturn
+        OSCMessage InputQT = new OSCMessage();
+        InputQT.setAddress("/InputQT");
+        InputQT.addArgument((double) (InputQuickTurn ? 0 : 1));
+
+        // Append the left FF
+        OSCMessage LeftFF = new OSCMessage();
+        LeftFF.setAddress("/LeftFF");
+        LeftFF.addArgument((double) LeftSpeedFeedForward);
+
+        // Append the right FF
+        OSCMessage RightFF = new OSCMessage();
+        RightFF.setAddress("/RightFF");
+        RightFF.addArgument((double) RightSpeedFeedForward);
+
         // Add these packets to the bundle.
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(timestamp);
@@ -198,6 +248,13 @@ public class CurvatureDrive {
         bundle.addPacket(Voltage);
         bundle.addPacket(rightVelocity);
         bundle.addPacket(fusedHeading);
+        bundle.addPacket(InputThrottleMsg);
+        bundle.addPacket(InputTurnMsg);
+        bundle.addPacket(InputBrakeMsg);
+        bundle.addPacket(InputBoostMsg);
+        bundle.addPacket(InputQT);
+        bundle.addPacket(LeftFF);
+        bundle.addPacket(RightFF);
 
         // Send the drive log data.
         try {
@@ -206,7 +263,6 @@ public class CurvatureDrive {
         } catch (Exception ex) {
             System.out.println("Error sending the drive log data! " + ex.getMessage());
         }
-
     }
 
     double getLeftEncoderVelocity() {
