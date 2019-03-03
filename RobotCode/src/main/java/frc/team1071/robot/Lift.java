@@ -206,7 +206,7 @@ class Lift {
         // Elevator set positions.
         int liftGatheringPositionBall = 6500;
         int liftLowScoreBall = 0;
-        int liftMiddleScoreBall = 10000;
+        int liftMiddleScoreBall = 13000;
         int liftHighScoreBall = 25500;
 
         int liftGatheringPositionHatch = 0;
