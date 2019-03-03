@@ -108,11 +108,11 @@ class Lift {
 
         // The four bar PID.
         fourBarMaster.configMotionAcceleration(300, 10);
-        fourBarMaster.configMotionCruiseVelocity(150, 10);
-        fourBarMaster.config_kP(0, 3.0, 10);
+        fourBarMaster.configMotionCruiseVelocity(189, 10);
+        fourBarMaster.config_kP(0, 1.5, 10);
         fourBarMaster.config_kI(0, 0, 10);
-        fourBarMaster.config_kD(0, 6.0, 10);
-        fourBarMaster.config_kF(0, 1.6, 10);
+        fourBarMaster.config_kD(0, 4.5, 10);
+        fourBarMaster.config_kF(0, 1.5, 10);
 
         fourBarMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5);
 
@@ -124,12 +124,12 @@ class Lift {
 
         // Configure the four bar current limits.
         fourBarMaster.configContinuousCurrentLimit(10);
-        fourBarMaster.configPeakCurrentDuration(1000);
-        fourBarMaster.configPeakCurrentLimit(20);
+        fourBarMaster.configPeakCurrentDuration(2000);
+        fourBarMaster.configPeakCurrentLimit(30);
         fourBarMaster.enableCurrentLimit(true);
         fourBarSlave.configContinuousCurrentLimit(10);
-        fourBarSlave.configPeakCurrentDuration(1000);
-        fourBarSlave.configPeakCurrentLimit(20);
+        fourBarSlave.configPeakCurrentDuration(2000);
+        fourBarSlave.configPeakCurrentLimit(30);
         fourBarMaster.enableCurrentLimit(true);
 
         // Set the soft limits on the four bar motors.
@@ -292,7 +292,7 @@ class Lift {
     {
         // Set the lift to the proper position.
         elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
-        if (Math.abs(fourBarMaster.getSelectedSensorPosition() - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096)) > 5)
+        if (Math.abs(fourBarMaster.getSelectedSensorPosition() - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096)) > 50)
         {
             System.out.println("Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096 + " : " + fourBarMaster.getSelectedSensorPosition());
             fourBarMaster.setSelectedSensorPosition(Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
@@ -310,7 +310,8 @@ class Lift {
         // Set the four bar to the proper position.
         if (initialized && !isFourBarFaulted()) {
             fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
-            System.out.println("Actual: " + fourBarMaster.getSelectedSensorPosition() + " Setpoint: " + targetFourBarPosition);
+            //System.out.println("A: " + fourBarMaster.getSelectedSensorPosition() + " S: " + targetFourBarPosition + " O: " + fourBarMaster.getMotorOutputPercent() + " : " + fourBarSlave.getMotorOutputPercent());
+            System.out.println("A: " + fourBarMaster.getSelectedSensorVelocity() + " T: " + fourBarMaster.getActiveTrajectoryVelocity() + " E: " + fourBarMaster.getClosedLoopError());
         } else {
             fourBarMaster.set(ControlMode.PercentOutput, 0);
         }
