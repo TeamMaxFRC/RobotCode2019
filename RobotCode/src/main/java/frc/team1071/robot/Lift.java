@@ -194,7 +194,7 @@ class Lift {
         double fourBarHighHatchDegrees = 50;
 
         // Elevator set positions.
-5        int liftGatheringPositionBall = 7500;
+        int liftGatheringPositionBall = 6500;
         int liftLowScoreBall = 0;
         int liftMiddleScoreBall = 10000;
         int liftHighScoreBall = 25500;
@@ -203,7 +203,7 @@ class Lift {
         int liftLowScoreHatch = 0;
         int liftMiddleScoreHatch = 15000;
         int liftHighScoreHatch = 25500;
-        int liftActiveGatherHatch = 2000;
+        int liftActiveGatherHatch = 3500;
 
         switch (position) {
 
