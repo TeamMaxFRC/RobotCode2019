@@ -112,7 +112,7 @@ class Lift {
         fourBarMaster.config_kP(0, 3.0, 10);
         fourBarMaster.config_kI(0, 0, 10);
         fourBarMaster.config_kD(0, 6.0, 10);
-        fourBarMaster.config_kF(0, 0.8, 10);
+        fourBarMaster.config_kF(0, 1.6, 10);
 
         fourBarMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5);
 

@@ -302,8 +302,8 @@ public class Robot extends TimedRobot {
 
         }
 
-        driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0);
-        driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, 1.0);
+        //driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0);
+        //driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, 1.0);
         driveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false, driverJoystick.getRawAxis(3));
 
         //--------------------------------------------------------------------------------------------------------------
