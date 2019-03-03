@@ -469,7 +469,7 @@ class Lift {
         // Append an identifier for the bundle.
         OSCMessage bundleIdentifier = new OSCMessage();
         bundleIdentifier.setAddress("/BundleIdentifier");
-        bundleIdentifier.addArgument("DriveTrainLog");
+        bundleIdentifier.addArgument("FourBarLog");
 
         // Append the robot timestamp for the data.
         OSCMessage timestamp = new OSCMessage();

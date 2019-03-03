@@ -456,9 +456,6 @@ public class Robot extends TimedRobot {
             // Run the lift.
             lift.runLift();
 
-            // Send the four bar logging data.
-            oscSender.sendFourBarData(lift);
-
         } catch (Exception Ex) {
             System.out.println("Exception in operator controls! " + Ex.getMessage());
         }
