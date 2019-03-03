@@ -265,6 +265,8 @@ public class Robot extends TimedRobot {
 
         // Report that the console is functional.
         oscSender.writeConsole("Robot has enabled!");
+
+        lift.LiftInit();
     }
 
     /**

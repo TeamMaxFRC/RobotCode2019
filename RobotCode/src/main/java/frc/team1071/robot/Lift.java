@@ -8,9 +8,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
-import com.revrobotics.CANEncoder;
 import edu.wpi.first.wpilibj.Timer;
-
 import frc.team254.InterpolatingDouble;
 import frc.team254.InterpolatingTreeMap;
 
@@ -42,19 +40,20 @@ class Lift {
 
     private double targetElevatorPosition;
     private double targetFourBarPosition;
-    private boolean initialized;
+    private boolean updated;
+    private boolean initialized = false;
 
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
 
     private int HasResetEncoder = 0;
 
-    private double FBP = 1.5;
+    private double FBP = 2.0;
     private double FBI = 0;
-    private double FBD = 4.5;
-    private double FBF = 1.5;
-    private double FBV = 189;
-    private double FBA = 300;
+    private double FBD = 3.2;
+    private double FBF = 2.4;
+    private double FBV = 300;
+    private double FBA = 600;
 
     /**
      * TODO: Comment.
@@ -79,7 +78,7 @@ class Lift {
         this.fourBarSlave = fourBarSlave;
         this.FourBarOffset = FourBarOffset;
         this.targetFourBarPosition = FourBarOffset + FourBarSpread;
-        this.initialized = false;
+        this.updated = false;
 
         // Configure the four bar talon.
         fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
@@ -312,8 +311,17 @@ class Lift {
         double Rotations = Degrees / 360;
         double EncoderTicks = Rotations * 4096;
         targetFourBarPosition = EncoderTicks + FourBarOffset;
+        updated = true;
         initialized = true;
     }
+
+    public void LiftInit()
+    {
+        targetFourBarPosition = 0;
+        updated = false;
+        initialized = false;
+    }
+
 
     public void LiftPeriodic()
     {
@@ -337,9 +345,10 @@ class Lift {
     void runLift() {
 
         // Set the four bar to the proper position.
-        if (initialized && !isFourBarFaulted()) {
+        if (updated && !isFourBarFaulted()) {
+            updated = false;
             fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
-        } else {
+        } else if (isFourBarFaulted() || !initialized){
             fourBarMaster.set(ControlMode.PercentOutput, 0);
         }
 
@@ -548,6 +557,10 @@ class Lift {
         TrajVelocity.setAddress("/ActiveTrajVel");
         TrajVelocity.addArgument((double)fourBarMaster.getActiveTrajectoryVelocity());
 
+        OSCMessage ActiveTrajPos = new OSCMessage();
+        ActiveTrajPos.setAddress("/ActiveTrajPos");
+        ActiveTrajPos.addArgument((double)fourBarMaster.getActiveTrajectoryPosition());
+
         // Add these packets to the bundle.
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(timestamp);
@@ -566,6 +579,7 @@ class Lift {
         bundle.addPacket(AMessage);
         bundle.addPacket(ClosedError);
         bundle.addPacket(TrajVelocity);
+        bundle.addPacket(ActiveTrajPos);
 
         // Send the drive log data.
         try {
