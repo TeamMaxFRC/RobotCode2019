@@ -5,6 +5,12 @@ import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.illposed.osc.OSCBundle;
+import com.illposed.osc.OSCMessage;
+import com.illposed.osc.OSCPortOut;
+import com.revrobotics.CANEncoder;
+import edu.wpi.first.wpilibj.Timer;
+
 import frc.team254.InterpolatingDouble;
 import frc.team254.InterpolatingTreeMap;
 
@@ -35,6 +41,18 @@ class Lift {
     private double targetElevatorPosition;
     private double targetFourBarPosition;
     private boolean initialized;
+
+    private OSCPortOut oscWirelessSender;
+    private OSCPortOut oscWiredSender;
+
+    private int HasResetEncoder = 0;
+
+    private double FBP = 1.5;
+    private double FBI = 0;
+    private double FBD = 4.5;
+    private double FBF = 1.5;
+    private double FBV = 189;
+    private double FBA = 300;
 
     /**
      * TODO: Comment.
@@ -107,12 +125,12 @@ class Lift {
         ArbFFLookup.put(new InterpolatingDouble(0.37), new InterpolatingDouble(0.00));
 
         // The four bar PID.
-        fourBarMaster.configMotionAcceleration(300, 10);
-        fourBarMaster.configMotionCruiseVelocity(189, 10);
-        fourBarMaster.config_kP(0, 1.5, 10);
-        fourBarMaster.config_kI(0, 0, 10);
-        fourBarMaster.config_kD(0, 4.5, 10);
-        fourBarMaster.config_kF(0, 1.5, 10);
+        fourBarMaster.configMotionAcceleration((int)FBA, 10);
+        fourBarMaster.configMotionCruiseVelocity((int)FBV, 10);
+        fourBarMaster.config_kP(0, FBP, 10);
+        fourBarMaster.config_kI(0, FBI, 10);
+        fourBarMaster.config_kD(0, FBD, 10);
+        fourBarMaster.config_kF(0, FBF, 10);
 
         fourBarMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5);
 
@@ -292,9 +310,11 @@ class Lift {
     {
         // Set the lift to the proper position.
         elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
+        HasResetEncoder = 0;
         if (Math.abs(fourBarMaster.getSelectedSensorPosition() - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096)) > 50)
         {
             System.out.println("Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096 + " : " + fourBarMaster.getSelectedSensorPosition());
+            HasResetEncoder = 1;
             fourBarMaster.setSelectedSensorPosition(Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
         }
         //FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
@@ -310,11 +330,11 @@ class Lift {
         // Set the four bar to the proper position.
         if (initialized && !isFourBarFaulted()) {
             fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
-            //System.out.println("A: " + fourBarMaster.getSelectedSensorPosition() + " S: " + targetFourBarPosition + " O: " + fourBarMaster.getMotorOutputPercent() + " : " + fourBarSlave.getMotorOutputPercent());
-            System.out.println("A: " + fourBarMaster.getSelectedSensorVelocity() + " T: " + fourBarMaster.getActiveTrajectoryVelocity() + " E: " + fourBarMaster.getClosedLoopError());
         } else {
             fourBarMaster.set(ControlMode.PercentOutput, 0);
         }
+
+        SendLiftData();
 
     }
 
@@ -433,6 +453,118 @@ class Lift {
 
     double getElevatorPosition() {
         return elevatorMaster.getSelectedSensorPosition();
+    }
+
+
+
+
+    /**
+     * Sends drive information to be logged by the dashboard.
+     */
+    public void SendLiftData() {
+
+        // Create an OSC bundle.
+        OSCBundle bundle = new OSCBundle();
+
+        // Append an identifier for the bundle.
+        OSCMessage bundleIdentifier = new OSCMessage();
+        bundleIdentifier.setAddress("/BundleIdentifier");
+        bundleIdentifier.addArgument("DriveTrainLog");
+
+        // Append the robot timestamp for the data.
+        OSCMessage timestamp = new OSCMessage();
+        timestamp.setAddress("/timestamp");
+        timestamp.addArgument(Timer.getFPGATimestamp());
+
+        // Append the left encoder data.
+        OSCMessage liftPosition = new OSCMessage();
+        liftPosition.setAddress("/LiftPosition");
+        liftPosition.addArgument(fourBarMaster.getSelectedSensorPosition());
+
+        // Append the left encoder data.
+        OSCMessage liftRelative = new OSCMessage();
+        liftRelative.setAddress("/LiftRelative");
+        liftRelative.addArgument(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096);
+
+        // Append the right encoder data.
+        OSCMessage liftVelocity = new OSCMessage();
+        liftVelocity.setAddress("/LiftVelocity");
+        liftVelocity.addArgument(fourBarMaster.getSelectedSensorVelocity());
+
+        OSCMessage targetFBPosition = new OSCMessage();
+        targetFBPosition.setAddress("/TargetFBPosition");
+        targetFBPosition.addArgument(targetFourBarPosition);
+
+        OSCMessage resetEncoder = new OSCMessage();
+        resetEncoder.setAddress("/ResetEncoder");
+        resetEncoder.addArgument(HasResetEncoder);
+
+        OSCMessage MasterTarget = new OSCMessage();
+        MasterTarget.setAddress("/MasterTargetDuty");
+        MasterTarget.addArgument(fourBarMaster.getMotorOutputPercent());
+
+        OSCMessage SlaveTarget = new OSCMessage();
+        SlaveTarget.setAddress("/SlaveTargetDuty");
+        SlaveTarget.addArgument(fourBarSlave.getMotorOutputPercent());
+
+        OSCMessage PMessage = new OSCMessage();
+        PMessage.setAddress("/P");
+        PMessage.addArgument(FBP);
+
+        OSCMessage IMessage = new OSCMessage();
+        IMessage.setAddress("/I");
+        IMessage.addArgument(FBI);
+
+        OSCMessage DMessage = new OSCMessage();
+        DMessage.setAddress("/D");
+        DMessage.addArgument(FBD);
+
+        OSCMessage FMessage = new OSCMessage();
+        FMessage.setAddress("/F");
+        FMessage.addArgument(FBF);
+
+        OSCMessage AMessage = new OSCMessage();
+        AMessage.setAddress("/A");
+        AMessage.addArgument(FBA);
+
+        OSCMessage VMessage = new OSCMessage();
+        VMessage.setAddress("/V");
+        VMessage.addArgument(FBV);
+
+        OSCMessage ClosedError = new OSCMessage();
+        ClosedError.setAddress("/ClosedLoopError");
+        ClosedError.addArgument(fourBarMaster.getClosedLoopError());
+
+        OSCMessage TrajVelocity = new OSCMessage();
+        TrajVelocity.setAddress("/ActiveTrajVel");
+        TrajVelocity.addArgument(fourBarMaster.getActiveTrajectoryVelocity());
+
+        // Add these packets to the bundle.
+        bundle.addPacket(bundleIdentifier);
+        bundle.addPacket(timestamp);
+        bundle.addPacket(liftPosition);
+        bundle.addPacket(liftRelative);
+        bundle.addPacket(liftVelocity);
+        bundle.addPacket(targetFBPosition);
+        bundle.addPacket(resetEncoder);
+        bundle.addPacket(MasterTarget);
+        bundle.addPacket(SlaveTarget);
+        bundle.addPacket(PMessage);
+        bundle.addPacket(IMessage);
+        bundle.addPacket(DMessage);
+        bundle.addPacket(FMessage);
+        bundle.addPacket(VMessage);
+        bundle.addPacket(AMessage);
+        bundle.addPacket(ClosedError);
+        bundle.addPacket(TrajVelocity);
+
+        // Send the drive log data.
+        try {
+            oscWiredSender.send(bundle);
+            oscWirelessSender.send(bundle);
+        } catch (Exception ex) {
+            System.out.println("Error sending the drive log data! " + ex.getMessage());
+        }
     }
 
 }
