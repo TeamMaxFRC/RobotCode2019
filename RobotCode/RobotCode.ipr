@@ -242,6 +242,7 @@
         <root url="jar://$USER_HOME$/Public/frc2019/maven/com/kauailabs/navx/frc/navx-java/3.1.344/navx-java-3.1.344.jar!/" />
         <root url="jar://C:/Public/frc2019/maven/com/kauailabs/navx/frc/navx-java/3.1.344/navx-java-3.1.344.jar!/" />
         <root url="jar://$PROJECT_DIR$/../../../../../Public/frc2019/maven/com/kauailabs/navx/frc/navx-java/3.1.344/navx-java-3.1.344.jar!/" />
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.kauailabs.navx.frc/navx-java/3.1.344/30981bb5cf08864cfdca75cfd21418470e16c167/navx-java-3.1.344.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>

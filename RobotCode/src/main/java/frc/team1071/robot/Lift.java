@@ -23,7 +23,7 @@ class Lift {
     }
 
     private TalonSRX elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree;
-    private TalonSRX fourBar;
+    private TalonSRX fourBarMaster, fourBarSlave;
 
     private static final double FourBarSpread = 1506;
     private static final double UpperSafetyLimitThresholdDegrees = 5.0;
@@ -43,10 +43,10 @@ class Lift {
      * @param elevatorSlaveOne
      * @param elevatorSlaveTwo
      * @param elevatorSlaveThree
-     * @param FourBarTalon
+     * @param fourBarMaster
      * @param FourBarOffset
      */
-    Lift(TalonSRX elevatorMaster, TalonSRX elevatorSlaveOne, TalonSRX elevatorSlaveTwo, TalonSRX elevatorSlaveThree, TalonSRX FourBarTalon, double FourBarOffset) {
+    Lift(TalonSRX elevatorMaster, TalonSRX elevatorSlaveOne, TalonSRX elevatorSlaveTwo, TalonSRX elevatorSlaveThree, TalonSRX fourBarMaster, TalonSRX fourBarSlave, double FourBarOffset) {
 
         // Set the elevator talons.
         this.elevatorMaster = elevatorMaster;
@@ -55,15 +55,16 @@ class Lift {
         this.elevatorSlaveThree = elevatorSlaveThree;
 
         // Set the four bar talon and additional variables.
-        this.fourBar = FourBarTalon;
+        this.fourBarMaster = fourBarMaster;
+        this.fourBarSlave = fourBarSlave;
         this.FourBarOffset = FourBarOffset;
         this.targetFourBarPosition = FourBarOffset + FourBarSpread;
         this.initialized = false;
 
         // Configure the four bar talon.
-        FourBarTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-        FourBarTalon.setInverted(true);
-        FourBarTalon.setSensorPhase(true);
+        fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
+        fourBarMaster.setInverted(true);
+        fourBarMaster.setSensorPhase(true);
 
         // The arbitrary feed forward look up table.
         ArbFFLookup.put(new InterpolatingDouble(0.00), new InterpolatingDouble(0.00));
@@ -106,32 +107,38 @@ class Lift {
         ArbFFLookup.put(new InterpolatingDouble(0.37), new InterpolatingDouble(0.00));
 
         // The four bar PID.
-        FourBarTalon.configMotionAcceleration(100, 10);
-        FourBarTalon.configMotionCruiseVelocity(100, 10);
-        FourBarTalon.config_kP(0, 2.0, 10);
-        FourBarTalon.config_kI(0, 0, 10);
-        FourBarTalon.config_kD(0, 6.0, 10);
-        FourBarTalon.config_kF(0, 0.8, 10);
+        fourBarMaster.configMotionAcceleration(300, 10);
+        fourBarMaster.configMotionCruiseVelocity(150, 10);
+        fourBarMaster.config_kP(0, 3.0, 10);
+        fourBarMaster.config_kI(0, 0, 10);
+        fourBarMaster.config_kD(0, 6.0, 10);
+        fourBarMaster.config_kF(0, 0.8, 10);
 
-        FourBarTalon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5);
+        fourBarMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5);
 
         // Configure the four bar voltage compensation.
-        FourBarTalon.configVoltageCompSaturation(11);
-        FourBarTalon.enableVoltageCompensation(true);
+        fourBarMaster.configVoltageCompSaturation(11);
+        fourBarMaster.enableVoltageCompensation(true);
+        fourBarSlave.configVoltageCompSaturation(11);
+        fourBarSlave.enableVoltageCompensation(true);
 
         // Configure the four bar current limits.
-        FourBarTalon.configContinuousCurrentLimit(10);
-        FourBarTalon.configPeakCurrentDuration(1000);
-        FourBarTalon.configPeakCurrentLimit(20);
-        FourBarTalon.enableCurrentLimit(true);
+        fourBarMaster.configContinuousCurrentLimit(10);
+        fourBarMaster.configPeakCurrentDuration(1000);
+        fourBarMaster.configPeakCurrentLimit(20);
+        fourBarMaster.enableCurrentLimit(true);
+        fourBarSlave.configContinuousCurrentLimit(10);
+        fourBarSlave.configPeakCurrentDuration(1000);
+        fourBarSlave.configPeakCurrentLimit(20);
+        fourBarMaster.enableCurrentLimit(true);
 
         // Set the soft limits on the four bar motors.
-        FourBarTalon.configForwardSoftLimitThreshold((int) (this.FourBarOffset + FourBarSpread - (UpperSafetyLimitThresholdDegrees / 360 * 4096)));
-        FourBarTalon.configForwardSoftLimitEnable(true);
-        FourBarTalon.configReverseSoftLimitThreshold((int) (this.FourBarOffset + (LowerSafetyLimitThresholdDegrees / 360 * 4096)));
-        FourBarTalon.configReverseSoftLimitEnable(true);
+        fourBarMaster.configForwardSoftLimitThreshold((int) (this.FourBarOffset + FourBarSpread - (UpperSafetyLimitThresholdDegrees / 360 * 4096)));
+        fourBarMaster.configForwardSoftLimitEnable(true);
+        fourBarMaster.configReverseSoftLimitThreshold((int) (this.FourBarOffset + (LowerSafetyLimitThresholdDegrees / 360 * 4096)));
+        fourBarMaster.configReverseSoftLimitEnable(true);
 
-
+        // Enable voltage compensation on the lift motors.
         elevatorMaster.enableVoltageCompensation(true);
         elevatorSlaveOne.enableVoltageCompensation(true);
         elevatorSlaveTwo.enableVoltageCompensation(true);
@@ -147,6 +154,10 @@ class Lift {
         elevatorSlaveOne.follow(elevatorMaster);
         elevatorSlaveTwo.follow(elevatorMaster);
         elevatorSlaveThree.follow(elevatorMaster);
+
+        // Have the four bar slave follow the master.
+        fourBarSlave.follow(fourBarMaster);
+        fourBarSlave.setInverted(false);
 
         // Invert the lift motors.
         elevatorMaster.setInverted(true);
@@ -183,7 +194,6 @@ class Lift {
         // Four bar positions in degrees.
         double fourBarBallGatheringPositionDegrees = 110;
         double fourBarHatchGatheringPositionDegrees = 30;
-
 
         double fourBarLowBallDegrees = 110;
         double fourBarMiddleBallDegrees = 110;
@@ -278,6 +288,20 @@ class Lift {
         initialized = true;
     }
 
+    public void LiftPeriodic()
+    {
+        // Set the lift to the proper position.
+        elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
+        if (Math.abs(fourBarMaster.getSelectedSensorPosition() - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096)) > 5)
+        {
+            System.out.println("Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096 + " : " + fourBarMaster.getSelectedSensorPosition());
+            fourBarMaster.setSelectedSensorPosition(Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
+        }
+        //FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
+
+    }
+
+
     /**
      * TODO: Comment.
      */
@@ -285,18 +309,11 @@ class Lift {
 
         // Set the four bar to the proper position.
         if (initialized && !isFourBarFaulted()) {
-            fourBar.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
+            fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
+            System.out.println("Actual: " + fourBarMaster.getSelectedSensorPosition() + " Setpoint: " + targetFourBarPosition);
         } else {
-            fourBar.set(ControlMode.PercentOutput, 0);
+            fourBarMaster.set(ControlMode.PercentOutput, 0);
         }
-
-        // Set the lift to the proper position.
-        elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
-        if (fourBar.getSelectedSensorPosition() % 4096 != fourBar.getSelectedSensorPosition())
-        {
-            fourBar.setSelectedSensorPosition(fourBar.getSelectedSensorPosition() % 4096);
-        }
-        //FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
 
     }
 
@@ -306,7 +323,7 @@ class Lift {
      * @return
      */
     double getAbsoluteFourBarTicks() {
-        return fourBar.getSensorCollection().getPulseWidthPosition();
+        return fourBarMaster.getSensorCollection().getPulseWidthPosition();
     }
 
     /**
@@ -315,7 +332,7 @@ class Lift {
      * @return
      */
     double getRelativeFourBarTicks() {
-        return fourBar.getSensorCollection().getQuadraturePosition();
+        return fourBarMaster.getSensorCollection().getQuadraturePosition();
     }
 
     /**
@@ -333,7 +350,7 @@ class Lift {
      * @return
      */
     double getFourBarCurrent() {
-        return fourBar.getOutputCurrent();
+        return fourBarMaster.getOutputCurrent() + fourBarSlave.getOutputCurrent();
     }
 
     /**
@@ -354,7 +371,7 @@ class Lift {
     }
 
     private double getOffsetRelative() {
-        return fourBar.getSensorCollection().getQuadraturePosition() - FourBarOffset;
+        return fourBarMaster.getSensorCollection().getQuadraturePosition() - FourBarOffset;
     }
 
     double getOffsetRelativeRotations() {
@@ -389,7 +406,7 @@ class Lift {
      * @return
      */
     boolean isFourBarFaulted() {
-        return fourBar.getSensorCollection().getPulseWidthPosition() == 0;
+        return fourBarMaster.getSensorCollection().getPulseWidthPosition() == 0;
     }
 
     /**
@@ -398,15 +415,15 @@ class Lift {
      * @return
      */
     double getFourBarActiveTrajectoryPosition() {
-        return fourBar.getActiveTrajectoryPosition();
+        return fourBarMaster.getActiveTrajectoryPosition();
     }
 
     double getFourBarMotorOutputPercent() {
-        return fourBar.getMotorOutputPercent();
+        return fourBarMaster.getMotorOutputPercent();
     }
 
     double getFourBarClosedLoopError() {
-        return fourBar.getClosedLoopError();
+        return fourBarMaster.getClosedLoopError();
     }
 
     double getElevatorVelocity() {

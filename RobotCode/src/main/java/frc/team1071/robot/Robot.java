@@ -58,7 +58,8 @@ public class Robot extends TimedRobot {
     private TalonSRX elevatorSlaveTwo;
     private TalonSRX elevatorSlaveThree;
     private TalonSRX gathererMotor;
-    private TalonSRX fourBarMotor;
+    private TalonSRX fourBarMotorMaster;
+    private TalonSRX fourBarMotorSlave;
 
     // Create the joysticks for the driver and the operator.
     private Joystick driverJoystick = new Joystick(0);
@@ -119,17 +120,19 @@ public class Robot extends TimedRobot {
                 elevatorSlaveOne = new TalonSRX(7);
                 elevatorSlaveTwo = new TalonSRX(9);
                 elevatorSlaveThree = new TalonSRX(8);
-                fourBarMotor = new TalonSRX(5);
+                fourBarMotorMaster = new TalonSRX(5);
+                fourBarMotorSlave = new TalonSRX(3);
             } else {
                 elevatorMaster = new TalonSRX(7);
                 elevatorSlaveOne = new TalonSRX(4);
                 elevatorSlaveTwo = new TalonSRX(5);
                 elevatorSlaveThree = new TalonSRX(6);
-                fourBarMotor = new TalonSRX(9);
+                fourBarMotorMaster = new TalonSRX(9);
+                fourBarMotorMaster = new TalonSRX(3);
             }
 
             // Create the lift helper class.
-            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotor, 1151);
+            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster, fourBarMotorSlave, 2464);
 
             if (isPracticeRobot) {
 
@@ -183,7 +186,7 @@ public class Robot extends TimedRobot {
 
             driveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary, rightMaster, rightSlavePrimary, rightSlaveSecondary, navX);
 
-            //Initialize the Solenoid.
+            // Initialize the solenoid.
             hatchSolenoid = new DoubleSolenoid(0, 1);
             hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
 
@@ -221,6 +224,8 @@ public class Robot extends TimedRobot {
 
         // Always send out the Limelight data.
         oscSender.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
+
+        lift.LiftPeriodic();
 
     }
 
@@ -288,7 +293,6 @@ public class Robot extends TimedRobot {
 
                 driverVertical = m_LimelightDriveCommand;
                 driverTwist = m_LimelightSteerCommand;
-
             }
         } else {
 
@@ -298,6 +302,8 @@ public class Robot extends TimedRobot {
 
         }
 
+        driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0);
+        driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, 1.0);
         driveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false, driverJoystick.getRawAxis(3));
 
         //--------------------------------------------------------------------------------------------------------------
@@ -367,25 +373,25 @@ public class Robot extends TimedRobot {
                     if (operatorJoystick.getRawButton(1)) {
                         lift.setLiftPosition(Lift.LiftPosition.GatheringHatch);
 
-                        // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
+                        // fourBarMotorMaster.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
                     }
 
                     // If the 'B' button is pressed, then set the low ball position.
                     else if (operatorJoystick.getRawButton(2)) {
                         lift.setLiftPosition(Lift.LiftPosition.LowBall);
-                        // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
+                        // fourBarMotorMaster.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
                     }
 
                     // If the 'X' button is pressed, then set the middle ball position.
                     else if (operatorJoystick.getRawButton(3)) {
                         lift.setLiftPosition(Lift.LiftPosition.MiddleBall);
-                        // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
+                        // fourBarMotorMaster.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
                     }
 
                     // If the 'Y' button is pressed, then set the high ball position.
                     else if (operatorJoystick.getRawButtonPressed(4)) {
                         lift.setLiftPosition(Lift.LiftPosition.HighBall);
-                        // fourBarMotor.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
+                        // fourBarMotorMaster.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
                     }
 
                 }
