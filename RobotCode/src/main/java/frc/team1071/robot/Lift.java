@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.team254.InterpolatingDouble;
 import frc.team254.InterpolatingTreeMap;
 
+import java.net.InetAddress;
+
 class Lift {
 
     public enum LiftPosition {
@@ -185,6 +187,13 @@ class Lift {
 
         // Invert the lift encoder.
         elevatorMaster.setSensorPhase(true);
+
+        try {
+            oscWirelessSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5803);
+            oscWiredSender = new OSCPortOut(InetAddress.getByName("10.10.71.5"), 5803);
+        } catch (Exception Ex) {
+            System.out.println("OSC Initialization Exception: " + Ex.getMessage());
+        }
 
     }
 
@@ -479,17 +488,17 @@ class Lift {
         // Append the left encoder data.
         OSCMessage liftPosition = new OSCMessage();
         liftPosition.setAddress("/LiftPosition");
-        liftPosition.addArgument(fourBarMaster.getSelectedSensorPosition());
+        liftPosition.addArgument((double)fourBarMaster.getSelectedSensorPosition());
 
         // Append the left encoder data.
         OSCMessage liftRelative = new OSCMessage();
         liftRelative.setAddress("/LiftRelative");
-        liftRelative.addArgument(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096);
+        liftRelative.addArgument((double)(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
 
         // Append the right encoder data.
         OSCMessage liftVelocity = new OSCMessage();
         liftVelocity.setAddress("/LiftVelocity");
-        liftVelocity.addArgument(fourBarMaster.getSelectedSensorVelocity());
+        liftVelocity.addArgument((double)fourBarMaster.getSelectedSensorVelocity());
 
         OSCMessage targetFBPosition = new OSCMessage();
         targetFBPosition.setAddress("/TargetFBPosition");
@@ -497,7 +506,7 @@ class Lift {
 
         OSCMessage resetEncoder = new OSCMessage();
         resetEncoder.setAddress("/ResetEncoder");
-        resetEncoder.addArgument(HasResetEncoder);
+        resetEncoder.addArgument((double)HasResetEncoder);
 
         OSCMessage MasterTarget = new OSCMessage();
         MasterTarget.setAddress("/MasterTargetDuty");
@@ -533,11 +542,11 @@ class Lift {
 
         OSCMessage ClosedError = new OSCMessage();
         ClosedError.setAddress("/ClosedLoopError");
-        ClosedError.addArgument(fourBarMaster.getClosedLoopError());
+        ClosedError.addArgument((double)fourBarMaster.getClosedLoopError());
 
         OSCMessage TrajVelocity = new OSCMessage();
         TrajVelocity.setAddress("/ActiveTrajVel");
-        TrajVelocity.addArgument(fourBarMaster.getActiveTrajectoryVelocity());
+        TrajVelocity.addArgument((double)fourBarMaster.getActiveTrajectoryVelocity());
 
         // Add these packets to the bundle.
         bundle.addPacket(bundleIdentifier);
