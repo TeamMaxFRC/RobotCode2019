@@ -128,7 +128,7 @@ public class CurvatureDrive {
     }
 
     private void RunQuickTurnMode(double Throttle, double Turn, boolean Brake, double Boost) {
-        double multiplier = Math.copySign(1, Throttle);
+        double multiplier = 1;//Math.copySign(1, Throttle);
         double BoostIncrease = Boost * (CappedSpeedFeetPerSecond - BoostThresholdFeetPerSecond);
         double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ? CappedSpeedFeetPerSecond : BoostThresholdFeetPerSecond );
         double TargetCurvature = Turn * CappedDegreesPerFeet;
