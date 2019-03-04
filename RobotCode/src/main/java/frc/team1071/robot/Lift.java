@@ -6,13 +6,16 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCBundle;
+import com.illposed.osc.OSCListener;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
+import com.illposed.osc.OSCPortIn;
 import edu.wpi.first.wpilibj.Timer;
 import frc.team254.InterpolatingDouble;
 import frc.team254.InterpolatingTreeMap;
 
 import java.net.InetAddress;
+import java.util.List;
 
 class Lift {
 
@@ -43,8 +46,12 @@ class Lift {
     private boolean updated;
     private boolean initialized = false;
 
+    private boolean hasUpdated = false;
+
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
+    private OSCPortOut oscRobSender;
+    private OSCPortIn oscRobReceiver;
 
     private int HasResetEncoder = 0;
 
@@ -190,6 +197,33 @@ class Lift {
         try {
             oscWirelessSender = new OSCPortOut(InetAddress.getByName("10.10.71.9"), 5803);
             oscWiredSender = new OSCPortOut(InetAddress.getByName("10.10.71.5"), 5803);
+            oscRobSender = new OSCPortOut(InetAddress.getByName("10.10.71.20"), 5803);
+
+            oscRobReceiver = new OSCPortIn(5803);
+            OSCListener updateListener = (time, message) -> {
+                try {
+                    List<Object> valArr = message.getArguments();
+                    if (valArr.size() == 10) {
+                        fourBarMaster.config_kP(0, (double)valArr.get(0));
+                        fourBarMaster.config_kI(0, (double)valArr.get(1));
+                        fourBarMaster.config_kD(0, (double)valArr.get(2));
+                        fourBarMaster.config_kF(0, (double)valArr.get(3));
+                        fourBarMaster.configMotionAcceleration((int)((double)valArr.get(4)), 0);
+                        fourBarMaster.configMotionCruiseVelocity((int)((double)valArr.get(5)), 0);
+                        fourBarMaster.configClosedloopRamp((double)valArr.get(6));
+                        fourBarMaster.config_IntegralZone(0, (int)((double)valArr.get(7)));
+                        targetFourBarPosition = (double)valArr.get(8);
+                        fourBarMaster.configMaxIntegralAccumulator(0, (int)((double)valArr.get(9)));
+
+                        System.out.println("Received target" + (double)valArr.get(8));
+                        System.out.println("Received target" + (int)((double)valArr.get(4)));
+                    }
+                } catch (Exception ignored) {
+
+                }
+            };
+            oscRobReceiver.addListener("/PIDUpdate", updateListener);
+            oscRobReceiver.startListening();
         } catch (Exception Ex) {
             System.out.println("OSC Initialization Exception: " + Ex.getMessage());
         }
@@ -327,14 +361,17 @@ class Lift {
     {
         // Set the lift to the proper position.
         elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
-        HasResetEncoder = 0;
         if (Math.abs(fourBarMaster.getSelectedSensorPosition() - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096)) > 50)
         {
             System.out.println("Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096 + " : " + fourBarMaster.getSelectedSensorPosition());
             HasResetEncoder = 1;
             fourBarMaster.setSelectedSensorPosition(Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
         }
-        //FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
+        
+        // The below are part of the live tuning package used by the cyberknights and should
+        // only be commented out during tuning
+        // SendRobData();
+        // fourBarMaster.set(ControlMode.MotionMagic,targetFourBarPosition, DemandType.ArbitraryFeedForward, 0);
 
     }
 
@@ -347,6 +384,7 @@ class Lift {
         // Set the four bar to the proper position.
         if (updated && !isFourBarFaulted()) {
             updated = false;
+            hasUpdated = true;
             fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
         } else if (isFourBarFaulted() || !initialized){
             fourBarMaster.set(ControlMode.PercentOutput, 0);
@@ -473,9 +511,6 @@ class Lift {
         return elevatorMaster.getSelectedSensorPosition();
     }
 
-
-
-
     /**
      * Sends drive information to be logged by the dashboard.
      */
@@ -516,14 +551,23 @@ class Lift {
         OSCMessage resetEncoder = new OSCMessage();
         resetEncoder.setAddress("/ResetEncoder");
         resetEncoder.addArgument((double)HasResetEncoder);
+        HasResetEncoder = 0;
 
         OSCMessage MasterTarget = new OSCMessage();
         MasterTarget.setAddress("/MasterTargetDuty");
         MasterTarget.addArgument(fourBarMaster.getMotorOutputPercent());
 
+        OSCMessage MasterCurrent = new OSCMessage();
+        MasterCurrent.setAddress("/MasterCurrent");
+        MasterCurrent.addArgument(fourBarMaster.getOutputCurrent());
+
         OSCMessage SlaveTarget = new OSCMessage();
         SlaveTarget.setAddress("/SlaveTargetDuty");
         SlaveTarget.addArgument(fourBarSlave.getMotorOutputPercent());
+
+        OSCMessage SlaveCurrent = new OSCMessage();
+        SlaveCurrent.setAddress("/SlaveCurrent");
+        SlaveCurrent.addArgument(fourBarSlave.getOutputCurrent());
 
         OSCMessage PMessage = new OSCMessage();
         PMessage.setAddress("/P");
@@ -561,6 +605,11 @@ class Lift {
         ActiveTrajPos.setAddress("/ActiveTrajPos");
         ActiveTrajPos.addArgument((double)fourBarMaster.getActiveTrajectoryPosition());
 
+        OSCMessage UpdatedMsg = new OSCMessage();
+        UpdatedMsg.setAddress("/Updated");
+        UpdatedMsg.addArgument((double)(hasUpdated ? 1 : 0));
+        hasUpdated = false;
+
         // Add these packets to the bundle.
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(timestamp);
@@ -580,11 +629,39 @@ class Lift {
         bundle.addPacket(ClosedError);
         bundle.addPacket(TrajVelocity);
         bundle.addPacket(ActiveTrajPos);
+        bundle.addPacket(UpdatedMsg);
 
         // Send the drive log data.
         try {
             oscWiredSender.send(bundle);
             oscWirelessSender.send(bundle);
+        } catch (Exception ex) {
+            System.out.println("Error sending the drive log data! " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Sends drive information to be logged by the dashboard.
+     */
+    public void SendRobData() {
+
+        // Create an OSC bundle.
+        OSCBundle bundle = new OSCBundle();
+
+        // Append an identifier for the bundle.
+        OSCMessage bundleIdentifier = new OSCMessage();
+        bundleIdentifier.setAddress("/PIDData");
+        bundleIdentifier.addArgument((double)fourBarMaster.getSelectedSensorPosition());
+        bundleIdentifier.addArgument(fourBarMaster.getClosedLoopTarget());
+        bundleIdentifier.addArgument(fourBarMaster.getIntegralAccumulator());
+        bundleIdentifier.addArgument("FourBar");
+
+        // Add these packets to the bundle.
+        bundle.addPacket(bundleIdentifier);
+
+        // Send the drive log data.
+        try {
+            oscRobSender.send(bundleIdentifier);
         } catch (Exception ex) {
             System.out.println("Error sending the drive log data! " + ex.getMessage());
         }
