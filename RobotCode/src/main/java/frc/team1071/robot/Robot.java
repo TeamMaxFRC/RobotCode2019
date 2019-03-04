@@ -132,7 +132,7 @@ public class Robot extends TimedRobot {
             }
 
             // Create the lift helper class.
-            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster, fourBarMotorSlave, 2464);
+            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster, fourBarMotorSlave, 2444);
 
             if (isPracticeRobot) {
 
