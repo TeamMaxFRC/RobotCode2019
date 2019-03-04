@@ -43,11 +43,8 @@ class Lift {
 
     private double targetElevatorPosition;
     private double targetFourBarPosition;
-    private boolean updated;
     private boolean initialized = false;
-
-    private boolean hasUpdated = false;
-
+    
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
     private OSCPortOut oscRobSender;
@@ -85,7 +82,6 @@ class Lift {
         this.fourBarSlave = fourBarSlave;
         this.FourBarOffset = FourBarOffset;
         this.targetFourBarPosition = FourBarOffset + FourBarSpread;
-        this.updated = false;
 
         // Configure the four bar talon.
         fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
@@ -345,14 +341,12 @@ class Lift {
         double Rotations = Degrees / 360;
         double EncoderTicks = Rotations * 4096;
         targetFourBarPosition = EncoderTicks + FourBarOffset;
-        updated = true;
         initialized = true;
     }
 
     public void LiftInit()
     {
         targetFourBarPosition = 0;
-        updated = false;
         initialized = false;
     }
 
@@ -382,9 +376,7 @@ class Lift {
     void runLift() {
 
         // Set the four bar to the proper position.
-        if (updated && !isFourBarFaulted()) {
-            updated = false;
-            hasUpdated = true;
+        if (initialized && !isFourBarFaulted()) {
             fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
         } else if (isFourBarFaulted() || !initialized){
             fourBarMaster.set(ControlMode.PercentOutput, 0);
@@ -605,11 +597,6 @@ class Lift {
         ActiveTrajPos.setAddress("/ActiveTrajPos");
         ActiveTrajPos.addArgument((double)fourBarMaster.getActiveTrajectoryPosition());
 
-        OSCMessage UpdatedMsg = new OSCMessage();
-        UpdatedMsg.setAddress("/Updated");
-        UpdatedMsg.addArgument((double)(hasUpdated ? 1 : 0));
-        hasUpdated = false;
-
         // Add these packets to the bundle.
         bundle.addPacket(bundleIdentifier);
         bundle.addPacket(timestamp);
@@ -629,7 +616,6 @@ class Lift {
         bundle.addPacket(ClosedError);
         bundle.addPacket(TrajVelocity);
         bundle.addPacket(ActiveTrajPos);
-        bundle.addPacket(UpdatedMsg);
 
         // Send the drive log data.
         try {
