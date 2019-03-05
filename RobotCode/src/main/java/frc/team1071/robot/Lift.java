@@ -410,7 +410,7 @@ class Lift {
     }
 
     private double getOffsetRelative() {
-        return fourBarMaster.getSensorCollection().getQuadraturePosition() - FourBarOffset;
+        return fourBarMaster.getSelectedSensorPosition() - FourBarOffset;
     }
 
     double getOffsetRelativeRotations() {
