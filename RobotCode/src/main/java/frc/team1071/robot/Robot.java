@@ -158,6 +158,10 @@ public class Robot extends TimedRobot {
 
             }
 
+            // Reset the lift's encoder position.
+            elevatorMaster.setSelectedSensorPosition(0, 0, 10);
+            elevatorMaster.set(ControlMode.MotionMagic, 0);
+
             //--------------------------------------------------------------------------------------------------------------------------------------------------
             // Other Initialization
             //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -250,15 +254,11 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
-
+        teleopPeriodic();
     }
 
     @Override
     public void teleopInit() {
-
-        // Reset the lift's encoder position.
-        elevatorMaster.setSelectedSensorPosition(0, 0, 10);
-        elevatorMaster.set(ControlMode.MotionMagic, 0);
 
         // Reset the solenoid position.
         hatchSolenoid.set(DoubleSolenoid.Value.kForward);
@@ -477,9 +477,9 @@ public class Robot extends TimedRobot {
     public void Update_Limelight_Tracking() {
         // These numbers must be tuned for your Robot!  Be careful!
         // TODO: These values need to be adjusted for our robot.
-        final double STEER_K = 0.025;                   // how hard to turn toward the target
+        final double STEER_K = 0.0275;                   // how hard to turn toward the target
         final double DRIVE_K = 0.15;                    // how hard to drive fwd toward the target
-        final double DESIRED_TARGET_AREA = 7.3;        // Area of the target when the robot reaches the wall
+        final double DESIRED_TARGET_AREA = 6.5;        // Area of the target when the robot reaches the wall
         final double MAX_DRIVE = 1.0;                  // Simple speed limit so we don't drive too fast
 
         if (!limelightTarget) {

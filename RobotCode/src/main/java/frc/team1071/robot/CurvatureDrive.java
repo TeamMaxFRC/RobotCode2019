@@ -54,7 +54,7 @@ public class CurvatureDrive {
     private void ConfigureGeneral(CANSparkMax Motor) {
         Motor.enableVoltageCompensation(11);
         Motor.setSmartCurrentLimit(55);
-        Motor.setOpenLoopRampRate(1);
+        Motor.setOpenLoopRampRate(0.75);
         Motor.setIdleMode(CANSparkMax.IdleMode.kCoast);
     }
 

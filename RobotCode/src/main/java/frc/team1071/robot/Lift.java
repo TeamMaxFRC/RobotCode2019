@@ -48,12 +48,12 @@ class Lift {
 
     private int HasResetEncoder = 0;
 
-    private double FBP = 2.0;
+    private double FBP = 11.3;
     private double FBI = 0;
-    private double FBD = 3.2;
-    private double FBF = 2.4;
-    private double FBV = 300;
-    private double FBA = 600;
+    private double FBD = 500;
+    private double FBF = 0.7;
+    private double FBV = 600;
+    private double FBA = 1000;
 
     /**
      * TODO: Comment.
@@ -225,7 +225,7 @@ class Lift {
         double fourBarMiddleBallDegrees = 110;
         double fourBarHighBallDegrees = 110;
 
-        double fourBarLowHatchDegrees = 50;
+        double fourBarLowHatchDegrees = 45;
         double fourBarMiddleHatchDegrees = 40;
         double fourBarHighHatchDegrees = 50;
 
