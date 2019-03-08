@@ -8,6 +8,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.illposed.osc.OSCBundle;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortOut;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Timer;
 import frc.team254.InterpolatingDouble;
 import frc.team254.InterpolatingTreeMap;
@@ -25,11 +26,13 @@ class Lift {
         MiddleBall,
         MiddleHatch,
         HighBall,
-        HighHatch
+        HighHatch,
+        AirBrake
     }
 
     private TalonSRX elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree;
     private TalonSRX fourBarMaster, fourBarSlave;
+    private Solenoid airBrake;
 
     private static final double FourBarSpread = 1506;
     private static final double UpperSafetyLimitThresholdDegrees = 5.0;
@@ -43,17 +46,23 @@ class Lift {
     private boolean updated;
     private boolean initialized = false;
 
+    private LiftPosition currentPosition;
+    private boolean isAirBrake = false;
+    private boolean AirBrakeActivated = false;
+    private int AirBrakeCounter = 0;
+
     private OSCPortOut oscWirelessSender;
     private OSCPortOut oscWiredSender;
 
     private int HasResetEncoder = 0;
+    private int ResetCounter = 0;
 
-    private double FBP = 11.3;
+    private double FBP = 1.5;
     private double FBI = 0;
-    private double FBD = 500;
-    private double FBF = 0.7;
-    private double FBV = 600;
-    private double FBA = 1000;
+    private double FBD = 3.0;
+    private double FBF = .6;
+    private double FBV = 200;
+    private double FBA = 500;
 
     /**
      * TODO: Comment.
@@ -65,7 +74,7 @@ class Lift {
      * @param fourBarMaster
      * @param FourBarOffset
      */
-    Lift(TalonSRX elevatorMaster, TalonSRX elevatorSlaveOne, TalonSRX elevatorSlaveTwo, TalonSRX elevatorSlaveThree, TalonSRX fourBarMaster, TalonSRX fourBarSlave, double FourBarOffset) {
+    Lift(TalonSRX elevatorMaster, TalonSRX elevatorSlaveOne, TalonSRX elevatorSlaveTwo, TalonSRX elevatorSlaveThree, TalonSRX fourBarMaster, Solenoid airBrake, TalonSRX fourBarSlave, double FourBarOffset) {
 
         // Set the elevator talons.
         this.elevatorMaster = elevatorMaster;
@@ -79,6 +88,9 @@ class Lift {
         this.FourBarOffset = FourBarOffset;
         this.targetFourBarPosition = FourBarOffset + FourBarSpread;
         this.updated = false;
+
+        // Set the solenoid.
+        this.airBrake = airBrake;
 
         // Configure the four bar talon.
         fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
@@ -217,9 +229,17 @@ class Lift {
      */
     void setLiftPosition(LiftPosition position) {
 
+        if (position == LiftPosition.AirBrake) {
+            AirBrakeActivated = false;
+            isAirBrake = true;
+        }
+        else {
+            isAirBrake = false;
+        }
+
         // Four bar positions in degrees.
         double fourBarBallGatheringPositionDegrees = 110;
-        double fourBarHatchGatheringPositionDegrees = 30;
+        double fourBarHatchGatheringPositionDegrees = 22;
 
         double fourBarLowBallDegrees = 110;
         double fourBarMiddleBallDegrees = 110;
@@ -283,6 +303,11 @@ class Lift {
                 setFourBarPositionDegrees(fourBarBallGatheringPositionDegrees);
                 break;
 
+            case AirBrake:
+                setElevatorPosition(liftGatheringPositionHatch);
+                setFourBarPositionDegrees(140);
+                break;
+
             case GatheringHatch:
             default:
                 setElevatorPosition(liftGatheringPositionHatch);
@@ -330,9 +355,18 @@ class Lift {
         HasResetEncoder = 0;
         if (Math.abs(fourBarMaster.getSelectedSensorPosition() - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096)) > 50)
         {
-            System.out.println("Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096 + " : " + fourBarMaster.getSelectedSensorPosition());
-            HasResetEncoder = 1;
-            fourBarMaster.setSelectedSensorPosition(Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
+            ResetCounter ++;
+            if(ResetCounter > 30)
+            {
+                ResetCounter = 0;
+                System.out.println("Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096 + " : " + fourBarMaster.getSelectedSensorPosition());
+                HasResetEncoder = 1;
+                fourBarMaster.setSelectedSensorPosition(Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
+            }
+        }
+        else
+        {
+            ResetCounter = 0;
         }
         //FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
 
@@ -345,11 +379,42 @@ class Lift {
     void runLift() {
 
         // Set the four bar to the proper position.
-        if (updated && !isFourBarFaulted()) {
+        if (updated && !isFourBarFaulted() && !AirBrakeActivated) {
             updated = false;
             fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
-        } else if (isFourBarFaulted() || !initialized){
+        } else if (isFourBarFaulted() || !initialized || AirBrakeActivated){
             fourBarMaster.set(ControlMode.PercentOutput, 0);
+        }
+
+
+
+        if ((isAirBrake && getFourBarDegrees() >= 134) || AirBrakeActivated) {
+            if(AirBrakeCounter >= 20)
+            {
+                airBrake.set(false);
+            }
+            if(isAirBrake)
+            {
+                if(AirBrakeCounter >= 20)
+                {
+                    AirBrakeCounter = 20;
+                    AirBrakeActivated = true;
+                }
+                AirBrakeCounter ++;
+            }
+            else if (AirBrakeCounter > 0)
+            {
+                AirBrakeCounter --;
+            }
+
+            if(AirBrakeCounter == 0)
+            {
+                AirBrakeActivated = false;
+            }
+
+        }
+        else {
+            airBrake.set(true);
         }
 
         SendLiftData();

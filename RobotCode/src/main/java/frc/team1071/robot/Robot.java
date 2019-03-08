@@ -35,7 +35,7 @@ public class Robot extends TimedRobot {
 
     // Is the stream deck in use?
     private static final boolean isStreamDeck = true;
-    private static final boolean isPracticeRobot = true;
+    private static final boolean isPracticeRobot = false;
 
     // Create the NavX.
     private AHRS navX;
@@ -76,10 +76,13 @@ public class Robot extends TimedRobot {
     // Create and initialize the compressor.
     private Compressor compressor = new Compressor(0);
 
-    // Create the Solenoid and Solenoid state for hatch gathering.
-    private DoubleSolenoid hatchSolenoid;
+    // Create the solenoid and solenoid state for hatch gathering.
+    private Solenoid hatchSolenoid;
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
+
+    // Create the air brake solenoid and solenoid state
+    private Solenoid airBrakeSolenoid;
 
     /**
      * This function is run when the robot is first started up.
@@ -131,8 +134,14 @@ public class Robot extends TimedRobot {
                 fourBarMotorSlave = new TalonSRX(10);
             }
 
+            // Initialize the solenoids.
+            hatchSolenoid = new Solenoid(0);
+            hatchSolenoid.set(false);
+            airBrakeSolenoid = new Solenoid(1);
+            airBrakeSolenoid.set(false);
+
             // Create the lift helper class.
-            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster, fourBarMotorSlave, isPracticeRobot ? 2464 : 544);
+            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster, airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280);
 
             if (isPracticeRobot) {
 
@@ -183,16 +192,12 @@ public class Robot extends TimedRobot {
                 gathererMotor.setInverted(true);
             }
 
-            gathererMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
+            //gathererMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
 
             // Initialize the NavX.
             navX = new AHRS(SPI.Port.kMXP);
 
             driveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary, rightMaster, rightSlavePrimary, rightSlaveSecondary, navX);
-
-            // Initialize the solenoid.
-            hatchSolenoid = new DoubleSolenoid(0, 1);
-            hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
 
         } catch (Exception Ex) {
             System.out.println("General Initialization Exception: " + Ex.getMessage());
@@ -229,6 +234,9 @@ public class Robot extends TimedRobot {
         // Always send out the Limelight data.
         oscSender.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
 
+        //driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, (double)Math.abs(driverJoystick.getRawAxis(1)));
+        //driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, (double)Math.abs(driverJoystick.getRawAxis(5)));
+
         lift.LiftPeriodic();
 
     }
@@ -261,7 +269,7 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
 
         // Reset the solenoid position.
-        hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+        hatchSolenoid.set(false);
 
         // Report that the console is functional.
         oscSender.writeConsole("Robot has enabled!");
@@ -333,6 +341,8 @@ public class Robot extends TimedRobot {
                     lift.setLiftPosition(Lift.LiftPosition.GatheringHatch);
                 } else if (operatorJoystick.getRawButton(8)) {
                     lift.setLiftPosition(Lift.LiftPosition.GatheringBall);
+                } else if (operatorJoystick.getRawButton(3)) {
+                    lift.setLiftPosition(Lift.LiftPosition.AirBrake);
                 }
 
                 // Run the ball gatherer.
@@ -346,20 +356,20 @@ public class Robot extends TimedRobot {
 
                 // Detect the current state of the magnetic limit switch.
                 boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
+                System.out.println("Switch: " + currentSwitchState);
 
                 // Actuate the solenoid depending on the user button press and the magnetic switch.
                 if (operatorJoystick.getRawButtonPressed(11)) {
-                    hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
+                    hatchSolenoid.set(true);
                     hatchSwitchDebounceCounter = 40;
 
                 } else if (operatorJoystick.getRawButtonPressed(12)) {
-                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                    hatchSolenoid.set(false);
                     hatchSwitchDebounceCounter = 40;
 
-                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse) {
-                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get()) {
+                    hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
-
                 }
 
                 // Store the last magnetic switch value.
@@ -428,16 +438,16 @@ public class Robot extends TimedRobot {
                 // Actuate the solenoid depending on the user button press and the magnetic switch.
                 if (operatorJoystick.getRawButtonPressed(5)) {
 
-                    if (hatchSolenoid.get() == DoubleSolenoid.Value.kForward) {
-                        hatchSolenoid.set(DoubleSolenoid.Value.kReverse);
+                    if (hatchSolenoid.get()) {
+                        hatchSolenoid.set(false);
                     } else {
-                        hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                        hatchSolenoid.set(true);
                     }
 
                     hatchSwitchDebounceCounter = 40;
 
-                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get() == DoubleSolenoid.Value.kReverse) {
-                    hatchSolenoid.set(DoubleSolenoid.Value.kForward);
+                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && !hatchSolenoid.get()) {
+                    hatchSolenoid.set(true);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 }
 
