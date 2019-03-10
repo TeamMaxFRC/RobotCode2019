@@ -259,7 +259,7 @@ class Lift {
         int liftLowScoreHatch = 0;
         int liftMiddleScoreHatch = 15000;
         int liftHighScoreHatch = 25500;
-        int liftActiveGatherHatch = 3500;
+        int liftActiveGatherHatch = 4500;
 
         switch (position) {
 
