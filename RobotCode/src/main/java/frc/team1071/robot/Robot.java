@@ -368,6 +368,9 @@ public class Robot extends TimedRobot {
                 } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get()) {
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
+                } else if (operatorJoystick.getRawButton(1)) {
+                    hatchSolenoid.set(false);
+                    lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 }
 
                 // Store the last magnetic switch value.
