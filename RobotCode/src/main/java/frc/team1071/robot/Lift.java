@@ -384,6 +384,10 @@ class Lift {
             fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
         } else if (isFourBarFaulted() || !initialized || AirBrakeActivated){
             fourBarMaster.set(ControlMode.PercentOutput, 0);
+            if(isFourBarFaulted())
+            {
+                System.out.println("FourBarFaulted");
+            }
         }
 
 

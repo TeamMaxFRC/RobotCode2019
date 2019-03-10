@@ -1,8 +1,6 @@
 package frc.team1071.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
-import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
@@ -356,7 +354,7 @@ public class Robot extends TimedRobot {
 
                 // Detect the current state of the magnetic limit switch.
                 boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
-                System.out.println("Switch: " + currentSwitchState);
+                //System.out.println("Switch: " + currentSwitchState);
 
                 // Actuate the solenoid depending on the user button press and the magnetic switch.
                 if (operatorJoystick.getRawButtonPressed(11)) {
