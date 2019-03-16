@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -31,9 +32,8 @@ public class Robot extends TimedRobot {
     private static final String kCustomAuto = "My Auto";
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
-    // Is the stream deck in use?
-    private static final boolean isStreamDeck = true;
-    private static final boolean isPracticeRobot = false;
+    // Boolean that determines if we're on the practice robot, or the real robot.
+    private static final boolean isPracticeRobot = true;
 
     // Create the NavX.
     private AHRS navX;
@@ -98,9 +98,9 @@ public class Robot extends TimedRobot {
         // Initialize all the motor controllers.
         try {
 
-            //--------------------------------------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------------------------------------
             // Drive Motors
-            //--------------------------------------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------------------------------------
 
             // Initialize the drive motors.
             leftMaster = new CANSparkMax(17, kBrushless);
@@ -111,9 +111,9 @@ public class Robot extends TimedRobot {
             rightSlavePrimary = new CANSparkMax(14, kBrushless);
             rightSlaveSecondary = new CANSparkMax(15, kBrushless);
 
-            //--------------------------------------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------------------------------------
             // Lift Motors
-            //--------------------------------------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------------------------------------
 
             // Initialize the lift motors.
             if (isPracticeRobot) {
@@ -139,7 +139,8 @@ public class Robot extends TimedRobot {
             airBrakeSolenoid.set(false);
 
             // Create the lift helper class.
-            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster, airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280);
+            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster,
+                    airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280);
 
             if (isPracticeRobot) {
 
@@ -169,9 +170,9 @@ public class Robot extends TimedRobot {
             elevatorMaster.setSelectedSensorPosition(0, 0, 10);
             elevatorMaster.set(ControlMode.MotionMagic, 0);
 
-            //--------------------------------------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------------------------------------
             // Other Initialization
-            //--------------------------------------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------------------------------------
 
             // Initialize the gatherer.
             if (isPracticeRobot) {
@@ -190,12 +191,18 @@ public class Robot extends TimedRobot {
                 gathererMotor.setInverted(true);
             }
 
-            //gathererMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
+            // gathererMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
+            // LimitSwitchNormal.NormallyOpen);
 
             // Initialize the NavX.
             navX = new AHRS(SPI.Port.kMXP);
 
-            driveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary, rightMaster, rightSlavePrimary, rightSlaveSecondary, navX);
+            driveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary, rightMaster,
+                    rightSlavePrimary, rightSlaveSecondary, navX);
+
+            // Disable all telemetry data for the LiveWindow.
+            // This is disabled since it is extremely slow and will cause loop overrun.
+            LiveWindow.disableAllTelemetry();
 
         } catch (Exception Ex) {
             System.out.println("General Initialization Exception: " + Ex.getMessage());
@@ -204,12 +211,13 @@ public class Robot extends TimedRobot {
     }
 
     /**
-     * This function is called every robot packet, no matter the mode. Use
-     * this for items like diagnostics that you want ran during disabled,
-     * autonomous, teleoperated and test.
+     * This function is called every robot packet, no matter the mode. Use this for
+     * items like diagnostics that you want ran during disabled, autonomous,
+     * teleoperated and test.
      *
-     * <p>This runs after the mode specific periodic functions, but before
-     * LiveWindow and SmartDashboard integrated updating.
+     * <p>
+     * This runs after the mode specific periodic functions, but before LiveWindow
+     * and SmartDashboard integrated updating.
      */
     @Override
     public void robotPeriodic() {
@@ -221,7 +229,8 @@ public class Robot extends TimedRobot {
         limelightTarget = tv.getDouble(0.0) >= 1.0;
 
         // Always send out error data.
-        oscSender.sendOscErrorData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary, rightSlaveSecondary);
+        oscSender.sendOscErrorData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary,
+                rightSlaveSecondary);
 
         // Always send out sensor data.
         oscSender.sendOscSensorData(driveTrain, lift, gathererMotor);
@@ -232,8 +241,10 @@ public class Robot extends TimedRobot {
         // Always send out the Limelight data.
         oscSender.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
 
-        //driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, (double)Math.abs(driverJoystick.getRawAxis(1)));
-        //driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, (double)Math.abs(driverJoystick.getRawAxis(5)));
+        // driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble,
+        // (double)Math.abs(driverJoystick.getRawAxis(1)));
+        // driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble,
+        // (double)Math.abs(driverJoystick.getRawAxis(5)));
 
         lift.LiftPeriodic();
 
@@ -241,14 +252,15 @@ public class Robot extends TimedRobot {
 
     /**
      * This autonomous (along with the chooser code above) shows how to select
-     * between different autonomous modes using the dashboard. The sendable
-     * chooser code works with the Java SmartDashboard. If you prefer the
-     * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-     * getString line to get the auto name from the text box below the Gyro
+     * between different autonomous modes using the dashboard. The sendable chooser
+     * code works with the Java SmartDashboard. If you prefer the LabVIEW Dashboard,
+     * remove all of the chooser code and uncomment the getString line to get the
+     * auto name from the text box below the Gyro
      *
-     * <p>You can add additional auto modes by adding additional comparisons to
-     * the switch structure below with additional strings. If using the
-     * SendableChooser make sure to add them to the chooser code above as well.
+     * <p>
+     * You can add additional auto modes by adding additional comparisons to the
+     * switch structure below with additional strings. If using the SendableChooser
+     * make sure to add them to the chooser code above as well.
      */
     @Override
     public void autonomousInit() {
@@ -281,9 +293,9 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
 
-        //--------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------
         // Drive Controls
-        //--------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------
 
         // Determine the proper motor values based on the joystick data.
         Update_Limelight_Tracking();
@@ -310,17 +322,18 @@ public class Robot extends TimedRobot {
 
         }
 
-        //driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0);
-        //driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, 1.0);
-        driveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false, driverJoystick.getRawAxis(3));
+        // driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0);
+        // driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, 1.0);
+        driveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false,
+                driverJoystick.getRawAxis(3));
 
-        //--------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------
         // Operator Controls
-        //--------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------
         try {
 
-            //When buttons are pressed on the stream deck, set lift to hatch positions.
-            if (isStreamDeck && !driverJoystick.getRawButton(5)) {
+            // When buttons are pressed on the stream deck, set lift to hatch positions.
+            if (!driverJoystick.getRawButton(5)) {
 
                 // Set lift position based on the button pressed on the stream deck.
                 if (operatorJoystick.getRawButton(4)) {
@@ -354,9 +367,9 @@ public class Robot extends TimedRobot {
 
                 // Detect the current state of the magnetic limit switch.
                 boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
-                //System.out.println("Switch: " + currentSwitchState);
 
-                // Actuate the solenoid depending on the user button press and the magnetic switch.
+                // Actuate the solenoid depending on the user button press and the magnetic
+                // switch.
                 if (operatorJoystick.getRawButtonPressed(11)) {
                     hatchSolenoid.set(true);
                     hatchSwitchDebounceCounter = 40;
@@ -365,7 +378,8 @@ public class Robot extends TimedRobot {
                     hatchSolenoid.set(false);
                     hatchSwitchDebounceCounter = 40;
 
-                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && hatchSolenoid.get()) {
+                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue
+                        && hatchSolenoid.get()) {
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 } else if (operatorJoystick.getRawButton(1)) {
@@ -375,94 +389,6 @@ public class Robot extends TimedRobot {
 
                 // Store the last magnetic switch value.
                 previousHatchSwitchValue = currentSwitchState;
-
-            } else if (!isStreamDeck &&  !driverJoystick.getRawButton(5)) {
-
-                //Disable when tuning PIDs
-                //when the right bumper is pressed, set the lift to ball positions.
-                if (operatorJoystick.getRawButton(6)) {
-
-                    // If the 'A' button is pressed, then set the ball gathering height.
-                    if (operatorJoystick.getRawButton(1)) {
-                        lift.setLiftPosition(Lift.LiftPosition.GatheringHatch);
-
-                        // fourBarMotorMaster.set(MCControlMode.MotionVoodooArbFF, fourBarGatheringPositionBall, 0, 0);
-                    }
-
-                    // If the 'B' button is pressed, then set the low ball position.
-                    else if (operatorJoystick.getRawButton(2)) {
-                        lift.setLiftPosition(Lift.LiftPosition.LowBall);
-                        // fourBarMotorMaster.set(MCControlMode.MotionVoodooArbFF, fourBarLowScoreBall, 0, 0);
-                    }
-
-                    // If the 'X' button is pressed, then set the middle ball position.
-                    else if (operatorJoystick.getRawButton(3)) {
-                        lift.setLiftPosition(Lift.LiftPosition.MiddleBall);
-                        // fourBarMotorMaster.set(MCControlMode.MotionVoodooArbFF, fourBarMiddleScoreBall, 0, 0);
-                    }
-
-                    // If the 'Y' button is pressed, then set the high ball position.
-                    else if (operatorJoystick.getRawButtonPressed(4)) {
-                        lift.setLiftPosition(Lift.LiftPosition.HighBall);
-                        // fourBarMotorMaster.set(MCControlMode.MotionVoodooArbFF, fourBarHighScoreBall, 0, 0);
-                    }
-
-                }
-
-                // When the right bumper isn't pressed, set the lift to hatch positions.
-                else {
-
-                    // If the 'A' button is pressed, then set the hatch gathering position.
-                    if (operatorJoystick.getRawButtonPressed(1)) {
-                        lift.setLiftPosition(Lift.LiftPosition.GatheringHatch);
-                    }
-
-                    // If the 'B' button is pressed, set the low hatch position.
-                    else if (operatorJoystick.getRawButtonPressed(2)) {
-                        lift.setLiftPosition(Lift.LiftPosition.LowHatch);
-                    }
-
-                    // If the 'X' button is pressed, set the middle hatch position.
-                    else if (operatorJoystick.getRawButtonPressed(3)) {
-                        lift.setLiftPosition(Lift.LiftPosition.MiddleHatch);
-                    }
-
-                    // If the 'Y' button is pressed, set the high hatch position.
-                    else if (operatorJoystick.getRawButtonPressed(4)) {
-                        lift.setLiftPosition(Lift.LiftPosition.HighHatch);
-                    }
-                }
-
-                // Detect the current state of the magnetic limit switch.
-                boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
-
-                // Actuate the solenoid depending on the user button press and the magnetic switch.
-                if (operatorJoystick.getRawButtonPressed(5)) {
-
-                    if (hatchSolenoid.get()) {
-                        hatchSolenoid.set(false);
-                    } else {
-                        hatchSolenoid.set(true);
-                    }
-
-                    hatchSwitchDebounceCounter = 40;
-
-                } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue && !hatchSolenoid.get()) {
-                    hatchSolenoid.set(true);
-                    lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
-                }
-
-                // Store the last magnetic switch value.
-                previousHatchSwitchValue = currentSwitchState;
-
-                // Run the cargo gatherer based how hard the triggers are being pressed.
-                if (operatorJoystick.getRawAxis(2) > 0.1) {
-                    gathererMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(2));
-                } else if (operatorJoystick.getRawAxis(3) > 0.1) {
-                    gathererMotor.set(ControlMode.PercentOutput, -operatorJoystick.getRawAxis(3));
-                } else {
-                    gathererMotor.set(ControlMode.PercentOutput, 0.1);
-                }
 
             }
 
@@ -482,16 +408,16 @@ public class Robot extends TimedRobot {
     }
 
     /**
-     * This function implements a simple method of generating driving and steering commands
-     * based on the tracking data from a limelight camera.
+     * This function implements a simple method of generating driving and steering
+     * commands based on the tracking data from a limelight camera.
      */
     public void Update_Limelight_Tracking() {
-        // These numbers must be tuned for your Robot!  Be careful!
-        // TODO: These values need to be adjusted for our robot.
-        final double STEER_K = 0.0275;                   // how hard to turn toward the target
-        final double DRIVE_K = 0.15;                    // how hard to drive fwd toward the target
-        final double DESIRED_TARGET_AREA = 6.5;        // Area of the target when the robot reaches the wall
-        final double MAX_DRIVE = 1.0;                  // Simple speed limit so we don't drive too fast
+
+        // These numbers must be tuned for your Robot! Be careful!
+        final double STEER_K = 0.0275; // how hard to turn toward the target
+        final double DRIVE_K = 0.15; // how hard to drive fwd toward the target
+        final double DESIRED_TARGET_AREA = 6.5; // Area of the target when the robot reaches the wall
+        final double MAX_DRIVE = 1.0; // Simple speed limit so we don't drive too fast
 
         if (!limelightTarget) {
             m_LimelightDriveCommand = 0.0;
