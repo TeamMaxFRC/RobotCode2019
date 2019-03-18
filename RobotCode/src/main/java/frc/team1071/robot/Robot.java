@@ -21,16 +21,8 @@ import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
  */
 public class Robot extends TimedRobot {
 
-    // Helper classes.
-    private CurvatureDrive driveTrain;
-    private Lift lift;
-    private OscSender oscSender = new OscSender();
-
     // Boolean that determines if we're on the practice robot, or the real robot.
     private static final boolean isPracticeRobot = true;
-
-    // Create the NavX.
-    private AHRS navX;
 
     // Create the Limelight.
     private NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -57,13 +49,16 @@ public class Robot extends TimedRobot {
     private Joystick driverJoystick = new Joystick(0);
     private Joystick operatorJoystick = new Joystick(1);
 
-    // Create the drive motors.
-    private CANSparkMax leftMaster;
-    private CANSparkMax rightMaster;
-    private CANSparkMax leftSlavePrimary;
-    private CANSparkMax leftSlaveSecondary;
-    private CANSparkMax rightSlavePrimary;
-    private CANSparkMax rightSlaveSecondary;
+    // Create and initialize the drive motors.
+    private CANSparkMax leftMaster = new CANSparkMax(17, kBrushless);
+    private CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
+    private CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+    private CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
+    private CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
+    private CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+    
+    // Create the NavX.
+    private AHRS navX = new AHRS(SPI.Port.kMXP);
 
     // Create and initialize the compressor.
     private Compressor compressor = new Compressor(0);
@@ -76,6 +71,12 @@ public class Robot extends TimedRobot {
     // Create the air brake solenoid and solenoid state
     private Solenoid airBrakeSolenoid;
 
+    // Helper classes.
+    private CurvatureDrive driveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary, rightMaster, rightSlavePrimary, rightSlaveSecondary, navX);
+
+    private Lift lift;
+    private OscSender oscSender = new OscSender();
+
     /**
      * This function is run when the robot is first started up.
      */
@@ -85,118 +86,88 @@ public class Robot extends TimedRobot {
         // Start the compressor. Toggle this value to turn the compressor off.
         compressor.setClosedLoopControl(false);
 
-        // Initialize all the motor controllers.
-        try {
+        // --------------------------------------------------------------------------------------------------------------------------------------------------
+        // Lift Motors
+        // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-            // --------------------------------------------------------------------------------------------------------------------------------------------------
-            // Drive Motors
-            // --------------------------------------------------------------------------------------------------------------------------------------------------
-
-            // Initialize the drive motors.
-            leftMaster = new CANSparkMax(17, kBrushless);
-            leftSlavePrimary = new CANSparkMax(1, kBrushless);
-            leftSlaveSecondary = new CANSparkMax(2, kBrushless);
-
-            rightMaster = new CANSparkMax(13, kBrushless);
-            rightSlavePrimary = new CANSparkMax(14, kBrushless);
-            rightSlaveSecondary = new CANSparkMax(15, kBrushless);
-
-            // --------------------------------------------------------------------------------------------------------------------------------------------------
-            // Lift Motors
-            // --------------------------------------------------------------------------------------------------------------------------------------------------
-
-            // Initialize the lift motors.
-            if (isPracticeRobot) {
-                elevatorMaster = new TalonSRX(4);
-                elevatorSlaveOne = new TalonSRX(7);
-                elevatorSlaveTwo = new TalonSRX(9);
-                elevatorSlaveThree = new TalonSRX(8);
-                fourBarMotorMaster = new TalonSRX(5);
-                fourBarMotorSlave = new TalonSRX(3);
-            } else {
-                elevatorMaster = new TalonSRX(7);
-                elevatorSlaveOne = new TalonSRX(4);
-                elevatorSlaveTwo = new TalonSRX(5);
-                elevatorSlaveThree = new TalonSRX(6);
-                fourBarMotorMaster = new TalonSRX(9);
-                fourBarMotorSlave = new TalonSRX(10);
-            }
-
-            // Initialize the solenoids.
-            hatchSolenoid = new Solenoid(0);
-            hatchSolenoid.set(false);
-            airBrakeSolenoid = new Solenoid(1);
-            airBrakeSolenoid.set(false);
-
-            // Create the lift helper class.
-            lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster,
-                    airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280);
-
-            if (isPracticeRobot) {
-
-                // Set the PID values for the lift.
-                elevatorMaster.config_kF(0, 0.32058916);
-                elevatorMaster.config_kP(0, 1.4);
-                elevatorMaster.config_kD(0, 2.8);
-
-                // Establish the cruise velocity and max acceleration for motion magic.
-                elevatorMaster.configMotionCruiseVelocity(2900);
-                elevatorMaster.configMotionAcceleration(5200);
-
-            } else {
-
-                // Set the PID values for the lift.
-                elevatorMaster.config_kF(0, 0.32058916);
-                elevatorMaster.config_kP(0, 0.30);
-                elevatorMaster.config_kD(0, 0.60);
-
-                // Establish the cruise velocity and max acceleration for motion magic.
-                elevatorMaster.configMotionCruiseVelocity(2900);
-                elevatorMaster.configMotionAcceleration(5200);
-
-            }
-
-            // Reset the lift's encoder position.
-            elevatorMaster.setSelectedSensorPosition(0, 0, 10);
-            elevatorMaster.set(ControlMode.MotionMagic, 0);
-
-            // --------------------------------------------------------------------------------------------------------------------------------------------------
-            // Other Initialization
-            // --------------------------------------------------------------------------------------------------------------------------------------------------
-
-            // Initialize the gatherer.
-            if (isPracticeRobot) {
-                gathererMotor = new TalonSRX(6);
-            } else {
-                gathererMotor = new TalonSRX(8);
-            }
-
-            // Config Gatherer
-            gathererMotor.enableCurrentLimit(true);
-            gathererMotor.configContinuousCurrentLimit(4);
-            gathererMotor.configPeakCurrentDuration(0);
-            gathererMotor.configPeakCurrentLimit(0);
-
-            if (!isPracticeRobot) {
-                gathererMotor.setInverted(true);
-            }
-
-            // gathererMotor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
-            // LimitSwitchNormal.NormallyOpen);
-
-            // Initialize the NavX.
-            navX = new AHRS(SPI.Port.kMXP);
-
-            driveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary, rightMaster,
-                    rightSlavePrimary, rightSlaveSecondary, navX);
-
-            // Disable all telemetry data for the LiveWindow.
-            // This is disabled since it is extremely slow and will cause loop overrun.
-            LiveWindow.disableAllTelemetry();
-
-        } catch (Exception Ex) {
-            System.out.println("General Initialization Exception: " + Ex.getMessage());
+        // Initialize the lift motors.
+        if (isPracticeRobot) {
+            elevatorMaster = new TalonSRX(4);
+            elevatorSlaveOne = new TalonSRX(7);
+            elevatorSlaveTwo = new TalonSRX(9);
+            elevatorSlaveThree = new TalonSRX(8);
+            fourBarMotorMaster = new TalonSRX(5);
+            fourBarMotorSlave = new TalonSRX(3);
+        } else {
+            elevatorMaster = new TalonSRX(7);
+            elevatorSlaveOne = new TalonSRX(4);
+            elevatorSlaveTwo = new TalonSRX(5);
+            elevatorSlaveThree = new TalonSRX(6);
+            fourBarMotorMaster = new TalonSRX(9);
+            fourBarMotorSlave = new TalonSRX(10);
         }
+
+        // Initialize the solenoids.
+        hatchSolenoid = new Solenoid(0);
+        hatchSolenoid.set(false);
+        airBrakeSolenoid = new Solenoid(1);
+        airBrakeSolenoid.set(false);
+
+        // Create the lift helper class.
+        lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster,
+                airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280);
+
+        if (isPracticeRobot) {
+
+            // Set the PID values for the lift.
+            elevatorMaster.config_kF(0, 0.32058916);
+            elevatorMaster.config_kP(0, 1.4);
+            elevatorMaster.config_kD(0, 2.8);
+
+            // Establish the cruise velocity and max acceleration for motion magic.
+            elevatorMaster.configMotionCruiseVelocity(2900);
+            elevatorMaster.configMotionAcceleration(5200);
+
+        } else {
+
+            // Set the PID values for the lift.
+            elevatorMaster.config_kF(0, 0.32058916);
+            elevatorMaster.config_kP(0, 0.30);
+            elevatorMaster.config_kD(0, 0.60);
+
+            // Establish the cruise velocity and max acceleration for motion magic.
+            elevatorMaster.configMotionCruiseVelocity(2900);
+            elevatorMaster.configMotionAcceleration(5200);
+
+        }
+
+        // Reset the lift's encoder position.
+        elevatorMaster.setSelectedSensorPosition(0, 0, 10);
+        elevatorMaster.set(ControlMode.MotionMagic, 0);
+
+        // --------------------------------------------------------------------------------------------------------------------------------------------------
+        // Other Initialization
+        // --------------------------------------------------------------------------------------------------------------------------------------------------
+
+        // Initialize the gatherer.
+        if (isPracticeRobot) {
+            gathererMotor = new TalonSRX(6);
+        } else {
+            gathererMotor = new TalonSRX(8);
+        }
+
+        // Config Gatherer
+        gathererMotor.enableCurrentLimit(true);
+        gathererMotor.configContinuousCurrentLimit(4);
+        gathererMotor.configPeakCurrentDuration(0);
+        gathererMotor.configPeakCurrentLimit(0);
+
+        if (!isPracticeRobot) {
+            gathererMotor.setInverted(true);
+        }
+
+        // Disable all telemetry data for the LiveWindow. This is disabled since it is extremely slow and will cause loop overrun.
+        LiveWindow.disableAllTelemetry();
 
     }
 
@@ -404,10 +375,10 @@ public class Robot extends TimedRobot {
     public void Update_Limelight_Tracking() {
 
         // These numbers must be tuned for your Robot! Be careful!
-        final double STEER_K = 0.0275; // how hard to turn toward the target
-        final double DRIVE_K = 0.15; // how hard to drive fwd toward the target
-        final double DESIRED_TARGET_AREA = 6.5; // Area of the target when the robot reaches the wall
-        final double MAX_DRIVE = 1.0; // Simple speed limit so we don't drive too fast
+        final double STEER_K = 0.0275; // How hard to turn toward the target.
+        final double DRIVE_K = 0.15; // How hard to drive fwd toward the target.
+        final double DESIRED_TARGET_AREA = 6.5; // Area of the target when the robot reaches the wall.
+        final double MAX_DRIVE = 1.0; // Simple speed limit so we don't drive too fast.
 
         if (!limelightTarget) {
             m_LimelightDriveCommand = 0.0;
@@ -420,13 +391,14 @@ public class Robot extends TimedRobot {
         double steerMaxInput = 0.4;
         m_LimelightSteerCommand = Math.max(Math.min(steer_cmd, steerMaxInput), -steerMaxInput);
 
-        // try to drive forward until the target area reaches our desired area
+        // Try to drive forward until the target area reaches our desired area.
         double drive_cmd = (DESIRED_TARGET_AREA - limelightArea) * DRIVE_K;
 
-        // don't let the robot drive too fast into the goal
+        // Don't let the robot drive too fast into the goal.
         if (drive_cmd > MAX_DRIVE) {
             drive_cmd = MAX_DRIVE;
         }
+
         m_LimelightDriveCommand = drive_cmd;
     }
 }
