@@ -9,8 +9,6 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 
@@ -27,10 +25,6 @@ public class Robot extends TimedRobot {
     private CurvatureDrive driveTrain;
     private Lift lift;
     private OscSender oscSender = new OscSender();
-
-    private static final String kDefaultAuto = "Default";
-    private static final String kCustomAuto = "My Auto";
-    private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
     // Boolean that determines if we're on the practice robot, or the real robot.
     private static final boolean isPracticeRobot = true;
@@ -88,12 +82,8 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
 
-        m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-        m_chooser.addOption("My Auto", kCustomAuto);
-        SmartDashboard.putData("Auto choices", m_chooser);
-
         // Start the compressor. Toggle this value to turn the compressor off.
-        compressor.setClosedLoopControl(true);
+        compressor.setClosedLoopControl(false);
 
         // Initialize all the motor controllers.
         try {
