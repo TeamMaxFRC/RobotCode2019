@@ -22,7 +22,61 @@ import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 public class Robot extends TimedRobot {
 
     // Boolean that determines if we're on the practice robot, or the real robot.
-    private static final boolean isPracticeRobot = true;
+    static final boolean isPracticeRobot = true;
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+    // Drive Train Subsystem Initialization
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    // Create and initialize the drive motors.
+    private CANSparkMax leftMaster = new CANSparkMax(17, kBrushless);
+    private CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
+    private CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
+    private CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
+    private CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
+    private CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
+
+    // Create the NavX.
+    private AHRS navX = new AHRS(SPI.Port.kMXP);
+
+    // Helper classes.
+    private CurvatureDrive driveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary,
+            rightMaster, rightSlavePrimary, rightSlaveSecondary, navX);
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+    // Lift Subsystem Initialization
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    // Create and initialize the elevator motors.
+    private TalonSRX elevatorMaster = new TalonSRX(isPracticeRobot ? 4 : 7);
+    private TalonSRX elevatorSlaveOne = new TalonSRX(isPracticeRobot ? 7 : 4);
+    private TalonSRX elevatorSlaveTwo = new TalonSRX(isPracticeRobot ? 5 : 9);
+    private TalonSRX elevatorSlaveThree = new TalonSRX(isPracticeRobot ? 8 : 6);
+
+    // Create and initialize the four bar motors.
+    private TalonSRX fourBarMotorMaster = new TalonSRX(isPracticeRobot ? 5 : 9);
+    private TalonSRX fourBarMotorSlave = new TalonSRX(isPracticeRobot ? 3 : 10);
+
+    // Create the air brake solenoid and solenoid state
+    private Solenoid airBrakeSolenoid = new Solenoid(1);
+
+    // Create the lift helper class.
+    private Lift lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree,
+            fourBarMotorMaster, airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280);
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+    // Gatherer Subsystem Initialization
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    private TalonSRX gathererMotor;
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+    // Climber Subsystem Initialization
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+    // Vision Subsystem Initialization
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
     // Create the Limelight.
     private NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -36,29 +90,9 @@ public class Robot extends TimedRobot {
     // Variables for Limelight targeting function.
     double m_LimelightDriveCommand, m_LimelightSteerCommand;
 
-    // Create the auxiliary motors.
-    private TalonSRX elevatorMaster;
-    private TalonSRX elevatorSlaveOne;
-    private TalonSRX elevatorSlaveTwo;
-    private TalonSRX elevatorSlaveThree;
-    private TalonSRX gathererMotor;
-    private TalonSRX fourBarMotorMaster;
-    private TalonSRX fourBarMotorSlave;
-
     // Create the joysticks for the driver and the operator.
     private Joystick driverJoystick = new Joystick(0);
     private Joystick operatorJoystick = new Joystick(1);
-
-    // Create and initialize the drive motors.
-    private CANSparkMax leftMaster = new CANSparkMax(17, kBrushless);
-    private CANSparkMax leftSlavePrimary = new CANSparkMax(1, kBrushless);
-    private CANSparkMax leftSlaveSecondary = new CANSparkMax(2, kBrushless);
-    private CANSparkMax rightMaster = new CANSparkMax(13, kBrushless);
-    private CANSparkMax rightSlavePrimary = new CANSparkMax(14, kBrushless);
-    private CANSparkMax rightSlaveSecondary = new CANSparkMax(15, kBrushless);
-    
-    // Create the NavX.
-    private AHRS navX = new AHRS(SPI.Port.kMXP);
 
     // Create and initialize the compressor.
     private Compressor compressor = new Compressor(0);
@@ -68,13 +102,6 @@ public class Robot extends TimedRobot {
     private boolean previousHatchSwitchValue = false;
     private int hatchSwitchDebounceCounter = 0;
 
-    // Create the air brake solenoid and solenoid state
-    private Solenoid airBrakeSolenoid;
-
-    // Helper classes.
-    private CurvatureDrive driveTrain = new CurvatureDrive(leftMaster, leftSlavePrimary, leftSlaveSecondary, rightMaster, rightSlavePrimary, rightSlaveSecondary, navX);
-
-    private Lift lift;
     private OscSender oscSender = new OscSender();
 
     /**
@@ -86,36 +113,11 @@ public class Robot extends TimedRobot {
         // Start the compressor. Toggle this value to turn the compressor off.
         compressor.setClosedLoopControl(false);
 
-        // --------------------------------------------------------------------------------------------------------------------------------------------------
-        // Lift Motors
-        // --------------------------------------------------------------------------------------------------------------------------------------------------
-
-        // Initialize the lift motors.
-        if (isPracticeRobot) {
-            elevatorMaster = new TalonSRX(4);
-            elevatorSlaveOne = new TalonSRX(7);
-            elevatorSlaveTwo = new TalonSRX(9);
-            elevatorSlaveThree = new TalonSRX(8);
-            fourBarMotorMaster = new TalonSRX(5);
-            fourBarMotorSlave = new TalonSRX(3);
-        } else {
-            elevatorMaster = new TalonSRX(7);
-            elevatorSlaveOne = new TalonSRX(4);
-            elevatorSlaveTwo = new TalonSRX(5);
-            elevatorSlaveThree = new TalonSRX(6);
-            fourBarMotorMaster = new TalonSRX(9);
-            fourBarMotorSlave = new TalonSRX(10);
-        }
-
         // Initialize the solenoids.
         hatchSolenoid = new Solenoid(0);
         hatchSolenoid.set(false);
-        airBrakeSolenoid = new Solenoid(1);
-        airBrakeSolenoid.set(false);
 
-        // Create the lift helper class.
-        lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree, fourBarMotorMaster,
-                airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280);
+        airBrakeSolenoid.set(false);
 
         if (isPracticeRobot) {
 
@@ -166,7 +168,8 @@ public class Robot extends TimedRobot {
             gathererMotor.setInverted(true);
         }
 
-        // Disable all telemetry data for the LiveWindow. This is disabled since it is extremely slow and will cause loop overrun.
+        // Disable all telemetry data for the LiveWindow. This is disabled since it is
+        // extremely slow and will cause loop overrun.
         LiveWindow.disableAllTelemetry();
 
     }
