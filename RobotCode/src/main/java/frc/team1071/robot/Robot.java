@@ -167,13 +167,16 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-
+        
         // Update the Limelight's values.
-        limelightX = tx.getDouble(0.0);
-        limelightY = ty.getDouble(0.0);
-        limelightArea = ta.getDouble(0.0);
-        limelightTarget = tv.getDouble(0.0) >= 1.0;
-
+        try {
+            limelightX = tx.getDouble(0.0);
+            limelightY = ty.getDouble(0.0);
+            limelightArea = ta.getDouble(0.0);
+            limelightTarget = tv.getDouble(0.0) >= 1.0;
+        } catch (Exception Ex) {
+            System.out.println("Exception getting Limelight data: " + Ex);
+        }
         // Always send out error data.
         oscSender.sendOscErrorData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary,
                 rightSlaveSecondary);
@@ -187,10 +190,14 @@ public class Robot extends TimedRobot {
         // Always send out the Limelight data.
         oscSender.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
 
-        // driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble,
-        // (double)Math.abs(driverJoystick.getRawAxis(1)));
-        // driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble,
-        // (double)Math.abs(driverJoystick.getRawAxis(5)));
+        // Set the controller rumble.
+        try {
+            double rumble = .1 * Math.abs(navX.getRawAccelY() - 0.025);
+            driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, rumble);
+            driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, rumble);
+        } catch (Exception Ex) {
+            System.out.println("Exception in setting controller rumble: " + Ex);
+        }
 
         lift.LiftPeriodic();
 
