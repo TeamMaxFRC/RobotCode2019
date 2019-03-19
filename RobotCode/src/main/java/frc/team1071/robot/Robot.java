@@ -118,8 +118,6 @@ public class Robot extends TimedRobot {
         // Start the compressor. Toggle this value to turn the compressor off.
         compressor.setClosedLoopControl(false);
 
-        airBrakeSolenoid.set(false);
-
         if (isPracticeRobot) {
 
             // Set the PID values for the lift.

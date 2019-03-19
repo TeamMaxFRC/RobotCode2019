@@ -18,16 +18,8 @@ import java.net.InetAddress;
 class Lift {
 
     public enum LiftPosition {
-        ActiveGatherHatch,
-        GatheringBall,
-        GatheringHatch,
-        LowBall,
-        LowHatch,
-        MiddleBall,
-        MiddleHatch,
-        HighBall,
-        HighHatch,
-        AirBrake
+        ActiveGatherHatch, GatheringBall, GatheringHatch, LowBall, LowHatch, MiddleBall, MiddleHatch, HighBall,
+        HighHatch, AirBrake
     }
 
     private TalonSRX elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree;
@@ -74,7 +66,8 @@ class Lift {
      * @param fourBarMaster
      * @param FourBarOffset
      */
-    Lift(TalonSRX elevatorMaster, TalonSRX elevatorSlaveOne, TalonSRX elevatorSlaveTwo, TalonSRX elevatorSlaveThree, TalonSRX fourBarMaster, Solenoid airBrake, TalonSRX fourBarSlave, double FourBarOffset) {
+    Lift(TalonSRX elevatorMaster, TalonSRX elevatorSlaveOne, TalonSRX elevatorSlaveTwo, TalonSRX elevatorSlaveThree,
+            TalonSRX fourBarMaster, Solenoid airBrake, TalonSRX fourBarSlave, double FourBarOffset) {
 
         // Set the elevator talons.
         this.elevatorMaster = elevatorMaster;
@@ -91,6 +84,9 @@ class Lift {
 
         // Set the solenoid.
         this.airBrake = airBrake;
+
+        // Set the air brake to inactive.
+        airBrake.set(false);
 
         // Configure the four bar talon.
         fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
@@ -138,8 +134,8 @@ class Lift {
         ArbFFLookup.put(new InterpolatingDouble(0.37), new InterpolatingDouble(0.00));
 
         // The four bar PID.
-        fourBarMaster.configMotionAcceleration((int)FBA, 10);
-        fourBarMaster.configMotionCruiseVelocity((int)FBV, 10);
+        fourBarMaster.configMotionAcceleration((int) FBA, 10);
+        fourBarMaster.configMotionCruiseVelocity((int) FBV, 10);
         fourBarMaster.config_kP(0, FBP, 10);
         fourBarMaster.config_kI(0, FBI, 10);
         fourBarMaster.config_kD(0, FBD, 10);
@@ -164,9 +160,11 @@ class Lift {
         fourBarMaster.enableCurrentLimit(true);
 
         // Set the soft limits on the four bar motors.
-        fourBarMaster.configForwardSoftLimitThreshold((int) (this.FourBarOffset + FourBarSpread - (UpperSafetyLimitThresholdDegrees / 360 * 4096)));
+        fourBarMaster.configForwardSoftLimitThreshold(
+                (int) (this.FourBarOffset + FourBarSpread - (UpperSafetyLimitThresholdDegrees / 360 * 4096)));
         fourBarMaster.configForwardSoftLimitEnable(true);
-        fourBarMaster.configReverseSoftLimitThreshold((int) (this.FourBarOffset + (LowerSafetyLimitThresholdDegrees / 360 * 4096)));
+        fourBarMaster.configReverseSoftLimitThreshold(
+                (int) (this.FourBarOffset + (LowerSafetyLimitThresholdDegrees / 360 * 4096)));
         fourBarMaster.configReverseSoftLimitEnable(true);
 
         // Enable voltage compensation on the lift motors.
@@ -232,8 +230,7 @@ class Lift {
         if (position == LiftPosition.AirBrake) {
             AirBrakeActivated = false;
             isAirBrake = true;
-        }
-        else {
+        } else {
             isAirBrake = false;
         }
 
@@ -263,56 +260,56 @@ class Lift {
 
         switch (position) {
 
-            case ActiveGatherHatch:
-                setElevatorPosition(liftActiveGatherHatch);
-                setFourBarPositionDegrees(fourBarHatchGatheringPositionDegrees);
-                break;
+        case ActiveGatherHatch:
+            setElevatorPosition(liftActiveGatherHatch);
+            setFourBarPositionDegrees(fourBarHatchGatheringPositionDegrees);
+            break;
 
-            case HighBall:
-                setElevatorPosition(liftHighScoreBall);
-                setFourBarPositionDegrees(fourBarHighBallDegrees);
-                break;
+        case HighBall:
+            setElevatorPosition(liftHighScoreBall);
+            setFourBarPositionDegrees(fourBarHighBallDegrees);
+            break;
 
-            case HighHatch:
-                setElevatorPosition(liftHighScoreHatch);
-                setFourBarPositionDegrees(fourBarHighHatchDegrees);
-                break;
+        case HighHatch:
+            setElevatorPosition(liftHighScoreHatch);
+            setFourBarPositionDegrees(fourBarHighHatchDegrees);
+            break;
 
-            case MiddleBall:
-                setElevatorPosition(liftMiddleScoreBall);
-                setFourBarPositionDegrees(fourBarMiddleBallDegrees);
-                break;
+        case MiddleBall:
+            setElevatorPosition(liftMiddleScoreBall);
+            setFourBarPositionDegrees(fourBarMiddleBallDegrees);
+            break;
 
-            case MiddleHatch:
-                setElevatorPosition(liftMiddleScoreHatch);
-                setFourBarPositionDegrees(fourBarMiddleHatchDegrees);
-                break;
+        case MiddleHatch:
+            setElevatorPosition(liftMiddleScoreHatch);
+            setFourBarPositionDegrees(fourBarMiddleHatchDegrees);
+            break;
 
-            case LowBall:
-                setElevatorPosition(liftLowScoreBall);
-                setFourBarPositionDegrees(fourBarLowBallDegrees);
-                break;
+        case LowBall:
+            setElevatorPosition(liftLowScoreBall);
+            setFourBarPositionDegrees(fourBarLowBallDegrees);
+            break;
 
-            case LowHatch:
-                setElevatorPosition(liftLowScoreHatch);
-                setFourBarPositionDegrees(fourBarLowHatchDegrees);
-                break;
+        case LowHatch:
+            setElevatorPosition(liftLowScoreHatch);
+            setFourBarPositionDegrees(fourBarLowHatchDegrees);
+            break;
 
-            case GatheringBall:
-                setElevatorPosition(liftGatheringPositionBall);
-                setFourBarPositionDegrees(fourBarBallGatheringPositionDegrees);
-                break;
+        case GatheringBall:
+            setElevatorPosition(liftGatheringPositionBall);
+            setFourBarPositionDegrees(fourBarBallGatheringPositionDegrees);
+            break;
 
-            case AirBrake:
-                setElevatorPosition(liftGatheringPositionHatch);
-                setFourBarPositionDegrees(140);
-                break;
+        case AirBrake:
+            setElevatorPosition(liftGatheringPositionHatch);
+            setFourBarPositionDegrees(140);
+            break;
 
-            case GatheringHatch:
-            default:
-                setElevatorPosition(liftGatheringPositionHatch);
-                setFourBarPositionDegrees(fourBarHatchGatheringPositionDegrees);
-                break;
+        case GatheringHatch:
+        default:
+            setElevatorPosition(liftGatheringPositionHatch);
+            setFourBarPositionDegrees(fourBarHatchGatheringPositionDegrees);
+            break;
 
         }
 
@@ -340,38 +337,35 @@ class Lift {
         initialized = true;
     }
 
-    public void LiftInit()
-    {
+    public void LiftInit() {
         targetFourBarPosition = 0;
         updated = false;
         initialized = false;
     }
 
-
-    public void LiftPeriodic()
-    {
+    public void LiftPeriodic() {
         // Set the lift to the proper position.
         elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
         HasResetEncoder = 0;
-        if (Math.abs(fourBarMaster.getSelectedSensorPosition() - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096)) > 50)
-        {
-            ResetCounter ++;
-            if(ResetCounter > 30)
-            {
+        if (Math.abs(fourBarMaster.getSelectedSensorPosition()
+                - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096)) > 50) {
+            ResetCounter++;
+            if (ResetCounter > 30) {
                 ResetCounter = 0;
-                System.out.println("Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096 + " : " + fourBarMaster.getSelectedSensorPosition());
+                System.out.println(
+                        "Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096
+                                + " : " + fourBarMaster.getSelectedSensorPosition());
                 HasResetEncoder = 1;
-                fourBarMaster.setSelectedSensorPosition(Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
+                fourBarMaster.setSelectedSensorPosition(
+                        Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
             }
-        }
-        else
-        {
+        } else {
             ResetCounter = 0;
         }
-        //FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition() % 4096);
+        // FourBarTalon.setSelectedSensorPosition(FourBarTalon.getSensorCollection().getPulseWidthPosition()
+        // % 4096);
 
     }
-
 
     /**
      * TODO: Comment.
@@ -381,43 +375,34 @@ class Lift {
         // Set the four bar to the proper position.
         if (updated && !isFourBarFaulted() && !AirBrakeActivated) {
             updated = false;
-            fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward, getFeedForwardAmount());
-        } else if (isFourBarFaulted() || !initialized || AirBrakeActivated){
+            fourBarMaster.set(ControlMode.MotionMagic, targetFourBarPosition, DemandType.ArbitraryFeedForward,
+                    getFeedForwardAmount());
+        } else if (isFourBarFaulted() || !initialized || AirBrakeActivated) {
             fourBarMaster.set(ControlMode.PercentOutput, 0);
-            if(isFourBarFaulted())
-            {
+            if (isFourBarFaulted()) {
                 System.out.println("FourBarFaulted");
             }
         }
 
-
-
         if ((isAirBrake && getFourBarDegrees() >= 134) || AirBrakeActivated) {
-            if(AirBrakeCounter >= 20)
-            {
+            if (AirBrakeCounter >= 20) {
                 airBrake.set(false);
             }
-            if(isAirBrake)
-            {
-                if(AirBrakeCounter >= 20)
-                {
+            if (isAirBrake) {
+                if (AirBrakeCounter >= 20) {
                     AirBrakeCounter = 20;
                     AirBrakeActivated = true;
                 }
-                AirBrakeCounter ++;
-            }
-            else if (AirBrakeCounter > 0)
-            {
-                AirBrakeCounter --;
+                AirBrakeCounter++;
+            } else if (AirBrakeCounter > 0) {
+                AirBrakeCounter--;
             }
 
-            if(AirBrakeCounter == 0)
-            {
+            if (AirBrakeCounter == 0) {
                 AirBrakeActivated = false;
             }
 
-        }
-        else {
+        } else {
             airBrake.set(true);
         }
 
@@ -542,9 +527,6 @@ class Lift {
         return elevatorMaster.getSelectedSensorPosition();
     }
 
-
-
-
     /**
      * Sends drive information to be logged by the dashboard.
      */
@@ -566,17 +548,17 @@ class Lift {
         // Append the left encoder data.
         OSCMessage liftPosition = new OSCMessage();
         liftPosition.setAddress("/LiftPosition");
-        liftPosition.addArgument((double)fourBarMaster.getSelectedSensorPosition());
+        liftPosition.addArgument((double) fourBarMaster.getSelectedSensorPosition());
 
         // Append the left encoder data.
         OSCMessage liftRelative = new OSCMessage();
         liftRelative.setAddress("/LiftRelative");
-        liftRelative.addArgument((double)(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
+        liftRelative.addArgument((double) (fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
 
         // Append the right encoder data.
         OSCMessage liftVelocity = new OSCMessage();
         liftVelocity.setAddress("/LiftVelocity");
-        liftVelocity.addArgument((double)fourBarMaster.getSelectedSensorVelocity());
+        liftVelocity.addArgument((double) fourBarMaster.getSelectedSensorVelocity());
 
         OSCMessage targetFBPosition = new OSCMessage();
         targetFBPosition.setAddress("/TargetFBPosition");
@@ -584,7 +566,7 @@ class Lift {
 
         OSCMessage resetEncoder = new OSCMessage();
         resetEncoder.setAddress("/ResetEncoder");
-        resetEncoder.addArgument((double)HasResetEncoder);
+        resetEncoder.addArgument((double) HasResetEncoder);
 
         OSCMessage MasterTarget = new OSCMessage();
         MasterTarget.setAddress("/MasterTargetDuty");
@@ -620,15 +602,15 @@ class Lift {
 
         OSCMessage ClosedError = new OSCMessage();
         ClosedError.setAddress("/ClosedLoopError");
-        ClosedError.addArgument((double)fourBarMaster.getClosedLoopError());
+        ClosedError.addArgument((double) fourBarMaster.getClosedLoopError());
 
         OSCMessage TrajVelocity = new OSCMessage();
         TrajVelocity.setAddress("/ActiveTrajVel");
-        TrajVelocity.addArgument((double)fourBarMaster.getActiveTrajectoryVelocity());
+        TrajVelocity.addArgument((double) fourBarMaster.getActiveTrajectoryVelocity());
 
         OSCMessage ActiveTrajPos = new OSCMessage();
         ActiveTrajPos.setAddress("/ActiveTrajPos");
-        ActiveTrajPos.addArgument((double)fourBarMaster.getActiveTrajectoryPosition());
+        ActiveTrajPos.addArgument((double) fourBarMaster.getActiveTrajectoryPosition());
 
         // Add these packets to the bundle.
         bundle.addPacket(bundleIdentifier);
@@ -660,4 +642,3 @@ class Lift {
     }
 
 }
-
