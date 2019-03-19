@@ -68,7 +68,17 @@ public class Robot extends TimedRobot {
     // Gatherer Subsystem Initialization
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    private TalonSRX gathererMotor;
+    // Create and initialize the ball gatherer motor.
+    private TalonSRX ballIntake = new TalonSRX(isPracticeRobot ? 6 : 8);
+
+    // Create the solenoid and solenoid state for hatch gathering.
+    private Solenoid hatchSolenoid = new Solenoid(0);
+
+    private boolean previousHatchSwitchValue = false;
+    private int hatchSwitchDebounceCounter = 0;
+
+    // Create the intake subsystem.
+    private Intake intake = new Intake(ballIntake, !isPracticeRobot, hatchSolenoid);
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Climber Subsystem Initialization
@@ -97,11 +107,6 @@ public class Robot extends TimedRobot {
     // Create and initialize the compressor.
     private Compressor compressor = new Compressor(0);
 
-    // Create the solenoid and solenoid state for hatch gathering.
-    private Solenoid hatchSolenoid;
-    private boolean previousHatchSwitchValue = false;
-    private int hatchSwitchDebounceCounter = 0;
-
     private OscSender oscSender = new OscSender();
 
     /**
@@ -112,10 +117,6 @@ public class Robot extends TimedRobot {
 
         // Start the compressor. Toggle this value to turn the compressor off.
         compressor.setClosedLoopControl(false);
-
-        // Initialize the solenoids.
-        hatchSolenoid = new Solenoid(0);
-        hatchSolenoid.set(false);
 
         airBrakeSolenoid.set(false);
 
@@ -151,23 +152,6 @@ public class Robot extends TimedRobot {
         // Other Initialization
         // --------------------------------------------------------------------------------------------------------------------------------------------------
 
-        // Initialize the gatherer.
-        if (isPracticeRobot) {
-            gathererMotor = new TalonSRX(6);
-        } else {
-            gathererMotor = new TalonSRX(8);
-        }
-
-        // Config Gatherer
-        gathererMotor.enableCurrentLimit(true);
-        gathererMotor.configContinuousCurrentLimit(4);
-        gathererMotor.configPeakCurrentDuration(0);
-        gathererMotor.configPeakCurrentLimit(0);
-
-        if (!isPracticeRobot) {
-            gathererMotor.setInverted(true);
-        }
-
         // Disable all telemetry data for the LiveWindow. This is disabled since it is
         // extremely slow and will cause loop overrun.
         LiveWindow.disableAllTelemetry();
@@ -197,10 +181,10 @@ public class Robot extends TimedRobot {
                 rightSlaveSecondary);
 
         // Always send out sensor data.
-        oscSender.sendOscSensorData(driveTrain, lift, gathererMotor);
+        oscSender.sendOscSensorData(driveTrain, lift, intake);
 
         // Always send out the current data.
-        oscSender.sendOscCurrentData(driveTrain, lift, gathererMotor, compressor);
+        oscSender.sendOscCurrentData(driveTrain, lift, intake, compressor);
 
         // Always send out the Limelight data.
         oscSender.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
@@ -291,12 +275,12 @@ public class Robot extends TimedRobot {
         driveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false,
                 driverJoystick.getRawAxis(3));
 
-        // --------------------------------------------------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------------------------------------------------------------------------
         // Operator Controls
-        // --------------------------------------------------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------------------------------------------------------------------------
         try {
 
-            // When buttons are pressed on the stream deck, set lift to hatch positions.
+            // Only run the operator controls when not in vision tracking mode.
             if (!driverJoystick.getRawButton(5)) {
 
                 // Set lift position based on the button pressed on the stream deck.
@@ -320,17 +304,17 @@ public class Robot extends TimedRobot {
                     lift.setLiftPosition(Lift.LiftPosition.AirBrake);
                 }
 
-                // Run the ball gatherer.
+                // Set the percent output for the ball gatherer.
                 if (operatorJoystick.getRawButton(6)) {
-                    gathererMotor.set(ControlMode.PercentOutput, 0.75);
+                    intake.setBallIntakePower(1.0);
                 } else if (operatorJoystick.getRawButton(7)) {
-                    gathererMotor.set(ControlMode.PercentOutput, -1.0);
+                    intake.setBallIntakePower(-1.0);
                 } else {
-                    gathererMotor.set(ControlMode.PercentOutput, .1);
+                    intake.setBallIntakePower(0.2);
                 }
 
                 // Detect the current state of the magnetic limit switch.
-                boolean currentSwitchState = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed();
+                boolean currentSwitchState = intake.getHatchLimitSwitch();
 
                 // Actuate the solenoid depending on the user button press and the magnetic
                 // switch.
@@ -356,7 +340,8 @@ public class Robot extends TimedRobot {
 
             }
 
-            // Run the lift.
+            // Run the various subsystems.
+            intake.runIntake();
             lift.runLift();
 
         } catch (Exception Ex) {

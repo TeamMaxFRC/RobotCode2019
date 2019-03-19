@@ -36,12 +36,8 @@ class OscSender {
     /**
      * Pools together the error data and sends it to the dashboard.
      */
-    void sendOscErrorData(CANSparkMax leftMaster,
-                          CANSparkMax rightMaster,
-                          CANSparkMax leftSlavePrimary,
-                          CANSparkMax rightSlavePrimary,
-                          CANSparkMax leftSlaveSecondary,
-                          CANSparkMax rightSlaveSecondary) {
+    void sendOscErrorData(CANSparkMax leftMaster, CANSparkMax rightMaster, CANSparkMax leftSlavePrimary,
+            CANSparkMax rightSlavePrimary, CANSparkMax leftSlaveSecondary, CANSparkMax rightSlaveSecondary) {
 
         // Variable for converting Spark MAX faults.
         short faultShort;
@@ -185,13 +181,16 @@ class OscSender {
     }
 
     /**
-     * Pools together the current data for each subsystem and sends it to the dashboard.
-     * @param driveTrain Drive train class, which contains all the drive motors.
-     * @param lift Lift class, which contains the elevator and four bar motors.
+     * Pools together the current data for each subsystem and sends it to the
+     * dashboard.
+     * 
+     * @param driveTrain    Drive train class, which contains all the drive motors.
+     * @param lift          Lift class, which contains the elevator and four bar
+     *                      motors.
      * @param gathererMotor Gatherer motor instance.
-     * @param compressor Compressor instance.
+     * @param compressor    Compressor instance.
      */
-    void sendOscCurrentData(CurvatureDrive driveTrain, Lift lift, TalonSRX gathererMotor, Compressor compressor) {
+    void sendOscCurrentData(CurvatureDrive driveTrain, Lift lift, Intake intake, Compressor compressor) {
 
         // Create an OSC bundle.
         OSCBundle bundle = new OSCBundle();
@@ -220,7 +219,7 @@ class OscSender {
         // Append the current for the gatherer motor.
         OSCMessage gathererCurrent = new OSCMessage();
         gathererCurrent.setAddress("/GathererCurrent");
-        gathererCurrent.addArgument(gathererMotor.getOutputCurrent());
+        gathererCurrent.addArgument(intake.getCurrent());
 
         // Append the current for the compressor.
         OSCMessage compressorCurrent = new OSCMessage();
@@ -244,7 +243,7 @@ class OscSender {
         }
     }
 
-    void sendOscSensorData(CurvatureDrive driveTrain, Lift lift, TalonSRX gathererMotor) {
+    void sendOscSensorData(CurvatureDrive driveTrain, Lift lift, Intake intake) {
 
         // Create an OSC bundle for encoder velocities.
         OSCBundle bundle = new OSCBundle();
@@ -278,7 +277,7 @@ class OscSender {
 
         OSCMessage magneticGatherPosition = new OSCMessage();
         magneticGatherPosition.setAddress("/MagneticGatherEncoder");
-        convertedBoolean = gathererMotor.getSensorCollection().isFwdLimitSwitchClosed() ? 1 : 0;
+        convertedBoolean = intake.getHatchLimitSwitch() ? 1 : 0;
         magneticGatherPosition.addArgument(convertedBoolean);
 
         // Four bar relative encoder position.
@@ -340,7 +339,7 @@ class OscSender {
         // Create an OSC bundle.
         OSCBundle bundle = new OSCBundle();
 
-        // Append an identifier  for the bundle
+        // Append an identifier for the bundle
         OSCMessage bundleIdentifier = new OSCMessage();
         bundleIdentifier.setAddress("/BundleIdentifier");
         bundleIdentifier.addArgument("ControllerDataBundle");
