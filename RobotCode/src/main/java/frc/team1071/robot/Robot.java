@@ -84,6 +84,18 @@ public class Robot extends TimedRobot {
     // Climber Subsystem Initialization
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+    // Create and initialize the winch and climber wheels.
+    // TODO: Determine the proper IDs for the talons.
+    private TalonSRX winch = new TalonSRX(isPracticeRobot ? 10 : 3);
+    private TalonSRX climberWheels = new TalonSRX(isPracticeRobot ? 12 : 12);
+
+    // Create and initialize the solenoids for the climber pistons.
+    private Solenoid leftClimberPiston = new Solenoid(2);
+    private Solenoid rightClimberPiston = new Solenoid(3);
+
+    // Create the climber subsystem.
+    private Climber climber = new Climber(winch, climberWheels, leftClimberPiston, rightClimberPiston, navX);
+
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Vision Subsystem Initialization
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -167,7 +179,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-        
+
         // Update the Limelight's values.
         try {
             limelightX = tx.getDouble(0.0);
@@ -192,7 +204,7 @@ public class Robot extends TimedRobot {
 
         // Set the controller rumble.
         try {
-            double rumble = .1 * Math.abs(navX.getRawAccelY() - 0.025);
+            double rumble = .2 * Math.abs(navX.getRawAccelY() - 0.025);
             driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, rumble);
             driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, rumble);
         } catch (Exception Ex) {
@@ -200,7 +212,6 @@ public class Robot extends TimedRobot {
         }
 
         lift.LiftPeriodic();
-
     }
 
     /**
@@ -275,6 +286,9 @@ public class Robot extends TimedRobot {
 
         }
 
+        // TODO: Delete after testing the climber.
+        winch.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(3));
+
         // driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0);
         // driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, 1.0);
         driveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false,
@@ -318,6 +332,16 @@ public class Robot extends TimedRobot {
                     intake.setBallIntakePower(0.2);
                 }
 
+                // Start the climber.
+                if (operatorJoystick.getRawButton(2)) {
+                    climber.startClimber();
+                } else if (operatorJoystick.getRawButtonReleased(1)) {
+                    climber.advanceStage();
+                }
+
+                // Run the climber.
+                climber.runClimber();
+
                 // Detect the current state of the magnetic limit switch.
                 boolean currentSwitchState = intake.getHatchLimitSwitch();
 
@@ -343,13 +367,14 @@ public class Robot extends TimedRobot {
                 // Store the last magnetic switch value.
                 previousHatchSwitchValue = currentSwitchState;
 
+                // Run the various subsystems.
+                intake.runIntake();
+                lift.runLift();
             }
 
-            // Run the various subsystems.
-            intake.runIntake();
-            lift.runLift();
+        } catch (
 
-        } catch (Exception Ex) {
+        Exception Ex) {
             System.out.println("Exception in operator controls! " + Ex.getMessage());
         }
 
