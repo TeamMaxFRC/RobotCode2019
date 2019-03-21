@@ -35,7 +35,7 @@ class Intake {
 
         // Limit the ball intake's current.
         ballIntake.enableCurrentLimit(true);
-        ballIntake.configContinuousCurrentLimit(4);
+        ballIntake.configContinuousCurrentLimit(10);
         ballIntake.configPeakCurrentDuration(0);
         ballIntake.configPeakCurrentLimit(0);
 
