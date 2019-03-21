@@ -1,4 +1,4 @@
-package frc.team1071.robot;
+ package frc.team1071.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -383,6 +383,26 @@ public class Robot extends TimedRobot {
     // This function is called periodically during test mode.
     @Override
     public void testPeriodic() {
+            lift.setLiftPosition(Lift.LiftPosition.LowHatch);
+            lift.setLiftPosition(Lift.LiftPosition.LowBall);
+            lift.setLiftPosition(Lift.LiftPosition.MiddleHatch);
+            lift.setLiftPosition(Lift.LiftPosition.MiddleBall);
+            lift.setLiftPosition(Lift.LiftPosition.AirBrake);
+
+        //     // Four bar positions in degrees.
+        // double fourBarHatchGatheringPositionDegrees = 22;
+        // double fourBarHighBallDegrees = 110;
+        // double fourBarLowHatchDegrees = 45;
+        // double fourBarMiddleHatchDegrees = 40;
+        // double fourBarHighHatchDegrees = 50;
+
+        // // Elevator set positions.
+        // int liftGatheringPositionBall = 6500;
+        // int liftMiddleScoreBall = 13000;
+        // int liftLowScoreHatch = 0;
+        // int liftMiddleScoreHatch = 15000;
+        // int liftHighScoreHatch = 25500;
+        // int liftActiveGatherHatch = 4500;
 
     }
 
