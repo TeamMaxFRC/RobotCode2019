@@ -182,7 +182,7 @@ public class Robot extends TimedRobot {
             SendPeriodicOscData();
         };
 
-        backgroundTask = new Task(20.0, taskFunction);
+        backgroundTask = new Task(.05, taskFunction);
     }
 
     public void SendPeriodicOscData() 
