@@ -33,7 +33,8 @@ class Climber {
     private static final double offset = -15;
 
     // Boolean that tracks if the climber is running.
-    private boolean climberRunning = false, resetWinch = false;
+    boolean climberRunning = false;
+    private boolean resetWinch = false;
     private int stage = 0;
     private Timer winchTimer = new Timer();
     public double driveWheels = 0.0;

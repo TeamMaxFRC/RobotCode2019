@@ -1,9 +1,10 @@
- package frc.team1071.robot;
+package frc.team1071.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
+
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -99,7 +100,8 @@ public class Robot extends TimedRobot {
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Testing Subsystem Initialization
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
-    
+    private Timer testTimer = new Timer();
+    int testStage = 0;
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Vision Subsystem Initialization
@@ -133,7 +135,7 @@ public class Robot extends TimedRobot {
     public void robotInit() {
 
         // Start the compressor. Toggle this value to turn the compressor off.
-        compressor.setClosedLoopControl(false);
+        compressor.setClosedLoopControl(true);
 
         if (isPracticeRobot) {
 
@@ -301,7 +303,7 @@ public class Robot extends TimedRobot {
         }
 
         // TODO: Delete after testing the climber.
-        //winch.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(3));
+        // winch.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(3));
 
         driveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false,
                 driverJoystick.getRawAxis(3));
@@ -394,14 +396,36 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testInit() {
-
+        teleopInit();
+        testStage = 0;
+        testTimer.reset();
+        testTimer.start();
     }
 
     // This function is called periodically during test mode.
     @Override
-    public void testPeriodic() 
-    {
-        // lift.setLiftPosition(Lift.LiftPosition.LowHatch);
+    public void testPeriodic() {
+        // Update the timer.
+        var elapsedTime = testTimer.get();
+        System.out.println(elapsedTime);
+        String stageName = "";
+
+        // Attempt to run the test procedure.
+        try {
+            if (testStage >= 0) {
+                switch (testStage) {
+                case 0:
+                    stageName = "Shweem";
+                    break;
+                default:
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            oscSender.writeConsole("Exception in " + stageName + ": " + e.toString());
+            oscSender.writeConsole("Stopping test procedure.");
+            testStage = -1;
+        }
     }
 
     /**
