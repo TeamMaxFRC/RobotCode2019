@@ -376,7 +376,7 @@ public class Robot extends TimedRobot {
                 // Actuate the solenoid depending on the user button press and the magnetic
                 // switch.
                 if (operatorJoystick.getRawButtonPressed(11)) {
-                    hatchSolenoid.set(!hatchSolenoid.get());
+                    hatchSolenoid.set(true);
                     hatchSwitchDebounceCounter = 40;
                 } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue
                         && hatchSolenoid.get()) {
