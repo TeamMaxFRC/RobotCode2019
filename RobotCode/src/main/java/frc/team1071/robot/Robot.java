@@ -11,6 +11,9 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
+import frc.team1071.lib.Task;
+import java.util.function.Consumer;
+
 import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 
 /**
@@ -115,6 +118,7 @@ public class Robot extends TimedRobot {
     private NetworkTableEntry tv = table.getEntry("tv");
     private double limelightX, limelightY, limelightArea;
     private boolean limelightTarget;
+    private Task backgroundTask;
 
     // Variables for Limelight targeting function.
     double m_LimelightDriveCommand, m_LimelightSteerCommand;
@@ -173,6 +177,28 @@ public class Robot extends TimedRobot {
         // extremely slow and will cause loop overrun.
         LiveWindow.disableAllTelemetry();
 
+        Consumer<Void> taskFunction = (t) -> 
+        {
+            SendPeriodicOscData();
+        };
+
+        backgroundTask = new Task(20.0, taskFunction);
+    }
+
+    public void SendPeriodicOscData() 
+    {
+        // Always send out error data.
+        oscSender.sendOscErrorData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary,
+                rightSlaveSecondary);
+
+        // Always send out sensor data.
+        oscSender.sendOscSensorData(driveTrain, lift, intake);
+
+        // Always send out the current data.
+        oscSender.sendOscCurrentData(driveTrain, lift, intake, compressor);
+
+        // Always send out the Limelight data.
+        oscSender.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
     }
 
     /**
@@ -196,18 +222,6 @@ public class Robot extends TimedRobot {
         } catch (Exception Ex) {
             System.out.println("Exception getting Limelight data: " + Ex);
         }
-        // Always send out error data.
-        oscSender.sendOscErrorData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary,
-                rightSlaveSecondary);
-
-        // Always send out sensor data.
-        oscSender.sendOscSensorData(driveTrain, lift, intake);
-
-        // Always send out the current data.
-        oscSender.sendOscCurrentData(driveTrain, lift, intake, compressor);
-
-        // Always send out the Limelight data.
-        oscSender.sendOscLimelightData(limelightX, limelightY, limelightArea, limelightTarget);
 
         // Set the controller rumble.
         try {
