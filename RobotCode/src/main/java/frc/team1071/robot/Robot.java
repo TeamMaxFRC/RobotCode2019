@@ -376,18 +376,13 @@ public class Robot extends TimedRobot {
                 // Actuate the solenoid depending on the user button press and the magnetic
                 // switch.
                 if (operatorJoystick.getRawButtonPressed(11)) {
-                    hatchSolenoid.set(true);
+                    hatchSolenoid.set(!hatchSolenoid.get());
                     hatchSwitchDebounceCounter = 40;
-
-                } else if (operatorJoystick.getRawButtonPressed(12)) {
-                    hatchSolenoid.set(false);
-                    hatchSwitchDebounceCounter = 40;
-
                 } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue
                         && hatchSolenoid.get()) {
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
-                } else if (operatorJoystick.getRawButton(1)) {
+                } else if (operatorJoystick.getRawButton(12)) {
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 }
