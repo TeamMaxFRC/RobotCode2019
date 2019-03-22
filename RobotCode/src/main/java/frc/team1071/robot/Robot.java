@@ -22,7 +22,7 @@ import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 public class Robot extends TimedRobot {
 
     // Boolean that determines if we're on the practice robot, or the real robot.
-    static final boolean isPracticeRobot = true;
+    static final boolean isPracticeRobot = false;
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Drive Train Subsystem Initialization
@@ -95,6 +95,11 @@ public class Robot extends TimedRobot {
 
     // Create the climber subsystem.
     private Climber climber = new Climber(winch, climberWheels, leftClimberPiston, rightClimberPiston, navX);
+
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+    // Testing Subsystem Initialization
+    // ---------------------------------------------------------------------------------------------------------------------------------------------------------
+    
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Vision Subsystem Initialization
@@ -249,6 +254,11 @@ public class Robot extends TimedRobot {
         oscSender.writeConsole("Robot has enabled!");
 
         lift.LiftInit();
+
+        // Disable climbing mode if it's enabled.
+        if (climber.climberRunning) {
+            climber.toggleClimber();
+        }
     }
 
     /**
@@ -281,16 +291,18 @@ public class Robot extends TimedRobot {
         } else {
 
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(0);
-            driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
-            driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
-
+            if (Math.abs(climber.driveWheels) > 0.0) {
+                driverVertical = Math.abs(climber.driveWheels) * 0.75;
+                driverTwist = 0.0;
+            } else {
+                driverVertical = QuickMaths.normalizeJoystickWithDeadband(-driverJoystick.getRawAxis(1), 0.05);
+                driverTwist = QuickMaths.normalizeJoystickWithDeadband(driverJoystick.getRawAxis(4), 0.05);
+            }
         }
 
         // TODO: Delete after testing the climber.
-        winch.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(3));
+        //winch.set(ControlMode.PercentOutput, driverJoystick.getRawAxis(3));
 
-        // driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0);
-        // driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, 1.0);
         driveTrain.Run(driverVertical, driverTwist, driverJoystick.getRawButton(6), false,
                 driverJoystick.getRawAxis(3));
 
@@ -332,10 +344,10 @@ public class Robot extends TimedRobot {
                     intake.setBallIntakePower(0.2);
                 }
 
-                // Start the climber.
-                if (operatorJoystick.getRawButton(2)) {
-                    climber.startClimber();
-                } else if (operatorJoystick.getRawButtonReleased(1)) {
+                // Update the state of the climber.
+                if (operatorJoystick.getRawButtonPressed(2)) {
+                    climber.toggleClimber();
+                } else if (operatorJoystick.getRawButtonPressed(1)) {
                     climber.advanceStage();
                 }
 
@@ -380,12 +392,16 @@ public class Robot extends TimedRobot {
 
     }
 
+    @Override
+    public void testInit() {
+
+    }
+
     // This function is called periodically during test mode.
     @Override
     public void testPeriodic() 
     {
-            lift.setLiftPosition(Lift.LiftPosition.LowHatch);
-
+        // lift.setLiftPosition(Lift.LiftPosition.LowHatch);
     }
 
     /**

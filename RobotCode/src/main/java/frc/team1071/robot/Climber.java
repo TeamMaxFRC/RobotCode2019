@@ -8,6 +8,7 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.PIDSubsystem;
 
 class Climber {
@@ -27,13 +28,15 @@ class Climber {
     PIDController climberPID;
 
     // PID constant values.
-    private static final double configP = .3;
+    private static final double configP = 0.2;
     private static final double configD = 0.0;
-    private static final double offset = 0;
+    private static final double offset = -15;
 
     // Boolean that tracks if the climber is running.
-    private boolean climberRunning = false;
+    private boolean climberRunning = false, resetWinch = false;
     private int stage = 0;
+    private Timer winchTimer = new Timer();
+    public double driveWheels = 0.0;
 
     /**
      * Initializes the climber,.
@@ -62,17 +65,28 @@ class Climber {
     /**
      * Starts running the climber pistons.
      */
-    void startClimber() {
+    void toggleClimber() {
+        if (climberRunning && !resetWinch) {
+            // Reset the pistons.
+            leftPiston.set(false);
+            rightPiston.set(false);
 
-        // Actuate the pistons.
-        leftPiston.set(true);
-        rightPiston.set(true);
+            // Mark the climber as not running.
+            climberRunning = false;
+            resetWinch = true;
+            // Start the time for the winch reset.
+            winchTimer.reset();
+            winchTimer.start();
+        } else {
+            // Actuate the pistons.
+            leftPiston.set(true);
+            rightPiston.set(true);
 
-        // Mark the climber as running.
-        climberRunning = true;
-        stage = 0;
-
-    }
+            // Mark the climber as running.
+            climberRunning = true;
+            stage = 0;
+        }
+    }  
 
     void advanceStage() {
         if (climberRunning) {
@@ -97,31 +111,36 @@ class Climber {
                 // winch.set(ControlMode.PercentOutput, configP * navX.getRawGyroY());
                 break;
             case 1:
-                winch.set(ControlMode.PercentOutput, 0.0);
-                climberWheels.set(ControlMode.PercentOutput, 0.75);
+                driveWheels = 0.75;
                 break;
             case 2:
-                climberWheels.set(ControlMode.PercentOutput, 0.0);
+                driveWheels = 0.0;
                 leftPiston.set(false);
                 rightPiston.set(false);
                 break;
             case 3:
-                climberWheels.set(ControlMode.PercentOutput, 0.75);
+                driveWheels = 0.75;
                 break;
             case 4:
-                climberWheels.set(ControlMode.PercentOutput, 0.0);
-                winch.set(ControlMode.PercentOutput, -0.5);
+                driveWheels = 0.0;
+                motorValue = -0.5;
                 break;
             case 5:
             default:
-                winch.set(ControlMode.PercentOutput, 0.0);
+                motorValue = 0;
                 climberRunning = false;
                 stage = 0;
                 break;
             }
             winch.set(ControlMode.PercentOutput, motorValue);
             System.out.println("Stage: " + stage + " Roll: " + navX.getRoll() + " Values: " + motorValue);
-
+        } else if (resetWinch) {
+            if (winchTimer.get() > 2000) {
+                winch.set(ControlMode.PercentOutput, 0.0);
+                resetWinch = false;
+            } else {
+                winch.set(ControlMode.PercentOutput, -0.7);
+            }
         } else {
             winch.set(ControlMode.PercentOutput, 0);
             climberWheels.set(ControlMode.PercentOutput, 0);
