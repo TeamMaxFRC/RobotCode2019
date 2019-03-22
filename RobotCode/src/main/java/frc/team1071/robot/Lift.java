@@ -90,8 +90,9 @@ class Lift {
 
         // Configure the four bar talon.
         fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-        fourBarMaster.setInverted(true);
+        fourBarMaster.setInverted(false);
         fourBarMaster.setSensorPhase(true);
+        fourBarSlave.setInverted(true);
 
         // The arbitrary feed forward look up table.
         ArbFFLookup.put(new InterpolatingDouble(0.00), new InterpolatingDouble(0.00));
@@ -186,7 +187,6 @@ class Lift {
 
         // Have the four bar slave follow the master.
         fourBarSlave.follow(fourBarMaster);
-        fourBarSlave.setInverted(false);
 
         // Invert the lift motors.
         elevatorMaster.setInverted(true);
