@@ -90,8 +90,8 @@ class Lift {
 
         // Configure the four bar talon.
         fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-        fourBarMaster.setInverted(true);
-        fourBarMaster.setSensorPhase(true);
+        fourBarMaster.setInverted(false);
+        fourBarMaster.setSensorPhase(false);
         fourBarSlave.setInverted(true);
 
         // The arbitrary feed forward look up table.
