@@ -34,7 +34,7 @@ class Climber {
 
     // Boolean that tracks if the climber is running.
     boolean climberRunning = false;
-    private boolean resetWinch = false;
+    private boolean resetWinch = true;
     private int stage = 0;
     private Timer winchTimer = new Timer();
     public double driveWheels = 0.0;
@@ -67,7 +67,7 @@ class Climber {
      * Starts running the climber pistons.
      */
     void toggleClimber() {
-        if (climberRunning && !resetWinch) {
+        if (!climberRunning && resetWinch) {
             // Reset the pistons.
             leftPiston.set(false);
             rightPiston.set(false);
@@ -99,7 +99,10 @@ class Climber {
      * Runs the climber, trying to maintain a Y value of 0.
      */
     void runClimber() {
-
+        if (!climberRunning) {
+            leftPiston.set(false);
+            rightPiston.set(false);
+        }
         // Check if the climber is running.
         if (climberRunning) {
             double motorValue = 0;
@@ -137,7 +140,7 @@ class Climber {
             System.out.println("Stage: " + stage + " Roll: " + navX.getRoll() + " Values: " + motorValue);
         } else if (resetWinch) {
             if (winchTimer.get() > 2000) {
-                winch.set(ControlMode.PercentOutput, 0.0);
+                //winch.set(ControlMode.PercentOutput, 0.0);
                 resetWinch = false;
             } else {
                 winch.set(ControlMode.PercentOutput, -0.7);

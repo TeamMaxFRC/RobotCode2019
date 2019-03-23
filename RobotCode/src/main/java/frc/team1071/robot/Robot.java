@@ -53,9 +53,9 @@ public class Robot extends TimedRobot {
 
     // Create and initialize the elevator motors.
     private TalonSRX elevatorMaster = new TalonSRX(isPracticeRobot ? 4 : 7);
-    private TalonSRX elevatorSlaveOne = new TalonSRX(isPracticeRobot ? 7 : 4);
-    private TalonSRX elevatorSlaveTwo = new TalonSRX(isPracticeRobot ? 5 : 9);
-    private TalonSRX elevatorSlaveThree = new TalonSRX(isPracticeRobot ? 8 : 6);
+    private TalonSRX elevatorSlaveOne = new TalonSRX(isPracticeRobot ? 7 : 6);
+    private TalonSRX elevatorSlaveTwo = new TalonSRX(isPracticeRobot ? 5 : 5);
+    private TalonSRX elevatorSlaveThree = new TalonSRX(isPracticeRobot ? 8 : 4);
 
     // Create and initialize the four bar motors.
     private TalonSRX fourBarMotorMaster = new TalonSRX(isPracticeRobot ? 5 : 9);

@@ -49,10 +49,10 @@ class Lift {
     private int HasResetEncoder = 0;
     private int ResetCounter = 0;
 
-    private double FBP = 1.5;
+    private double FBP = 1.9;
     private double FBI = 0;
     private double FBD = 3.0;
-    private double FBF = .6;
+    private double FBF = .8;
     private double FBV = 200;
     private double FBA = 500;
 
@@ -90,7 +90,7 @@ class Lift {
 
         // Configure the four bar talon.
         fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-        fourBarMaster.setInverted(false);
+        fourBarMaster.setInverted(true);
         fourBarMaster.setSensorPhase(true);
         fourBarSlave.setInverted(true);
 
@@ -242,9 +242,9 @@ class Lift {
         double fourBarMiddleBallDegrees = 110;
         double fourBarHighBallDegrees = 110;
 
-        double fourBarLowHatchDegrees = 45;
-        double fourBarMiddleHatchDegrees = 40;
-        double fourBarHighHatchDegrees = 50;
+        double fourBarLowHatchDegrees = 22;
+        double fourBarMiddleHatchDegrees = 22;
+        double fourBarHighHatchDegrees = 110;
 
         // Elevator set positions.
         int liftGatheringPositionBall = 6500;
@@ -253,9 +253,9 @@ class Lift {
         int liftHighScoreBall = 25500;
 
         int liftGatheringPositionHatch = 0;
-        int liftLowScoreHatch = 0;
-        int liftMiddleScoreHatch = 15000;
-        int liftHighScoreHatch = 25500;
+        int liftLowScoreHatch = 2000;
+        int liftMiddleScoreHatch = 17500;
+        int liftHighScoreHatch = 21000;
         int liftActiveGatherHatch = 4500;
 
         switch (position) {
@@ -302,7 +302,7 @@ class Lift {
 
         case AirBrake:
             setElevatorPosition(liftGatheringPositionHatch);
-            setFourBarPositionDegrees(140);
+            setFourBarPositionDegrees(160);
             break;
 
         case GatheringHatch:
