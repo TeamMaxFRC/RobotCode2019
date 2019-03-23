@@ -63,18 +63,22 @@ class Climber {
 
     }
 
+    void climberInit() {
+        climberRunning = false;
+    }
+
     /**
      * Starts running the climber pistons.
      */
     void toggleClimber() {
-        if (!climberRunning && resetWinch) {
+        if (!climberRunning) {
             // Reset the pistons.
             leftPiston.set(false);
             rightPiston.set(false);
 
             // Mark the climber as not running.
             climberRunning = false;
-            resetWinch = true;
+
             // Start the time for the winch reset.
             winchTimer.reset();
             winchTimer.start();
@@ -99,12 +103,13 @@ class Climber {
      * Runs the climber, trying to maintain a Y value of 0.
      */
     void runClimber() {
+
+        // If the climber isn't running, retract the pistons and stop the lift.
         if (!climberRunning) {
             leftPiston.set(false);
             rightPiston.set(false);
-        }
-        // Check if the climber is running.
-        if (climberRunning) {
+            winch.set(ControlMode.PercentOutput, 0.0);
+        } else {
             double motorValue = 0;
             switch (stage) {
             case 0:
@@ -112,10 +117,10 @@ class Climber {
                 motorValue = configP * (navX.getRoll() - offset);
 
                 // Set the winch output to the PID value.
-                // winch.set(ControlMode.PercentOutput, configP * navX.getRawGyroY());
+                //winch.set(ControlMode.PercentOutput, configP * navX.getRawGyroY());
                 break;
             case 1:
-                driveWheels = 0.75;
+                driveWheels = 0.2;
                 break;
             case 2:
                 driveWheels = 0.0;
@@ -123,7 +128,7 @@ class Climber {
                 rightPiston.set(false);
                 break;
             case 3:
-                driveWheels = 0.75;
+                driveWheels = 0.2;
                 break;
             case 4:
                 driveWheels = 0.0;
@@ -138,16 +143,6 @@ class Climber {
             }
             winch.set(ControlMode.PercentOutput, motorValue);
             System.out.println("Stage: " + stage + " Roll: " + navX.getRoll() + " Values: " + motorValue);
-        } else if (resetWinch) {
-            if (winchTimer.get() > 2000) {
-                //winch.set(ControlMode.PercentOutput, 0.0);
-                resetWinch = false;
-            } else {
-                winch.set(ControlMode.PercentOutput, -0.7);
-            }
-        } else {
-            winch.set(ControlMode.PercentOutput, 0);
-            climberWheels.set(ControlMode.PercentOutput, 0);
         }
 
     }

@@ -272,9 +272,7 @@ public class Robot extends TimedRobot {
         lift.LiftInit();
 
         // Disable climbing mode if it's enabled.
-        if (climber.climberRunning) {
-            climber.toggleClimber();
-        }
+        climber.climberInit();
     }
 
     /**
@@ -368,7 +366,7 @@ public class Robot extends TimedRobot {
                 }
 
                 // Run the climber.
-                climber.runClimber();
+                //climber.runClimber();
 
                 // Detect the current state of the magnetic limit switch.
                 boolean currentSwitchState = intake.getHatchLimitSwitch();
