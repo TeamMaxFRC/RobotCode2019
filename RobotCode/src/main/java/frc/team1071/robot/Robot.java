@@ -226,8 +226,8 @@ public class Robot extends TimedRobot {
         // Set the controller rumble.
         try {
             double rumble = .2 * Math.abs(navX.getRawAccelY() - 0.025);
-            driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, rumble);
-            driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, rumble);
+            //driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, rumble);
+            //driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, rumble);
         } catch (Exception Ex) {
             System.out.println("Exception in setting controller rumble: " + Ex);
         }
