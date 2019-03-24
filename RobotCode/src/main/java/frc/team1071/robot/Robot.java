@@ -177,16 +177,14 @@ public class Robot extends TimedRobot {
         // extremely slow and will cause loop overrun.
         LiveWindow.disableAllTelemetry();
 
-        Consumer<Void> taskFunction = (t) -> 
-        {
+        Consumer<Void> taskFunction = (t) -> {
             SendPeriodicOscData();
         };
 
         backgroundTask = new Task(.05, taskFunction);
     }
 
-    public void SendPeriodicOscData() 
-    {
+    public void SendPeriodicOscData() {
         // Always send out error data.
         oscSender.sendOscErrorData(leftMaster, rightMaster, leftSlavePrimary, rightSlavePrimary, leftSlaveSecondary,
                 rightSlaveSecondary);
@@ -226,8 +224,8 @@ public class Robot extends TimedRobot {
         // Set the controller rumble.
         try {
             double rumble = .2 * Math.abs(navX.getRawAccelY() - 0.025);
-            //driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, rumble);
-            //driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, rumble);
+            // driverJoystick.setRumble(GenericHID.RumbleType.kLeftRumble, rumble);
+            // driverJoystick.setRumble(GenericHID.RumbleType.kRightRumble, rumble);
         } catch (Exception Ex) {
             System.out.println("Exception in setting controller rumble: " + Ex);
         }
@@ -249,7 +247,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousInit() {
-
+        teleopInit();
     }
 
     /**
@@ -366,7 +364,7 @@ public class Robot extends TimedRobot {
                 }
 
                 // Run the climber.
-                //climber.runClimber();
+                climber.runClimber();
 
                 // Detect the current state of the magnetic limit switch.
                 boolean currentSwitchState = intake.getHatchLimitSwitch();

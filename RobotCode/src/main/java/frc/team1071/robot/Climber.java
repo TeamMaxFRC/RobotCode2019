@@ -28,9 +28,9 @@ class Climber {
     PIDController climberPID;
 
     // PID constant values.
-    private static final double configP = 0.2;
+    private static final double configP = 0.1;
     private static final double configD = 0.0;
-    private static final double offset = -15;
+    private static final double offset = -10;
 
     // Boolean that tracks if the climber is running.
     boolean climberRunning = false;
@@ -55,12 +55,12 @@ class Climber {
 
         // Enable power compensation for the winch motor.
         winch.enableVoltageCompensation(true);
-        winch.setInverted(false);
+        winch.setInverted(true);
+        winch.configContinuousCurrentLimit(30);
 
         // Default the pistons to the closed state.
         leftPiston.set(false);
         rightPiston.set(false);
-
     }
 
     void climberInit() {
@@ -71,13 +71,14 @@ class Climber {
      * Starts running the climber pistons.
      */
     void toggleClimber() {
-        if (!climberRunning) {
+        if (climberRunning) {
             // Reset the pistons.
             leftPiston.set(false);
             rightPiston.set(false);
 
             // Mark the climber as not running.
             climberRunning = false;
+            climberWheels.set(ControlMode.PercentOutput, 0.0);
 
             // Start the time for the winch reset.
             winchTimer.reset();
@@ -91,7 +92,7 @@ class Climber {
             climberRunning = true;
             stage = 0;
         }
-    }  
+    }
 
     void advanceStage() {
         if (climberRunning) {
@@ -106,43 +107,51 @@ class Climber {
 
         // If the climber isn't running, retract the pistons and stop the lift.
         if (!climberRunning) {
+
             leftPiston.set(false);
             rightPiston.set(false);
             winch.set(ControlMode.PercentOutput, 0.0);
-        } else {
-            double motorValue = 0;
-            switch (stage) {
-            case 0:
-                // Print the value the motor would be set to.
-                motorValue = configP * (navX.getRoll() - offset);
 
-                // Set the winch output to the PID value.
-                //winch.set(ControlMode.PercentOutput, configP * navX.getRawGyroY());
+        } else {
+
+            // Variable for the output power of the winch.
+            double winchOutput = 0;
+
+            // This state machine proceeds through the steps of climbing.
+            switch (stage) {
+
+            // Just let the pistons go up in the first stage.
+            case 0:
                 break;
+
+            // Run the winch down and drive the wheels.
             case 1:
-                driveWheels = 0.2;
+                driveWheels = 0.5;
+                winchOutput = -1.0;
                 break;
+            // Pull the pistons up.
             case 2:
-                driveWheels = 0.0;
                 leftPiston.set(false);
                 rightPiston.set(false);
-                break;
-            case 3:
-                driveWheels = 0.2;
-                break;
-            case 4:
                 driveWheels = 0.0;
-                motorValue = -0.5;
                 break;
-            case 5:
+            // Run the drive wheels after the pistons come up.
+            case 3:
+                driveWheels = 0.5;
+                break;
+            // Pull the winch up.
+            case 4:
             default:
-                motorValue = 0;
-                climberRunning = false;
-                stage = 0;
+                winchOutput = 1.0;
                 break;
             }
-            winch.set(ControlMode.PercentOutput, motorValue);
-            System.out.println("Stage: " + stage + " Roll: " + navX.getRoll() + " Values: " + motorValue);
+
+            // Set the output for the winch and the climber wheels.
+            winch.set(ControlMode.PercentOutput, winchOutput);
+            climberWheels.set(ControlMode.PercentOutput, driveWheels * 2);
+
+            // Print out some data.
+            System.out.println("Stage: " + stage + " Roll: " + navX.getRoll() + " Values: " + winchOutput);
         }
 
     }

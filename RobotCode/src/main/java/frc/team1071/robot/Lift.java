@@ -49,7 +49,7 @@ class Lift {
     private int HasResetEncoder = 0;
     private int ResetCounter = 0;
 
-    private double FBP = 1.9;
+    private double FBP = 1.5;
     private double FBI = 0;
     private double FBD = 3.0;
     private double FBF = .8;
@@ -254,9 +254,9 @@ class Lift {
 
         int liftGatheringPositionHatch = 0;
         int liftLowScoreHatch = 1500;
-        int liftMiddleScoreHatch = 15000;
-        int liftHighScoreHatch = 18500;
-        int liftActiveGatherHatch = 4500;
+        int liftMiddleScoreHatch = 16000;
+        int liftHighScoreHatch = 19000;
+        int liftActiveGatherHatch = 7500;
 
         switch (position) {
 
