@@ -141,9 +141,12 @@ class Climber {
                 break;
             // Pull the winch up.
             case 4:
-            default:
+                driveWheels = 0.0;
                 winchOutput = 1.0;
                 break;
+            case 5:
+            default:
+                driveWheels = 0.5;
             }
 
             // Set the output for the winch and the climber wheels.
