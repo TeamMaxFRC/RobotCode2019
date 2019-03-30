@@ -67,7 +67,7 @@ class Lift {
      * @param FourBarOffset
      */
     Lift(TalonSRX elevatorMaster, TalonSRX elevatorSlaveOne, TalonSRX elevatorSlaveTwo, TalonSRX elevatorSlaveThree,
-            TalonSRX fourBarMaster, Solenoid airBrake, TalonSRX fourBarSlave, double FourBarOffset) {
+            TalonSRX fourBarMaster, Solenoid airBrake, TalonSRX fourBarSlave, double FourBarOffset, boolean isPracticeRobot) {
 
         // Set the elevator talons.
         this.elevatorMaster = elevatorMaster;
@@ -89,10 +89,17 @@ class Lift {
         airBrake.set(false);
 
         // Configure the four bar talon.
+        if (isPracticeRobot){
+            fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
+            fourBarMaster.setInverted(false);
+            fourBarMaster.setSensorPhase(true);
+            fourBarSlave.setInverted(false);
+        } else {
         fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
         fourBarMaster.setInverted(false);
         fourBarMaster.setSensorPhase(false);
         fourBarSlave.setInverted(true);
+        }
 
         // The arbitrary feed forward look up table.
         ArbFFLookup.put(new InterpolatingDouble(0.00), new InterpolatingDouble(0.00));

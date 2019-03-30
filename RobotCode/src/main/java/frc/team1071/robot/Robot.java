@@ -26,7 +26,7 @@ import static com.revrobotics.CANSparkMaxLowLevel.MotorType.kBrushless;
 public class Robot extends TimedRobot {
 
     // Boolean that determines if we're on the practice robot, or the real robot.
-    static final boolean isPracticeRobot = false;
+    static final boolean isPracticeRobot = true;
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Drive Train Subsystem Initialization
@@ -66,7 +66,7 @@ public class Robot extends TimedRobot {
 
     // Create the lift helper class.
     private Lift lift = new Lift(elevatorMaster, elevatorSlaveOne, elevatorSlaveTwo, elevatorSlaveThree,
-            fourBarMotorMaster, airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280);
+            fourBarMotorMaster, airBrakeSolenoid, fourBarMotorSlave, isPracticeRobot ? 2464 : 280, isPracticeRobot);
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Gatherer Subsystem Initialization
