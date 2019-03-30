@@ -49,12 +49,19 @@ class Lift {
     private int HasResetEncoder = 0;
     private int ResetCounter = 0;
 
-    private double FBP = 1.5;
-    private double FBI = 0;
-    private double FBD = 3.0;
-    private double FBF = .8;
-    private double FBV = 200;
-    private double FBA = 500;
+    private double FBPh = 1.5;
+    private double FBIh = 0;
+    private double FBDh = 3.0;
+    private double FBFh = .8;
+    private double FBVh = 200;
+    private double FBAh = 500;
+
+    private double FBPs = 1.5;
+    private double FBIs = 0;
+    private double FBDs = 3.0;
+    private double FBFs = .8;
+    private double FBVs = 200;
+    private double FBAs = 500;
 
     /**
      * TODO: Comment.
@@ -67,7 +74,8 @@ class Lift {
      * @param FourBarOffset
      */
     Lift(TalonSRX elevatorMaster, TalonSRX elevatorSlaveOne, TalonSRX elevatorSlaveTwo, TalonSRX elevatorSlaveThree,
-            TalonSRX fourBarMaster, Solenoid airBrake, TalonSRX fourBarSlave, double FourBarOffset, boolean isPracticeRobot) {
+            TalonSRX fourBarMaster, Solenoid airBrake, TalonSRX fourBarSlave, double FourBarOffset,
+            boolean isPracticeRobot) {
 
         // Set the elevator talons.
         this.elevatorMaster = elevatorMaster;
@@ -89,16 +97,16 @@ class Lift {
         airBrake.set(false);
 
         // Configure the four bar talon.
-        if (isPracticeRobot){
+        if (isPracticeRobot) {
             fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
             fourBarMaster.setInverted(false);
             fourBarMaster.setSensorPhase(true);
             fourBarSlave.setInverted(false);
         } else {
-        fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-        fourBarMaster.setInverted(false);
-        fourBarMaster.setSensorPhase(false);
-        fourBarSlave.setInverted(true);
+            fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
+            fourBarMaster.setInverted(false);
+            fourBarMaster.setSensorPhase(false);
+            fourBarSlave.setInverted(true);
         }
 
         // The arbitrary feed forward look up table.
@@ -142,13 +150,16 @@ class Lift {
         ArbFFLookup.put(new InterpolatingDouble(0.37), new InterpolatingDouble(0.00));
 
         // The four bar PID.
-        fourBarMaster.configMotionAcceleration((int) FBA, 10);
-        fourBarMaster.configMotionCruiseVelocity((int) FBV, 10);
-        fourBarMaster.config_kP(0, FBP, 10);
-        fourBarMaster.config_kI(0, FBI, 10);
-        fourBarMaster.config_kD(0, FBD, 10);
-        fourBarMaster.config_kF(0, FBF, 10);
-
+        fourBarMaster.configMotionAcceleration((int) FBAh, 10);
+        fourBarMaster.configMotionCruiseVelocity((int) FBVh, 10);
+        fourBarMaster.config_kP(0, FBPh, 10);
+        fourBarMaster.config_kI(0, FBIh, 10);
+        fourBarMaster.config_kD(0, FBDh, 10);
+        fourBarMaster.config_kF(0, FBFh, 10);
+        fourBarMaster.config_kP(1, FBPs, 10);
+        fourBarMaster.config_kI(1, FBIs, 10);
+        fourBarMaster.config_kD(1, FBDs, 10);
+        fourBarMaster.config_kF(1, FBFs, 10);
         fourBarMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5);
 
         // Configure the four bar voltage compensation.
@@ -351,6 +362,10 @@ class Lift {
     }
 
     public void LiftPeriodic() {
+
+        // Set the four bar PID slot based on it position.
+        fourBarMaster.selectProfileSlot(targetFourBarPosition > getAbsoluteFourBarTicks() ? 0 : 1, 0);
+
         // Set the lift to the proper position.
         elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
         HasResetEncoder = 0;
@@ -378,7 +393,6 @@ class Lift {
      * TODO: Comment.
      */
     void runLift() {
-
         // Set the four bar to the proper position.
         if (updated && !isFourBarFaulted() && !AirBrakeActivated) {
             updated = false;
@@ -585,27 +599,27 @@ class Lift {
 
         OSCMessage PMessage = new OSCMessage();
         PMessage.setAddress("/P");
-        PMessage.addArgument(FBP);
+        PMessage.addArgument(FBPh);
 
         OSCMessage IMessage = new OSCMessage();
         IMessage.setAddress("/I");
-        IMessage.addArgument(FBI);
+        IMessage.addArgument(FBIh);
 
         OSCMessage DMessage = new OSCMessage();
         DMessage.setAddress("/D");
-        DMessage.addArgument(FBD);
+        DMessage.addArgument(FBDh);
 
         OSCMessage FMessage = new OSCMessage();
         FMessage.setAddress("/F");
-        FMessage.addArgument(FBF);
+        FMessage.addArgument(FBFh);
 
         OSCMessage AMessage = new OSCMessage();
         AMessage.setAddress("/A");
-        AMessage.addArgument(FBA);
+        AMessage.addArgument(FBAh);
 
         OSCMessage VMessage = new OSCMessage();
         VMessage.setAddress("/V");
-        VMessage.addArgument(FBV);
+        VMessage.addArgument(FBVh);
 
         OSCMessage ClosedError = new OSCMessage();
         ClosedError.setAddress("/ClosedLoopError");
