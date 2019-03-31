@@ -126,8 +126,9 @@ public class Robot extends TimedRobot {
 
     // Create the joysticks for the driver and the operator.
     private Joystick driverJoystick = new Joystick(0);
-    private double leftRumble, rightRumble, pulse;
-    private int rumbleTimer = 0;
+    private double rumble = 0, rumbleAcceleration;
+    private int rumbleTimer = 0, rumbleDuration = 50, pulseDiff = 0;
+    private boolean pulse = false;
     private Joystick operatorJoystick = new Joystick(1);
 
     // Create and initialize the compressor.
@@ -340,10 +341,13 @@ public class Robot extends TimedRobot {
                     lift.setLiftPosition(Lift.LiftPosition.LowHatch);
                 } else if (operatorJoystick.getRawButton(5)) {
                     lift.setLiftPosition(Lift.LiftPosition.HighBall);
+                    hatchSolenoid.set(false);
                 } else if (operatorJoystick.getRawButton(10)) {
                     lift.setLiftPosition(Lift.LiftPosition.MiddleBall);
+                    hatchSolenoid.set(false);
                 } else if (operatorJoystick.getRawButton(15)) {
                     lift.setLiftPosition(Lift.LiftPosition.LowBall);
+                    hatchSolenoid.set(false);
                 } else if (operatorJoystick.getRawButton(13)) {
                     lift.setLiftPosition(Lift.LiftPosition.GatheringHatch);
                 } else if (operatorJoystick.getRawButton(8)) {
@@ -377,16 +381,16 @@ public class Robot extends TimedRobot {
                 // Actuate the solenoid depending on the user button press and the magnetic
                 // switch.
                 if (operatorJoystick.getRawButtonPressed(11)) {
-                    setRumble(50);
+                    setRumble(0);
                     hatchSolenoid.set(true);
                     hatchSwitchDebounceCounter = 40;
                 } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue
                         && hatchSolenoid.get()) {
-                    setRumble(50);
+                    setRumble(0);
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 } else if (operatorJoystick.getRawButton(12)) {
-                    setRumble(50);
+                    setRumble(0);
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 }
@@ -475,21 +479,48 @@ public class Robot extends TimedRobot {
         m_LimelightDriveCommand = drive_cmd;
     }
 
-    public void setRumble(int duration) {
-        rumbleTimer = duration;
+    public void setRumble(int type) {
+        rumbleTimer = rumbleDuration;
+        switch (type) {
+        case -1: // Fall
+            rumbleAcceleration = -1 / rumbleDuration;
+            rumble = 1.0;
+            break;
+        case 1: // Rise
+            rumbleAcceleration = 1 / rumbleDuration;
+            rumble = 0.0;
+            break;
+        case 0: // Static
+        default:
+            rumbleAcceleration = 0;
+            rumbleTimer = (int) (rumbleDuration * 0.3);
+            rumble = 0.5;
+            break;
+        }
+    }
+
+    public void pulseRumble() {
+        pulse = true;
     }
 
     public void rumbleUpdate() {
         if (rumbleTimer > 0) {
-            pulse = Math.sin(.15 * Math.PI * rumbleTimer);
-            leftRumble = pulse;
-            rightRumble = pulse;
+            rumble += rumbleAcceleration;
             rumbleTimer--;
         } else {
-            leftRumble = 0;
-            rightRumble = 0;
+            rumble = 0;
         }
-        driverJoystick.setRumble(RumbleType.kLeftRumble, leftRumble);
-        driverJoystick.setRumble(RumbleType.kRightRumble, rightRumble);
+
+        if (pulse) {
+            pulseDiff++;
+            if (pulseDiff > 4) {
+                pulseDiff = 0;
+            }
+            rumble += Math.sin(.5 * Math.PI * pulseDiff);
+        }
+
+        driverJoystick.setRumble(RumbleType.kLeftRumble, Math.abs(rumble));
+        driverJoystick.setRumble(RumbleType.kRightRumble, Math.abs(rumble));
+        pulse = false;
     }
 }

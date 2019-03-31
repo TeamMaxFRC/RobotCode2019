@@ -50,16 +50,16 @@ class Lift {
     private int ResetCounter = 0;
 
     private double FBPh = 1.5;
-    private double FBIh = 0;
+    private double FBIh = 0.0;
     private double FBDh = 3.0;
-    private double FBFh = .8;
+    private double FBFh = 0.8;
     private double FBVh = 200;
     private double FBAh = 500;
 
-    private double FBPs = 1.5;
-    private double FBIs = 0;
-    private double FBDs = 3.0;
-    private double FBFs = .8;
+    private double FBPs = 0.2;
+    private double FBIs = 0.0;
+    private double FBDs = 4.0;
+    private double FBFs = 0.8;
     private double FBVs = 200;
     private double FBAs = 500;
 
@@ -99,7 +99,7 @@ class Lift {
         // Configure the four bar talon.
         if (isPracticeRobot) {
             fourBarMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
-            fourBarMaster.setInverted(false);
+            fourBarMaster.setInverted(true);
             fourBarMaster.setSensorPhase(true);
             fourBarSlave.setInverted(false);
         } else {
@@ -260,20 +260,20 @@ class Lift {
         double fourBarMiddleBallDegrees = 110;
         double fourBarHighBallDegrees = 110;
 
-        double fourBarLowHatchDegrees = 22;
-        double fourBarMiddleHatchDegrees = 22;
+        double fourBarLowHatchDegrees = 40;
+        double fourBarMiddleHatchDegrees = 40;
         double fourBarHighHatchDegrees = 110;
 
         // Elevator set positions.
         int liftGatheringPositionBall = 6500;
         int liftLowScoreBall = 0;
-        int liftMiddleScoreBall = 14500;
-        int liftHighScoreBall = 27500;
+        int liftMiddleScoreBall = 13500;
+        int liftHighScoreBall = 26000;
 
         int liftGatheringPositionHatch = 0;
         int liftLowScoreHatch = 1500;
         int liftMiddleScoreHatch = 16000;
-        int liftHighScoreHatch = 19000;
+        int liftHighScoreHatch = 19500;
         int liftActiveGatherHatch = 7500;
 
         switch (position) {
