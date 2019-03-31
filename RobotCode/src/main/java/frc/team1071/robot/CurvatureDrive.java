@@ -17,14 +17,15 @@ public class CurvatureDrive {
 
     private static final double WheelDiameterFeet = 0.5;
     private static final double RevolutionPerMinutePerVolt = 470;
-    //private static final double RevolutionPerMinutePerSecondPerVolt = 1300;
+    // private static final double RevolutionPerMinutePerSecondPerVolt = 1300;
     private static final double GearRatio = 8.680555556;
     private static final double DegreesPerFeetPerSecondPerFeetPerSecondDifferential = 27.64219461;
     private static final double FeetPerSecondDifferentialPerDegreesPerSecond = 0.036176578;
 
     private static final double RPMtoFeetPerSecond = WheelDiameterFeet * Math.PI / 60 / GearRatio;
     private static final double FeetPerSecondPerVolt = RevolutionPerMinutePerVolt * RPMtoFeetPerSecond;
-    //private static final double FeetPerSecondPerSecondPerVolt = RevolutionPerMinutePerSecondPerVolt * RPMtoFeetPerSecond;
+    // private static final double FeetPerSecondPerSecondPerVolt =
+    // RevolutionPerMinutePerSecondPerVolt * RPMtoFeetPerSecond;
 
     private CANSparkMax LeftMaster;
     private CANSparkMax LeftSlaveOne;
@@ -58,7 +59,6 @@ public class CurvatureDrive {
         Motor.setIdleMode(CANSparkMax.IdleMode.kCoast);
     }
 
-
     private void ConfigureMaster(CANSparkMax Master) {
         ConfigureGeneral(Master);
     }
@@ -83,7 +83,8 @@ public class CurvatureDrive {
         this.RightSlaveTwo.setInverted(true);
     }
 
-    public CurvatureDrive(CANSparkMax LeftMaster, CANSparkMax LeftSlaveOne, CANSparkMax LeftSlaveTwo, CANSparkMax RightMaster, CANSparkMax RightSlaveOne, CANSparkMax RightSlaveTwo, AHRS NavX) {
+    public CurvatureDrive(CANSparkMax LeftMaster, CANSparkMax LeftSlaveOne, CANSparkMax LeftSlaveTwo,
+            CANSparkMax RightMaster, CANSparkMax RightSlaveOne, CANSparkMax RightSlaveTwo, AHRS NavX) {
         this.LeftMaster = LeftMaster;
         this.LeftSlaveOne = LeftSlaveOne;
         this.LeftSlaveTwo = LeftSlaveTwo;
@@ -107,7 +108,9 @@ public class CurvatureDrive {
     private void RunCurvatureMode(double Throttle, double Turn, boolean Brake, double Boost) {
         double multiplier = Math.copySign(1, Throttle);
         double BoostIncrease = Boost * (CappedSpeedFeetPerSecond - BoostThresholdFeetPerSecond);
-        double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ? CappedSpeedFeetPerSecond : BoostThresholdFeetPerSecond );
+        double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ?
+                                                                                      // CappedSpeedFeetPerSecond :
+                                                                                      // BoostThresholdFeetPerSecond );
         double TargetCurvature = Turn * CappedDegreesPerFeet;
 
         double TargetDegreesPerSecond = TargetSpeed * TargetCurvature;
@@ -128,9 +131,11 @@ public class CurvatureDrive {
     }
 
     private void RunQuickTurnMode(double Throttle, double Turn, boolean Brake, double Boost) {
-        double multiplier = 1;//Math.copySign(1, Throttle);
+        double multiplier = 0.8;// Math.copySign(1, Throttle);
         double BoostIncrease = Boost * (CappedSpeedFeetPerSecond - BoostThresholdFeetPerSecond);
-        double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ? CappedSpeedFeetPerSecond : BoostThresholdFeetPerSecond );
+        double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ?
+                                                                                      // CappedSpeedFeetPerSecond :
+                                                                                      // BoostThresholdFeetPerSecond );
         double TargetCurvature = Turn * CappedDegreesPerFeet;
 
         double TargetDegreesPerSecond = (BoostThresholdFeetPerSecond + BoostIncrease) * TargetCurvature;
@@ -164,7 +169,6 @@ public class CurvatureDrive {
         InputQuickTurn = QuickTurn;
         SendDriveData();
     }
-
 
     /**
      * Sends drive information to be logged by the dashboard.
@@ -219,7 +223,7 @@ public class CurvatureDrive {
         // Append the input brake
         OSCMessage InputBrakeMsg = new OSCMessage();
         InputBrakeMsg.setAddress("/InputBrake");
-        InputBrakeMsg.addArgument((double)(InputBrake ? 0 : 1));
+        InputBrakeMsg.addArgument((double) (InputBrake ? 0 : 1));
 
         // Append the input boost
         OSCMessage InputBoostMsg = new OSCMessage();
@@ -275,6 +279,7 @@ public class CurvatureDrive {
 
     /**
      * Sums the current pulled by all the drive motors.
+     * 
      * @return The total current drawn by the drive train.
      */
     double getCurrent() {

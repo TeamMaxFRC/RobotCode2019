@@ -440,8 +440,8 @@ public class Robot extends TimedRobot {
     public void Update_Limelight_Tracking() {
 
         // These numbers must be tuned for your Robot! Be careful!
-        final double STEER_K = 0.0275; // How hard to turn toward the target.
-        final double DRIVE_K = 0.15; // How hard to drive fwd toward the target.
+        final double STEER_K = 0.04; // How hard to turn toward the target.
+        final double DRIVE_K = 0.2; // How hard to drive fwd toward the target.
         final double DESIRED_TARGET_AREA = 6.5; // Area of the target when the robot reaches the wall.
         final double MAX_DRIVE = 1.0; // Simple speed limit so we don't drive too fast.
 
