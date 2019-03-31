@@ -9,6 +9,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
 import frc.team1071.lib.Task;
@@ -125,6 +126,8 @@ public class Robot extends TimedRobot {
 
     // Create the joysticks for the driver and the operator.
     private Joystick driverJoystick = new Joystick(0);
+    private double leftRumble, rightRumble, pulse;
+    private int rumbleTimer = 0;
     private Joystick operatorJoystick = new Joystick(1);
 
     // Create and initialize the compressor.
@@ -323,6 +326,8 @@ public class Robot extends TimedRobot {
         // -----------------------------------------------------------------------------------------------------------------------------------------------------
         try {
 
+            rumbleUpdate();
+
             // Only run the operator controls when not in vision tracking mode.
             if (!driverJoystick.getRawButton(5)) {
 
@@ -372,13 +377,16 @@ public class Robot extends TimedRobot {
                 // Actuate the solenoid depending on the user button press and the magnetic
                 // switch.
                 if (operatorJoystick.getRawButtonPressed(11)) {
+                    setRumble(50);
                     hatchSolenoid.set(true);
                     hatchSwitchDebounceCounter = 40;
                 } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue
                         && hatchSolenoid.get()) {
+                            setRumble(50);
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 } else if (operatorJoystick.getRawButton(12)) {
+                    setRumble(50);
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 }
@@ -465,5 +473,23 @@ public class Robot extends TimedRobot {
         }
 
         m_LimelightDriveCommand = drive_cmd;
+    }
+
+    public void setRumble(int duration) {
+        rumbleTimer = duration;
+    }
+
+    public void rumbleUpdate() {
+        if (rumbleTimer > 0) {
+            pulse = Math.sin(.15 * Math.PI * rumbleTimer);
+            leftRumble = pulse;
+            rightRumble = pulse;
+            rumbleTimer--;
+        } else {
+            leftRumble = 0;
+            rightRumble = 0;
+        }
+        driverJoystick.setRumble(RumbleType.kLeftRumble, leftRumble);
+        driverJoystick.setRumble(RumbleType.kRightRumble, rightRumble);
     }
 }
