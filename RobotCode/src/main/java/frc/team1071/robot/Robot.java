@@ -55,7 +55,7 @@ public class Robot extends TimedRobot {
     // Create and initialize the elevator motors.
     private TalonSRX elevatorMaster = new TalonSRX(isPracticeRobot ? 4 : 7);
     private TalonSRX elevatorSlaveOne = new TalonSRX(isPracticeRobot ? 7 : 6);
-    private TalonSRX elevatorSlaveTwo = new TalonSRX(isPracticeRobot ? 5 : 5);
+    private TalonSRX elevatorSlaveTwo = new TalonSRX(isPracticeRobot ? 9 : 5);
     private TalonSRX elevatorSlaveThree = new TalonSRX(isPracticeRobot ? 8 : 4);
 
     // Create and initialize the four bar motors.
@@ -382,7 +382,7 @@ public class Robot extends TimedRobot {
                     hatchSwitchDebounceCounter = 40;
                 } else if (hatchSwitchDebounceCounter-- <= 0 && currentSwitchState && !previousHatchSwitchValue
                         && hatchSolenoid.get()) {
-                            setRumble(50);
+                    setRumble(50);
                     hatchSolenoid.set(false);
                     lift.setLiftPosition(Lift.LiftPosition.ActiveGatherHatch);
                 } else if (operatorJoystick.getRawButton(12)) {
