@@ -49,9 +49,9 @@ class Lift {
     private int HasResetEncoder = 0;
     private int ResetCounter = 0;
 
-    private double FBPh = 1.5;
+    private double FBPh = 2.0;
     private double FBIh = 0.0;
-    private double FBDh = 3.0;
+    private double FBDh = 6.0;
     private double FBFh = 0.8;
     private double FBVh = 200;
     private double FBAh = 500;
@@ -169,14 +169,14 @@ class Lift {
         fourBarSlave.enableVoltageCompensation(true);
 
         // Configure the four bar current limits.
-        fourBarMaster.configContinuousCurrentLimit(10);
-        fourBarMaster.configPeakCurrentDuration(2000);
-        fourBarMaster.configPeakCurrentLimit(30);
+        fourBarMaster.configContinuousCurrentLimit(25);
+        fourBarMaster.configPeakCurrentDuration(0);
+        fourBarMaster.configPeakCurrentLimit(0);
         fourBarMaster.enableCurrentLimit(true);
-        fourBarSlave.configContinuousCurrentLimit(10);
-        fourBarSlave.configPeakCurrentDuration(2000);
-        fourBarSlave.configPeakCurrentLimit(30);
-        fourBarMaster.enableCurrentLimit(true);
+        fourBarSlave.configContinuousCurrentLimit(25);
+        fourBarSlave.configPeakCurrentDuration(0);
+        fourBarSlave.configPeakCurrentLimit(0);
+        fourBarSlave.enableCurrentLimit(true);
 
         // Set the soft limits on the four bar motors.
         fourBarMaster.configForwardSoftLimitThreshold(
@@ -254,11 +254,11 @@ class Lift {
 
         // Four bar positions in degrees.
         double fourBarBallGatheringPositionDegrees = 110;
-        double fourBarHatchGatheringPositionDegrees = 22;
+        double fourBarHatchGatheringPositionDegrees = 30;
 
-        double fourBarLowBallDegrees = 110;
-        double fourBarMiddleBallDegrees = 110;
-        double fourBarHighBallDegrees = 110;
+        double fourBarLowBallDegrees = 105;
+        double fourBarMiddleBallDegrees = 105;
+        double fourBarHighBallDegrees = 105;
 
         double fourBarLowHatchDegrees = 40;
         double fourBarMiddleHatchDegrees = 40;
@@ -273,8 +273,8 @@ class Lift {
         int liftGatheringPositionHatch = 0;
         int liftLowScoreHatch = 1500;
         int liftMiddleScoreHatch = 16000;
-        int liftHighScoreHatch = 19500;
-        int liftActiveGatherHatch = 7500;
+        int liftHighScoreHatch = 18500;
+        int liftActiveGatherHatch = 4000;
 
         switch (position) {
 
@@ -393,6 +393,7 @@ class Lift {
      * TODO: Comment.
      */
     void runLift() {
+
         // Set the four bar to the proper position.
         if (updated && !isFourBarFaulted() && !AirBrakeActivated) {
             updated = false;

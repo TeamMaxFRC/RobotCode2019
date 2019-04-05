@@ -55,7 +55,7 @@ public class CurvatureDrive {
     private void ConfigureGeneral(CANSparkMax Motor) {
         Motor.enableVoltageCompensation(11);
         Motor.setSmartCurrentLimit(55);
-        Motor.setOpenLoopRampRate(0.75);
+        Motor.setOpenLoopRampRate(0.60);
         Motor.setIdleMode(CANSparkMax.IdleMode.kCoast);
     }
 
@@ -130,13 +130,13 @@ public class CurvatureDrive {
         RightMaster.set(RightSpeedFeedForward);
     }
 
-    private void RunQuickTurnMode(double Throttle, double Turn, boolean Brake, double Boost) {
+    private void RunQuickTurnMode(double Throttle, double Turn, boolean Brake, double Boost, double QuickTurnSlow) {
         double multiplier = 0.8;// Math.copySign(1, Throttle);
         double BoostIncrease = Boost * (CappedSpeedFeetPerSecond - BoostThresholdFeetPerSecond);
         double TargetSpeed = Throttle * (BoostThresholdFeetPerSecond + BoostIncrease);// ( Boost ?
                                                                                       // CappedSpeedFeetPerSecond :
                                                                                       // BoostThresholdFeetPerSecond );
-        double TargetCurvature = Turn * CappedDegreesPerFeet;
+        double TargetCurvature = Turn * (CappedDegreesPerFeet - (QuickTurnSlow * (CappedDegreesPerFeet * 2 / 3)));
 
         double TargetDegreesPerSecond = (BoostThresholdFeetPerSecond + BoostIncrease) * TargetCurvature;
 
@@ -155,9 +155,10 @@ public class CurvatureDrive {
         RightMaster.set(RightSpeedFeedForward);
     }
 
-    public void Run(double Throttle, double Turn, boolean QuickTurn, boolean Brake, double Boost) {
+    public void Run(double Throttle, double Turn, boolean QuickTurn, boolean Brake, double Boost,
+            double QuickTurnSlow) {
         if (QuickTurn) {
-            RunQuickTurnMode(Throttle, Turn, Brake, Boost);
+            RunQuickTurnMode(Throttle, Turn, Brake, Boost, QuickTurnSlow);
         } else {
             RunCurvatureMode(Throttle, Turn, Brake, Boost);
         }
