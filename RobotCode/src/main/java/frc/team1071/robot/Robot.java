@@ -106,6 +106,7 @@ public class Robot extends TimedRobot {
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     private Timer testTimer = new Timer();
     int testStage = 0;
+    double motorSpeed = 0.0;
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------
     // Vision Subsystem Initialization
@@ -434,12 +435,17 @@ public class Robot extends TimedRobot {
                 case 0:
                     stageName = "Shweem";
                     break;
+                case 1:
+                    stageName = "drive train";
+                    leftMaster.set(0.5);
+                    rightMaster.set(0.5);
+                    break;
                 default:
                     break;
                 }
             }
         } catch (Exception e) {
-            oscSender.writeConsole("Exception in " + stageName + ": " + e.toString());
+            oscSender.writeConsole("Exception in " + stageName + " testing: " + e.toString());
             oscSender.writeConsole("Stopping test procedure.");
             testStage = -1;
         }
