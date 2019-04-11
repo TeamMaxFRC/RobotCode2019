@@ -271,7 +271,7 @@ class Lift {
         int liftHighScoreBall = 26000;
 
         int liftGatheringPositionHatch = 0;
-        int liftLowScoreHatch = 1500;
+        int liftLowScoreHatch = 1550;
         int liftMiddleScoreHatch = 16000;
         int liftHighScoreHatch = 26000;
         int liftActiveGatherHatch = 4000;
@@ -320,7 +320,7 @@ class Lift {
 
         case AirBrake:
             setElevatorPosition(liftGatheringPositionHatch);
-            setFourBarPositionDegrees(160);
+            setFourBarPositionDegrees(180);
             break;
 
         case GatheringHatch:
