@@ -369,11 +369,11 @@ class Lift {
         // Set the lift to the proper position.
         elevatorMaster.set(ControlMode.MotionMagic, targetElevatorPosition);
         HasResetEncoder = 0;
-        double temp = Math.abs(Math.abs(fourBarMaster.getSelectedSensorPosition() % 4096)
+        double temp = Math.abs(fourBarMaster.getSelectedSensorPosition()
                 - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
         if (temp > 100 && temp < 3996) {
             ResetCounter++;
-            if (ResetCounter > 50) {
+            if (ResetCounter > 30) {
                 ResetCounter = 0;
                 System.out.println(
                         "Resetting encoder: " + fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096
@@ -519,7 +519,9 @@ class Lift {
      * @return
      */
     boolean isFourBarFaulted() {
-        return fourBarMaster.getSensorCollection().getPulseWidthPosition() == 0;
+        return fourBarMaster.getSensorCollection().getPulseWidthPosition() == 0 || 
+               fourBarMaster.getSelectedSensorPosition() < -100 ||
+               fourBarMaster.getSelectedSensorPosition() > 4200;
     }
 
     /**
