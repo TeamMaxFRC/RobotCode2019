@@ -371,7 +371,7 @@ class Lift {
         HasResetEncoder = 0;
         double temp = Math.abs(fourBarMaster.getSelectedSensorPosition()
                 - Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
-        if (temp > 100 && temp < 3996) {
+        if ((temp > 100 && temp < 3996) || temp >= 4096) {
             ResetCounter++;
             if (ResetCounter > 30) {
                 ResetCounter = 0;
@@ -383,7 +383,10 @@ class Lift {
                         Math.abs(fourBarMaster.getSensorCollection().getPulseWidthPosition() % 4096));
             }
         } else {
-            ResetCounter = 0;
+            ResetCounter--;
+            if (ResetCounter < 0) {
+                ResetCounter = 0;
+            }
         }
     }
 
@@ -519,9 +522,8 @@ class Lift {
      * @return
      */
     boolean isFourBarFaulted() {
-        return fourBarMaster.getSensorCollection().getPulseWidthPosition() == 0 || 
-               fourBarMaster.getSelectedSensorPosition() < -100 ||
-               fourBarMaster.getSelectedSensorPosition() > 4200;
+        return fourBarMaster.getSensorCollection().getPulseWidthPosition() == 0
+                || fourBarMaster.getSelectedSensorPosition() < -100 || fourBarMaster.getSelectedSensorPosition() > 4200;
     }
 
     /**
